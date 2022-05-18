@@ -1,0 +1,1048 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    generatedBy: cdk8s
+  name: zclcdk-test-1
+  namespace: zclcdk-test-1
+---
+apiVersion: v1
+kind: ConfigMap
+data:
+  apicredentials: |-
+    notreal@fakeemail.ch
+    twochains
+  node-password: T.tLHkcmwePT/p,]sYuntjwHKAsrhm#4eRs4LuKHwvHejWYAC2JP4M8HimwgmbaZ
+metadata:
+  labels:
+    app: chainlink-cm-0
+  name: chainlink-cm-0
+  namespace: zclcdk-test-1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chainlink-service-0
+  namespace: zclcdk-test-1
+spec:
+  ports:
+    - name: access
+      port: 6688
+      targetPort: 6688
+    - name: p2p
+      port: 8899
+      targetPort: 8899
+  selector:
+    app: chainlink-node
+    instance: "0"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chainlink-0
+  namespace: zclcdk-test-1
+spec:
+  selector:
+    matchLabels:
+      app: chainlink-node
+      instance: "0"
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+      labels:
+        app: chainlink-node
+        instance: "0"
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: chainlink
+            - name: POSTGRES_PASSWORD
+              value: node
+            - name: PGPASSWORD
+              value: node
+            - name: PGUSER
+              value: postgres
+          image: postgres:11.6
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - postgres
+            initialDelaySeconds: 60
+            periodSeconds: 60
+          name: chainlink-db
+          ports:
+            - containerPort: 5432
+              name: postgres
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - postgres
+            initialDelaySeconds: 2
+            periodSeconds: 2
+          resources:
+            limits:
+              cpu: 450m
+              memory: 1024Mi
+            requests:
+              cpu: 450m
+              memory: 1024Mi
+        - args:
+            - node
+            - start
+            - -d
+            - -p
+            - /etc/node-secrets-volume/node-password
+            - -a
+            - /etc/node-secrets-volume/apicredentials
+            - --vrfpassword=/etc/node-secrets-volume/apicredentials
+          env:
+            - name: DATABASE_URL
+              value: postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable
+            - name: CHAINLINK_DEV
+              value: "true"
+            - name: JSON_CONSOLE
+              value: "false"
+            - name: DATABASE_NAME
+              value: chainlink
+            - name: ETH_URL
+              value: ws://geth:8546
+            - name: ETH_DISABLED
+              value: "false"
+            - name: KEEPER_REGISTRY_SYNC_INTERVAL
+              value: 5s
+            - name: P2P_LISTEN_PORT
+              value: "6690"
+            - name: KEEPER_REGISTRY_PERFORM_GAS_OVERHEAD
+              value: "1"
+            - name: CHAINLINK_TLS_PORT
+              value: "0"
+            - name: ENABLE_BULLETPROOF_TX_MANAGER
+              value: "true"
+            - name: MAX_EXPORT_HTML_THREADS
+              value: "2"
+            - name: MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
+              value: "0"
+            - name: EXPLORER_SECRET
+              value: ""
+            - name: LOG_LEVEL
+              value: debug
+            - name: P2P_LISTEN_IP
+              value: 0.0.0.0
+            - name: ROOT
+              value: ./clroot
+            - name: DEFAULT_HTTP_ALLOW_UNRESTRICTED_NETWORK_ACCESS
+              value: "true"
+            - name: ETH_MAX_IN_FLIGHT_TRANSACTIONS
+              value: "5000"
+            - name: EXPLORER_URL
+              value: ""
+            - name: EXPLORER_ACCESS_KEY
+              value: ""
+            - name: KEEPER_DEFAULT_TRANSACTION_QUEUE_DEPTH
+              value: "1"
+            - name: ALLOW_ORIGINS
+              value: "*"
+            - name: CHAINLINK_PGPASSWORD
+              value: node
+            - name: CHAINLINK_PORT
+              value: "6688"
+            - name: OCR_TRACE_LOGGING
+              value: "true"
+            - name: KEEPER_MINIMUM_REQUIRED_CONFIRMATIONS
+              value: "1"
+            - name: ETH_CHAIN_ID
+              value: "1337"
+            - name: FEATURE_EXTERNAL_INITIATORS
+              value: "false"
+            - name: FEATURE_OFFCHAIN_REPORTING
+              value: "true"
+            - name: SECURE_COOKIES
+              value: "false"
+          image: public.ecr.aws/z0b1w9r9/chainlink:develop.d2b337227bc5d4c4b6ee4f605017f205e01e5d16
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 6688
+            initialDelaySeconds: 20
+            periodSeconds: 5
+          name: node
+          ports:
+            - containerPort: 6688
+              name: access
+            - containerPort: 8899
+              name: p2p
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 6688
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: 200m
+              memory: 500Mi
+            requests:
+              cpu: 200m
+              memory: 500Mi
+          volumeMounts:
+            - mountPath: /etc/node-secrets-volume
+              name: chainlink-config-map
+      serviceAccountName: default
+      volumes:
+        - configMap:
+            name: chainlink-cm-0
+          name: chainlink-config-map
+---
+apiVersion: v1
+kind: ConfigMap
+data:
+  apicredentials: |-
+    notreal@fakeemail.ch
+    twochains
+  node-password: T.tLHkcmwePT/p,]sYuntjwHKAsrhm#4eRs4LuKHwvHejWYAC2JP4M8HimwgmbaZ
+metadata:
+  labels:
+    app: chainlink-cm-1
+  name: chainlink-cm-1
+  namespace: zclcdk-test-1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chainlink-service-1
+  namespace: zclcdk-test-1
+spec:
+  ports:
+    - name: access
+      port: 6688
+      targetPort: 6688
+    - name: p2p
+      port: 8899
+      targetPort: 8899
+  selector:
+    app: chainlink-node
+    instance: "1"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chainlink-1
+  namespace: zclcdk-test-1
+spec:
+  selector:
+    matchLabels:
+      app: chainlink-node
+      instance: "1"
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+      labels:
+        app: chainlink-node
+        instance: "1"
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: chainlink
+            - name: POSTGRES_PASSWORD
+              value: node
+            - name: PGPASSWORD
+              value: node
+            - name: PGUSER
+              value: postgres
+          image: postgres:11.6
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - postgres
+            initialDelaySeconds: 60
+            periodSeconds: 60
+          name: chainlink-db
+          ports:
+            - containerPort: 5432
+              name: postgres
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - postgres
+            initialDelaySeconds: 2
+            periodSeconds: 2
+          resources:
+            limits:
+              cpu: 450m
+              memory: 1024Mi
+            requests:
+              cpu: 450m
+              memory: 1024Mi
+        - args:
+            - node
+            - start
+            - -d
+            - -p
+            - /etc/node-secrets-volume/node-password
+            - -a
+            - /etc/node-secrets-volume/apicredentials
+            - --vrfpassword=/etc/node-secrets-volume/apicredentials
+          env:
+            - name: JSON_CONSOLE
+              value: "false"
+            - name: KEEPER_REGISTRY_SYNC_INTERVAL
+              value: 5s
+            - name: KEEPER_MINIMUM_REQUIRED_CONFIRMATIONS
+              value: "1"
+            - name: CHAINLINK_TLS_PORT
+              value: "0"
+            - name: P2P_LISTEN_PORT
+              value: "6690"
+            - name: ETH_MAX_IN_FLIGHT_TRANSACTIONS
+              value: "5000"
+            - name: DATABASE_URL
+              value: postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable
+            - name: DATABASE_NAME
+              value: chainlink
+            - name: CHAINLINK_PORT
+              value: "6688"
+            - name: CHAINLINK_DEV
+              value: "true"
+            - name: FEATURE_EXTERNAL_INITIATORS
+              value: "false"
+            - name: CHAINLINK_PGPASSWORD
+              value: node
+            - name: OCR_TRACE_LOGGING
+              value: "true"
+            - name: ETH_URL
+              value: ws://geth:8546
+            - name: ETH_CHAIN_ID
+              value: "1337"
+            - name: ETH_DISABLED
+              value: "false"
+            - name: DEFAULT_HTTP_ALLOW_UNRESTRICTED_NETWORK_ACCESS
+              value: "true"
+            - name: EXPLORER_SECRET
+              value: ""
+            - name: SECURE_COOKIES
+              value: "false"
+            - name: EXPLORER_ACCESS_KEY
+              value: ""
+            - name: KEEPER_REGISTRY_PERFORM_GAS_OVERHEAD
+              value: "1"
+            - name: FEATURE_OFFCHAIN_REPORTING
+              value: "true"
+            - name: MAX_EXPORT_HTML_THREADS
+              value: "2"
+            - name: ROOT
+              value: ./clroot
+            - name: KEEPER_DEFAULT_TRANSACTION_QUEUE_DEPTH
+              value: "1"
+            - name: MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
+              value: "0"
+            - name: P2P_LISTEN_IP
+              value: 0.0.0.0
+            - name: EXPLORER_URL
+              value: ""
+            - name: ALLOW_ORIGINS
+              value: "*"
+            - name: ENABLE_BULLETPROOF_TX_MANAGER
+              value: "true"
+            - name: LOG_LEVEL
+              value: debug
+          image: public.ecr.aws/z0b1w9r9/chainlink:develop.d2b337227bc5d4c4b6ee4f605017f205e01e5d16
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 6688
+            initialDelaySeconds: 20
+            periodSeconds: 5
+          name: node
+          ports:
+            - containerPort: 6688
+              name: access
+            - containerPort: 8899
+              name: p2p
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 6688
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: 200m
+              memory: 500Mi
+            requests:
+              cpu: 200m
+              memory: 500Mi
+          volumeMounts:
+            - mountPath: /etc/node-secrets-volume
+              name: chainlink-config-map
+      serviceAccountName: default
+      volumes:
+        - configMap:
+            name: chainlink-cm-1
+          name: chainlink-config-map
+---
+apiVersion: v1
+kind: ConfigMap
+data:
+  apicredentials: |-
+    notreal@fakeemail.ch
+    twochains
+  node-password: T.tLHkcmwePT/p,]sYuntjwHKAsrhm#4eRs4LuKHwvHejWYAC2JP4M8HimwgmbaZ
+metadata:
+  labels:
+    app: chainlink-cm-2
+  name: chainlink-cm-2
+  namespace: zclcdk-test-1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chainlink-service-2
+  namespace: zclcdk-test-1
+spec:
+  ports:
+    - name: access
+      port: 6688
+      targetPort: 6688
+    - name: p2p
+      port: 8899
+      targetPort: 8899
+  selector:
+    app: chainlink-node
+    instance: "2"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chainlink-2
+  namespace: zclcdk-test-1
+spec:
+  selector:
+    matchLabels:
+      app: chainlink-node
+      instance: "2"
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+      labels:
+        app: chainlink-node
+        instance: "2"
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: chainlink
+            - name: POSTGRES_PASSWORD
+              value: node
+            - name: PGPASSWORD
+              value: node
+            - name: PGUSER
+              value: postgres
+          image: postgres:11.6
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - postgres
+            initialDelaySeconds: 60
+            periodSeconds: 60
+          name: chainlink-db
+          ports:
+            - containerPort: 5432
+              name: postgres
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - postgres
+            initialDelaySeconds: 2
+            periodSeconds: 2
+          resources:
+            limits:
+              cpu: 450m
+              memory: 1024Mi
+            requests:
+              cpu: 450m
+              memory: 1024Mi
+        - args:
+            - node
+            - start
+            - -d
+            - -p
+            - /etc/node-secrets-volume/node-password
+            - -a
+            - /etc/node-secrets-volume/apicredentials
+            - --vrfpassword=/etc/node-secrets-volume/apicredentials
+          env:
+            - name: MAX_EXPORT_HTML_THREADS
+              value: "2"
+            - name: ETH_URL
+              value: ws://geth:8546
+            - name: CHAINLINK_DEV
+              value: "true"
+            - name: ENABLE_BULLETPROOF_TX_MANAGER
+              value: "true"
+            - name: OCR_TRACE_LOGGING
+              value: "true"
+            - name: ETH_MAX_IN_FLIGHT_TRANSACTIONS
+              value: "5000"
+            - name: ETH_CHAIN_ID
+              value: "1337"
+            - name: FEATURE_EXTERNAL_INITIATORS
+              value: "false"
+            - name: JSON_CONSOLE
+              value: "false"
+            - name: LOG_LEVEL
+              value: debug
+            - name: MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
+              value: "0"
+            - name: KEEPER_REGISTRY_SYNC_INTERVAL
+              value: 5s
+            - name: DATABASE_URL
+              value: postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable
+            - name: DATABASE_NAME
+              value: chainlink
+            - name: ALLOW_ORIGINS
+              value: "*"
+            - name: CHAINLINK_PGPASSWORD
+              value: node
+            - name: CHAINLINK_PORT
+              value: "6688"
+            - name: EXPLORER_URL
+              value: ""
+            - name: KEEPER_DEFAULT_TRANSACTION_QUEUE_DEPTH
+              value: "1"
+            - name: CHAINLINK_TLS_PORT
+              value: "0"
+            - name: SECURE_COOKIES
+              value: "false"
+            - name: ETH_DISABLED
+              value: "false"
+            - name: P2P_LISTEN_IP
+              value: 0.0.0.0
+            - name: P2P_LISTEN_PORT
+              value: "6690"
+            - name: ROOT
+              value: ./clroot
+            - name: KEEPER_REGISTRY_PERFORM_GAS_OVERHEAD
+              value: "1"
+            - name: DEFAULT_HTTP_ALLOW_UNRESTRICTED_NETWORK_ACCESS
+              value: "true"
+            - name: FEATURE_OFFCHAIN_REPORTING
+              value: "true"
+            - name: EXPLORER_ACCESS_KEY
+              value: ""
+            - name: EXPLORER_SECRET
+              value: ""
+            - name: KEEPER_MINIMUM_REQUIRED_CONFIRMATIONS
+              value: "1"
+          image: public.ecr.aws/z0b1w9r9/chainlink:develop.d2b337227bc5d4c4b6ee4f605017f205e01e5d16
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 6688
+            initialDelaySeconds: 20
+            periodSeconds: 5
+          name: node
+          ports:
+            - containerPort: 6688
+              name: access
+            - containerPort: 8899
+              name: p2p
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 6688
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: 200m
+              memory: 500Mi
+            requests:
+              cpu: 200m
+              memory: 500Mi
+          volumeMounts:
+            - mountPath: /etc/node-secrets-volume
+              name: chainlink-config-map
+      serviceAccountName: default
+      volumes:
+        - configMap:
+            name: chainlink-cm-2
+          name: chainlink-config-map
+---
+apiVersion: v1
+kind: ConfigMap
+data:
+  apicredentials: |-
+    notreal@fakeemail.ch
+    twochains
+  node-password: T.tLHkcmwePT/p,]sYuntjwHKAsrhm#4eRs4LuKHwvHejWYAC2JP4M8HimwgmbaZ
+metadata:
+  labels:
+    app: chainlink-cm-3
+  name: chainlink-cm-3
+  namespace: zclcdk-test-1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chainlink-service-3
+  namespace: zclcdk-test-1
+spec:
+  ports:
+    - name: access
+      port: 6688
+      targetPort: 6688
+    - name: p2p
+      port: 8899
+      targetPort: 8899
+  selector:
+    app: chainlink-node
+    instance: "3"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chainlink-3
+  namespace: zclcdk-test-1
+spec:
+  selector:
+    matchLabels:
+      app: chainlink-node
+      instance: "3"
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+      labels:
+        app: chainlink-node
+        instance: "3"
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: chainlink
+            - name: POSTGRES_PASSWORD
+              value: node
+            - name: PGPASSWORD
+              value: node
+            - name: PGUSER
+              value: postgres
+          image: postgres:11.6
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - postgres
+            initialDelaySeconds: 60
+            periodSeconds: 60
+          name: chainlink-db
+          ports:
+            - containerPort: 5432
+              name: postgres
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - postgres
+            initialDelaySeconds: 2
+            periodSeconds: 2
+          resources:
+            limits:
+              cpu: 450m
+              memory: 1024Mi
+            requests:
+              cpu: 450m
+              memory: 1024Mi
+        - args:
+            - node
+            - start
+            - -d
+            - -p
+            - /etc/node-secrets-volume/node-password
+            - -a
+            - /etc/node-secrets-volume/apicredentials
+            - --vrfpassword=/etc/node-secrets-volume/apicredentials
+          env:
+            - name: CHAINLINK_DEV
+              value: "true"
+            - name: FEATURE_EXTERNAL_INITIATORS
+              value: "false"
+            - name: CHAINLINK_PORT
+              value: "6688"
+            - name: OCR_TRACE_LOGGING
+              value: "true"
+            - name: KEEPER_DEFAULT_TRANSACTION_QUEUE_DEPTH
+              value: "1"
+            - name: KEEPER_MINIMUM_REQUIRED_CONFIRMATIONS
+              value: "1"
+            - name: KEEPER_REGISTRY_PERFORM_GAS_OVERHEAD
+              value: "1"
+            - name: ETH_CHAIN_ID
+              value: "1337"
+            - name: FEATURE_OFFCHAIN_REPORTING
+              value: "true"
+            - name: MAX_EXPORT_HTML_THREADS
+              value: "2"
+            - name: SECURE_COOKIES
+              value: "false"
+            - name: ALLOW_ORIGINS
+              value: "*"
+            - name: CHAINLINK_TLS_PORT
+              value: "0"
+            - name: JSON_CONSOLE
+              value: "false"
+            - name: ROOT
+              value: ./clroot
+            - name: ETH_URL
+              value: ws://geth:8546
+            - name: LOG_LEVEL
+              value: debug
+            - name: MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
+              value: "0"
+            - name: EXPLORER_ACCESS_KEY
+              value: ""
+            - name: DATABASE_NAME
+              value: chainlink
+            - name: EXPLORER_SECRET
+              value: ""
+            - name: CHAINLINK_PGPASSWORD
+              value: node
+            - name: ENABLE_BULLETPROOF_TX_MANAGER
+              value: "true"
+            - name: ETH_MAX_IN_FLIGHT_TRANSACTIONS
+              value: "5000"
+            - name: DATABASE_URL
+              value: postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable
+            - name: ETH_DISABLED
+              value: "false"
+            - name: DEFAULT_HTTP_ALLOW_UNRESTRICTED_NETWORK_ACCESS
+              value: "true"
+            - name: EXPLORER_URL
+              value: ""
+            - name: KEEPER_REGISTRY_SYNC_INTERVAL
+              value: 5s
+            - name: P2P_LISTEN_IP
+              value: 0.0.0.0
+            - name: P2P_LISTEN_PORT
+              value: "6690"
+          image: public.ecr.aws/z0b1w9r9/chainlink:develop.d2b337227bc5d4c4b6ee4f605017f205e01e5d16
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 6688
+            initialDelaySeconds: 20
+            periodSeconds: 5
+          name: node
+          ports:
+            - containerPort: 6688
+              name: access
+            - containerPort: 8899
+              name: p2p
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 6688
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: 200m
+              memory: 500Mi
+            requests:
+              cpu: 200m
+              memory: 500Mi
+          volumeMounts:
+            - mountPath: /etc/node-secrets-volume
+              name: chainlink-config-map
+      serviceAccountName: default
+      volumes:
+        - configMap:
+            name: chainlink-cm-3
+          name: chainlink-config-map
+---
+apiVersion: v1
+kind: ConfigMap
+data:
+  apicredentials: |-
+    notreal@fakeemail.ch
+    twochains
+  node-password: T.tLHkcmwePT/p,]sYuntjwHKAsrhm#4eRs4LuKHwvHejWYAC2JP4M8HimwgmbaZ
+metadata:
+  labels:
+    app: chainlink-cm-4
+  name: chainlink-cm-4
+  namespace: zclcdk-test-1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chainlink-service-4
+  namespace: zclcdk-test-1
+spec:
+  ports:
+    - name: access
+      port: 6688
+      targetPort: 6688
+    - name: p2p
+      port: 8899
+      targetPort: 8899
+  selector:
+    app: chainlink-node
+    instance: "4"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chainlink-4
+  namespace: zclcdk-test-1
+spec:
+  selector:
+    matchLabels:
+      app: chainlink-node
+      instance: "4"
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+      labels:
+        app: chainlink-node
+        instance: "4"
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: chainlink
+            - name: POSTGRES_PASSWORD
+              value: node
+            - name: PGPASSWORD
+              value: node
+            - name: PGUSER
+              value: postgres
+          image: postgres:11.6
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - postgres
+            initialDelaySeconds: 60
+            periodSeconds: 60
+          name: chainlink-db
+          ports:
+            - containerPort: 5432
+              name: postgres
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - postgres
+            initialDelaySeconds: 2
+            periodSeconds: 2
+          resources:
+            limits:
+              cpu: 450m
+              memory: 1024Mi
+            requests:
+              cpu: 450m
+              memory: 1024Mi
+        - args:
+            - node
+            - start
+            - -d
+            - -p
+            - /etc/node-secrets-volume/node-password
+            - -a
+            - /etc/node-secrets-volume/apicredentials
+            - --vrfpassword=/etc/node-secrets-volume/apicredentials
+          env:
+            - name: ROOT
+              value: ./clroot
+            - name: ETH_MAX_IN_FLIGHT_TRANSACTIONS
+              value: "5000"
+            - name: EXPLORER_ACCESS_KEY
+              value: ""
+            - name: KEEPER_MINIMUM_REQUIRED_CONFIRMATIONS
+              value: "1"
+            - name: FEATURE_EXTERNAL_INITIATORS
+              value: "false"
+            - name: FEATURE_OFFCHAIN_REPORTING
+              value: "true"
+            - name: LOG_LEVEL
+              value: debug
+            - name: MAX_EXPORT_HTML_THREADS
+              value: "2"
+            - name: EXPLORER_URL
+              value: ""
+            - name: ETH_URL
+              value: ws://geth:8546
+            - name: CHAINLINK_TLS_PORT
+              value: "0"
+            - name: ENABLE_BULLETPROOF_TX_MANAGER
+              value: "true"
+            - name: MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
+              value: "0"
+            - name: ALLOW_ORIGINS
+              value: "*"
+            - name: CHAINLINK_PORT
+              value: "6688"
+            - name: OCR_TRACE_LOGGING
+              value: "true"
+            - name: DATABASE_NAME
+              value: chainlink
+            - name: CHAINLINK_DEV
+              value: "true"
+            - name: EXPLORER_SECRET
+              value: ""
+            - name: KEEPER_REGISTRY_PERFORM_GAS_OVERHEAD
+              value: "1"
+            - name: ETH_DISABLED
+              value: "false"
+            - name: DEFAULT_HTTP_ALLOW_UNRESTRICTED_NETWORK_ACCESS
+              value: "true"
+            - name: SECURE_COOKIES
+              value: "false"
+            - name: KEEPER_DEFAULT_TRANSACTION_QUEUE_DEPTH
+              value: "1"
+            - name: CHAINLINK_PGPASSWORD
+              value: node
+            - name: P2P_LISTEN_PORT
+              value: "6690"
+            - name: P2P_LISTEN_IP
+              value: 0.0.0.0
+            - name: DATABASE_URL
+              value: postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable
+            - name: ETH_CHAIN_ID
+              value: "1337"
+            - name: JSON_CONSOLE
+              value: "false"
+            - name: KEEPER_REGISTRY_SYNC_INTERVAL
+              value: 5s
+          image: public.ecr.aws/z0b1w9r9/chainlink:develop.d2b337227bc5d4c4b6ee4f605017f205e01e5d16
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 6688
+            initialDelaySeconds: 20
+            periodSeconds: 5
+          name: node
+          ports:
+            - containerPort: 6688
+              name: access
+            - containerPort: 8899
+              name: p2p
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 6688
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: 200m
+              memory: 500Mi
+            requests:
+              cpu: 200m
+              memory: 500Mi
+          volumeMounts:
+            - mountPath: /etc/node-secrets-volume
+              name: chainlink-config-map
+      serviceAccountName: default
+      volumes:
+        - configMap:
+            name: chainlink-cm-4
+          name: chainlink-config-map
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sol
+  namespace: zclcdk-test-1
+spec:
+  ports:
+    - name: ws-rpc
+      port: 8900
+      targetPort: 8900
+    - name: http-rpc
+      port: 8899
+      targetPort: 8899
+  selector:
+    app: sol
+---
+apiVersion: v1
+kind: ConfigMap
+data:
+  config.yml: |-
+    json_rpc_url: http://0.0.0.0:8899
+    websocket_url: ws://0.0.0.0:8900
+    keypair_path: /root/.config/solana/cli/id.json
+    commitment: finalized
+  id.json: "[205,246,252,222,193,57,3,13,164,146,52,162,143,135,8,254,37,4,250,48,137,61,49,57,187,210,209,118,108,125,81,235,136,69,202,17,24,209,91,226,206,92,80,45,83,14,222,113,229,190,94,142,188,124,102,122,15,246,40,190,24,247,69,133]"
+metadata:
+  labels:
+    app: sol-cm
+  name: sol-cm
+  namespace: zclcdk-test-1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sol
+  namespace: zclcdk-test-1
+spec:
+  selector:
+    matchLabels:
+      app: sol
+  template:
+    metadata:
+      labels:
+        app: sol
+    spec:
+      containers:
+        - env: []
+          image: f4hrenh9it/sol-val:v1
+          imagePullPolicy: Always
+          name: sol-val
+          ports:
+            - containerPort: 8899
+              name: http-rpc
+            - containerPort: 8900
+              name: ws-rpc
+          resources:
+            limits:
+              cpu: 1600m
+              memory: 4000Mi
+            requests:
+              cpu: 800m
+              memory: 2000Mi
+          volumeMounts:
+            - mountPath: /root/.config/solana/cli
+              name: sol-cm
+      serviceAccountName: default
+      volumes:
+        - configMap:
+            name: sol-cm
+          name: sol-cm
