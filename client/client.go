@@ -100,7 +100,7 @@ type ManifestOutput interface {
 	SetNamespace(ns string)
 	GetNamespace() string
 	GetReadyCheckData() ReadyCheckData
-	PrintConnectionInfo(fwd *Forwarder) error
+	ProcessConnections(fwd *Forwarder) (map[string][]string, error)
 }
 
 // WaitForPodBySelectorRunning Wait up to timeout seconds for all pods in 'namespace' with given 'selector' to enter running state.

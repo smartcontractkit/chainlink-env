@@ -23,6 +23,8 @@ type Environment struct {
 	Cfg    *Config
 	Client *client.K8sClient
 	Fwd    *client.Forwarder
+	Out    client.ManifestOutput
+	URLs   map[string][]string
 }
 
 func New(cfg *Config) *Environment {
@@ -34,23 +36,27 @@ func New(cfg *Config) *Environment {
 	}
 }
 
-func (m *Environment) DeployOrConnect(app cdk8s.App, c client.ManifestOutput) error {
+func (m *Environment) DeployOrConnect(app cdk8s.App, out client.ManifestOutput) error {
 	ns := os.Getenv("ENV_NAMESPACE")
 	if !m.Client.NamespaceExists(ns) {
-		if err := m.Deploy(app, c); err != nil {
+		if err := m.Deploy(app, out); err != nil {
 			return err
 		}
 	} else {
 		log.Info().Str("Namespace", ns).Msg("Namespace found")
-		c.SetNamespace(ns)
+		out.SetNamespace(ns)
 	}
-	if err := m.Fwd.Connect(c.GetNamespace(), ""); err != nil {
+	if err := m.Fwd.Connect(out.GetNamespace(), ""); err != nil {
 		return err
 	}
 	log.Debug().Interface("Mapping", m.Fwd.Info).Msg("Ports mapping")
-	if err := c.PrintConnectionInfo(m.Fwd); err != nil {
+	var err error
+	m.URLs, err = out.ProcessConnections(m.Fwd)
+	if err != nil {
 		return err
 	}
+	m.Out = out
+	log.Warn().Interface("Connections", m.URLs).Send()
 	if m.Cfg.KeepConnection {
 		log.Info().Msg("Keeping forwarder connections, press Ctrl+C to interrupt")
 		if m.Cfg.RemoveOnInterrupt {
@@ -61,7 +67,7 @@ func (m *Environment) DeployOrConnect(app cdk8s.App, c client.ManifestOutput) er
 		<-ch
 		log.Warn().Msg("Interrupted")
 		if m.Cfg.RemoveOnInterrupt {
-			return m.Client.RemoveNamespace(c.GetNamespace())
+			return m.Client.RemoveNamespace(out.GetNamespace())
 		}
 	}
 	return nil

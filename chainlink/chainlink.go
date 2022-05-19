@@ -16,6 +16,10 @@ import (
 const (
 	AppName           = "chainlink-node"
 	NodeContainerName = "node"
+	GethURLsKey       = "geth"
+	NodesLocalURLsKey = "chainlink_local"
+	NodesInternalKey  = "chainlink_internal"
+	DBsInternalKey    = "chainlink_db"
 )
 
 var (
@@ -417,25 +421,46 @@ func (m *ManifestOutputData) GetReadyCheckData() client.ReadyCheckData {
 	return m.ReadyCheckData
 }
 
-func (m *ManifestOutputData) PrintConnectionInfo(fwd *client.Forwarder) error {
+func (m *ManifestOutputData) ProcessConnections(fwd *client.Forwarder) (map[string][]string, error) {
+	urlsByApp := make(map[string][]string)
 	geth, err := fwd.FindPort("geth:", "geth", "ws-rpc").As(client.LocalConnection, client.WS)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	pods, err := fwd.Client.ListPods(m.Namespace, fmt.Sprintf("app=%s", AppName))
 	if err != nil {
-		return err
+		return nil, err
 	}
+	urlsByApp[GethURLsKey] = append(urlsByApp[GethURLsKey], geth)
 	log.Info().Str("URL", geth).Msg("Geth network")
 	for i := 0; i < len(pods.Items); i++ {
 		n, err := fwd.FindPort(fmt.Sprintf("%s:%d", AppName, i), "node", "access").
 			As(client.LocalConnection, client.HTTP)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		log.Info().Int("Node", i).Str("URL", n).Msg("Connection info")
+		urlsByApp[NodesLocalURLsKey] = append(urlsByApp[NodesLocalURLsKey], n)
+		log.Info().Int("Node", i).Str("URL", n).Msg("Local connection")
 	}
-	return nil
+	for i := 0; i < len(pods.Items); i++ {
+		n, err := fwd.FindPort(fmt.Sprintf("%s:%d", AppName, i), "node", "access").
+			As(client.RemoteConnection, client.HTTP)
+		if err != nil {
+			return nil, err
+		}
+		urlsByApp[NodesInternalKey] = append(urlsByApp[NodesInternalKey], n)
+		log.Info().Int("Node", i).Str("URL", n).Msg("Remote (in cluster) connection")
+	}
+	for i := 0; i < len(pods.Items); i++ {
+		n, err := fwd.FindPort(fmt.Sprintf("%s:%d", AppName, i), "chainlink-db", "postgres").
+			As(client.LocalConnection, client.HTTP)
+		if err != nil {
+			return nil, err
+		}
+		urlsByApp[DBsInternalKey] = append(urlsByApp[DBsInternalKey], n)
+		log.Info().Int("Node", i).Str("URL", n).Msg("DB local Connection")
+	}
+	return urlsByApp, nil
 }
 
 // Manifest root manifest creation function

@@ -22,8 +22,7 @@ func main() {
 						Env: &chainlink.NodeEnvVars{
 							KeeperRegistrySyncInterval: "10s",
 						},
-						Instances:   3,
-						Persistence: chainlink.PersistenceProps{Capacity: "3Gi"},
+						Instances: 2,
 					},
 				},
 			}))
