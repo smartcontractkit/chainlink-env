@@ -123,6 +123,7 @@ func (j *jsiiProxy_NetworkChaos) Node() constructs.Node {
 	return returns
 }
 
+
 // Defines a "NetworkChaos" API object.
 func NewNetworkChaos(scope constructs.Construct, id *string, props *NetworkChaosProps) NetworkChaos {
 	_init_.Initialize()
@@ -285,7 +286,7 @@ func (n *jsiiProxy_NetworkChaos) ToString() *string {
 // NetworkChaos is the Schema for the networkchaos API.
 type NetworkChaosProps struct {
 	// Spec defines the behavior of a pod chaos experiment.
-	Spec     *NetworkChaosSpec        `field:"required" json:"spec" yaml:"spec"`
+	Spec *NetworkChaosSpec `field:"required" json:"spec" yaml:"spec"`
 	Metadata *cdk8s.ApiObjectMetadata `field:"optional" json:"metadata" yaml:"metadata"`
 }
 
@@ -369,24 +370,24 @@ type NetworkChaosSpecBandwidth struct {
 
 // Corrupt represents the detail about corrupt action.
 type NetworkChaosSpecCorrupt struct {
-	Corrupt     *string `field:"required" json:"corrupt" yaml:"corrupt"`
+	Corrupt *string `field:"required" json:"corrupt" yaml:"corrupt"`
 	Correlation *string `field:"optional" json:"correlation" yaml:"correlation"`
 }
 
 // Delay represents the detail about delay action.
 type NetworkChaosSpecDelay struct {
-	Latency     *string `field:"required" json:"latency" yaml:"latency"`
+	Latency *string `field:"required" json:"latency" yaml:"latency"`
 	Correlation *string `field:"optional" json:"correlation" yaml:"correlation"`
-	Jitter      *string `field:"optional" json:"jitter" yaml:"jitter"`
+	Jitter *string `field:"optional" json:"jitter" yaml:"jitter"`
 	// ReorderSpec defines details of packet reorder.
 	Reorder *NetworkChaosSpecDelayReorder `field:"optional" json:"reorder" yaml:"reorder"`
 }
 
 // ReorderSpec defines details of packet reorder.
 type NetworkChaosSpecDelayReorder struct {
-	Gap         *float64 `field:"required" json:"gap" yaml:"gap"`
-	Reorder     *string  `field:"required" json:"reorder" yaml:"reorder"`
-	Correlation *string  `field:"optional" json:"correlation" yaml:"correlation"`
+	Gap *float64 `field:"required" json:"gap" yaml:"gap"`
+	Reorder *string `field:"required" json:"reorder" yaml:"reorder"`
+	Correlation *string `field:"optional" json:"correlation" yaml:"correlation"`
 }
 
 // Direction represents the direction, this applies on netem and network partition action.
@@ -398,19 +399,19 @@ const (
 	// from.
 	NetworkChaosSpecDirection_FROM NetworkChaosSpecDirection = "FROM"
 	// both.
-	NetworkChaosSpecDirection_BOTH   NetworkChaosSpecDirection = "BOTH"
+	NetworkChaosSpecDirection_BOTH NetworkChaosSpecDirection = "BOTH"
 	NetworkChaosSpecDirection_VALUE_ NetworkChaosSpecDirection = "VALUE_"
 )
 
 // DuplicateSpec represents the detail about loss action.
 type NetworkChaosSpecDuplicate struct {
-	Duplicate   *string `field:"required" json:"duplicate" yaml:"duplicate"`
+	Duplicate *string `field:"required" json:"duplicate" yaml:"duplicate"`
 	Correlation *string `field:"optional" json:"correlation" yaml:"correlation"`
 }
 
 // Loss represents the detail about loss action.
 type NetworkChaosSpecLoss struct {
-	Loss        *string `field:"required" json:"loss" yaml:"loss"`
+	Loss *string `field:"required" json:"loss" yaml:"loss"`
 	Correlation *string `field:"optional" json:"correlation" yaml:"correlation"`
 }
 
@@ -563,3 +564,4 @@ type NetworkChaosSpecTargetSelectorExpressionSelectors struct {
 	// If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 	Values *[]*string `field:"optional" json:"values" yaml:"values"`
 }
+

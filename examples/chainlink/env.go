@@ -13,8 +13,12 @@ func main() {
 	}).DeployOrConnect(
 		chainlink.NewChart(
 			&chainlink.Props{
-				Namespace:  "zclcdk-deployment",
-				ChainProps: []interface{}{ethereum.DefaultDevProps()},
+				Namespace: "zclcdk-deployment",
+				ChainProps: []interface{}{
+					&ethereum.Props{
+						DevPeriod: "5",
+					},
+				},
 				AppVersions: []chainlink.VersionProps{
 					{
 						Image:     "public.ecr.aws/chainlink/chainlink",

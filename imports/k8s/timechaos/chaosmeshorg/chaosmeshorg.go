@@ -123,6 +123,7 @@ func (j *jsiiProxy_TimeChaos) Node() constructs.Node {
 	return returns
 }
 
+
 // Defines a "TimeChaos" API object.
 func NewTimeChaos(scope constructs.Construct, id *string, props *TimeChaosProps) TimeChaos {
 	_init_.Initialize()
@@ -285,7 +286,7 @@ func (t *jsiiProxy_TimeChaos) ToString() *string {
 // TimeChaos is the Schema for the timechaos API.
 type TimeChaosProps struct {
 	// Spec defines the behavior of a time chaos experiment.
-	Spec     *TimeChaosSpec           `field:"required" json:"spec" yaml:"spec"`
+	Spec *TimeChaosSpec `field:"required" json:"spec" yaml:"spec"`
 	Metadata *cdk8s.ApiObjectMetadata `field:"optional" json:"metadata" yaml:"metadata"`
 }
 
@@ -382,3 +383,4 @@ type TimeChaosSpecSelectorExpressionSelectors struct {
 	// If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 	Values *[]*string `field:"optional" json:"values" yaml:"values"`
 }
+

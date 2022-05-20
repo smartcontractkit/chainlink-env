@@ -16,11 +16,15 @@ install:
 	curl -LO https://dl.k8s.io/release/v1.24.0/bin/darwin/amd64/kubectl
 	chmod +x ./kubectl
 	mv kubectl ./bin
-	brew install cdk8s
+	brew install cdk8s@1.1.1
 	cdk8s import
 
 .PHONY: test
 test:
+	go test ./...
+
+.PHONY: examples
+examples:
 	go run cmd/test.go
 
 .PHONY: chaosmesh

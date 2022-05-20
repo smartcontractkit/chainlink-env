@@ -123,6 +123,7 @@ func (j *jsiiProxy_PodChaos) Node() constructs.Node {
 	return returns
 }
 
+
 // Defines a "PodChaos" API object.
 func NewPodChaos(scope constructs.Construct, id *string, props *PodChaosProps) PodChaos {
 	_init_.Initialize()
@@ -285,7 +286,7 @@ func (p *jsiiProxy_PodChaos) ToString() *string {
 // PodChaos is the control script`s spec.
 type PodChaosProps struct {
 	// Spec defines the behavior of a pod chaos experiment.
-	Spec     *PodChaosSpec            `field:"required" json:"spec" yaml:"spec"`
+	Spec *PodChaosSpec `field:"required" json:"spec" yaml:"spec"`
 	Metadata *cdk8s.ApiObjectMetadata `field:"optional" json:"metadata" yaml:"metadata"`
 }
 
@@ -400,3 +401,4 @@ type PodChaosSpecSelectorExpressionSelectors struct {
 	// If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 	Values *[]*string `field:"optional" json:"values" yaml:"values"`
 }
+

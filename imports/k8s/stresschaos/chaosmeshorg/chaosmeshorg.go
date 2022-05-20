@@ -123,6 +123,7 @@ func (j *jsiiProxy_StressChaos) Node() constructs.Node {
 	return returns
 }
 
+
 // Defines a "StressChaos" API object.
 func NewStressChaos(scope constructs.Construct, id *string, props *StressChaosProps) StressChaos {
 	_init_.Initialize()
@@ -285,7 +286,7 @@ func (s *jsiiProxy_StressChaos) ToString() *string {
 // StressChaos is the Schema for the stresschaos API.
 type StressChaosProps struct {
 	// Spec defines the behavior of a time chaos experiment.
-	Spec     *StressChaosSpec         `field:"required" json:"spec" yaml:"spec"`
+	Spec *StressChaosSpec `field:"required" json:"spec" yaml:"spec"`
 	Metadata *cdk8s.ApiObjectMetadata `field:"optional" json:"metadata" yaml:"metadata"`
 }
 
@@ -422,3 +423,4 @@ type StressChaosSpecStressorsMemory struct {
 	// One can specify the size as % of total available memory or in units of B, KB/KiB, MB/MiB, GB/GiB, TB/TiB.
 	Size *string `field:"optional" json:"size" yaml:"size"`
 }
+

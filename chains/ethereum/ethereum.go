@@ -4,37 +4,38 @@ import (
 	"fmt"
 	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	a "github.com/smartcontractkit/chainlink-env/alias"
+	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
 )
 
 type Props struct {
-	DevPeriod int
-	GasPrice  int
-	GasTarget int
+	DevPeriod string `envconfig:"DEV_PERIOD"`
+	GasPrice  string `envconfig:"GAS_PRICE"`
+	GasTarget string `envconfig:"GAS_TARGET"`
 }
 
-func DefaultDevProps() *Props {
+func defaultDevChainProps() *Props {
 	return &Props{
-		DevPeriod: 1,
-		GasPrice:  10000000000,
-		GasTarget: 80000000000,
+		DevPeriod: "1",
+		GasPrice:  "10000000000",
+		GasTarget: "80000000000",
 	}
 }
 
-// internalChartVars some shared labels/selectors and names that must match in resources
-type internalChartVars struct {
+// chartData some shared labels/selectors and names that must match in resources
+type chartData struct {
 	Labels        *map[string]*string
 	BaseName      string
 	ConfigMapName string
 	Props         *Props
 }
 
-func configMap(chart cdk8s.Chart, shared internalChartVars) {
-	k8s.NewKubeConfigMap(chart, a.Str(shared.ConfigMapName), &k8s.KubeConfigMapProps{
+func configMap(chart cdk8s.Chart, data chartData) {
+	k8s.NewKubeConfigMap(chart, a.Str(data.ConfigMapName), &k8s.KubeConfigMapProps{
 		Metadata: &k8s.ObjectMeta{
-			Name: a.Str(shared.ConfigMapName),
+			Name: a.Str(data.ConfigMapName),
 			Labels: &map[string]*string{
-				"app": a.Str(shared.ConfigMapName),
+				"app": a.Str(data.ConfigMapName),
 			},
 		},
 		Data: &map[string]*string{
@@ -90,10 +91,10 @@ geth "$@"`),
 	})
 }
 
-func service(chart cdk8s.Chart, shared internalChartVars) {
-	k8s.NewKubeService(chart, a.Str(fmt.Sprintf("%s-service", shared.BaseName)), &k8s.KubeServiceProps{
+func service(chart cdk8s.Chart, data chartData) {
+	k8s.NewKubeService(chart, a.Str(fmt.Sprintf("%s-service", data.BaseName)), &k8s.KubeServiceProps{
 		Metadata: &k8s.ObjectMeta{
-			Name: a.Str(shared.BaseName),
+			Name: a.Str(data.BaseName),
 		},
 		Spec: &k8s.ServiceSpec{
 			Ports: &[]*k8s.ServicePort{
@@ -107,12 +108,12 @@ func service(chart cdk8s.Chart, shared internalChartVars) {
 					Port:       a.Num(8544),
 					TargetPort: k8s.IntOrString_FromNumber(a.Num(8544)),
 				}},
-			Selector: shared.Labels,
+			Selector: data.Labels,
 		},
 	})
 }
 
-func deployment(chart cdk8s.Chart, shared internalChartVars) {
+func deployment(chart cdk8s.Chart, shared chartData) {
 	k8s.NewKubeDeployment(
 		chart,
 		a.Str(fmt.Sprintf("%s-deployment", shared.BaseName)),
@@ -147,9 +148,11 @@ func deployment(chart cdk8s.Chart, shared internalChartVars) {
 		})
 }
 
-func container(shared internalChartVars) *k8s.Container {
+func container(data chartData) *k8s.Container {
+	props := defaultDevChainProps()
+	config.MustEnvCodeOverrideStruct("", props, data.Props)
 	return &k8s.Container{
-		Name:            a.Str(shared.BaseName),
+		Name:            a.Str(data.BaseName),
 		Image:           a.Str(fmt.Sprintf("%s:%s", "ethereum/client-go", "v1.10.17")),
 		ImagePullPolicy: a.Str("Always"),
 		Command: &[]*string{
@@ -183,32 +186,32 @@ func container(shared internalChartVars) *k8s.Container {
 			a.Str("--networkid=1337"),
 			a.Str("--rpc.txfeecap=0"),
 
-			a.Str(fmt.Sprintf("--dev.period=%d", shared.Props.DevPeriod)),
-			a.Str(fmt.Sprintf("--miner.gasprice=%d", shared.Props.GasPrice)),
-			a.Str(fmt.Sprintf("--miner.gastarget=%d", shared.Props.GasTarget)),
+			a.Str(fmt.Sprintf("--dev.period=%s", props.DevPeriod)),
+			a.Str(fmt.Sprintf("--miner.gasprice=%s", props.GasPrice)),
+			a.Str(fmt.Sprintf("--miner.gastarget=%s", props.GasTarget)),
 		},
 		VolumeMounts: &[]*k8s.VolumeMount{
 			{
-				Name:      a.Str(shared.ConfigMapName),
+				Name:      a.Str(data.ConfigMapName),
 				MountPath: a.Str("/root/init.sh"),
 				SubPath:   a.Str("init.sh"),
 			},
 			{
-				Name:      a.Str(shared.ConfigMapName),
+				Name:      a.Str(data.ConfigMapName),
 				MountPath: a.Str("/root/config"),
 			},
 			{
-				Name:      a.Str(shared.ConfigMapName),
+				Name:      a.Str(data.ConfigMapName),
 				MountPath: a.Str("/root/.ethereum/devchain/keystore/key1"),
 				SubPath:   a.Str("key1"),
 			},
 			{
-				Name:      a.Str(shared.ConfigMapName),
+				Name:      a.Str(data.ConfigMapName),
 				MountPath: a.Str("/root/.ethereum/devchain/keystore/key2"),
 				SubPath:   a.Str("key2"),
 			},
 			{
-				Name:      a.Str(shared.ConfigMapName),
+				Name:      a.Str(data.ConfigMapName),
 				MountPath: a.Str("/root/.ethereum/devchain/keystore/key3"),
 				SubPath:   a.Str("key3"),
 			},
@@ -223,13 +226,12 @@ func container(shared internalChartVars) *k8s.Container {
 				ContainerPort: a.Num(8546),
 			},
 		},
-		Env:       &[]*k8s.EnvVar{},
 		Resources: a.ContainerResources("200m", "528Mi", "200m", "528Mi"),
 	}
 }
 
 func NewEthereum(chart cdk8s.Chart, props *Props) cdk8s.Chart {
-	s := internalChartVars{
+	s := chartData{
 		Labels: &map[string]*string{
 			"app": a.Str("geth"),
 		},

@@ -123,6 +123,7 @@ func (j *jsiiProxy_HttpChaos) Node() constructs.Node {
 	return returns
 }
 
+
 // Defines a "HTTPChaos" API object.
 func NewHttpChaos(scope constructs.Construct, id *string, props *HttpChaosProps) HttpChaos {
 	_init_.Initialize()
@@ -285,7 +286,7 @@ func (h *jsiiProxy_HttpChaos) ToString() *string {
 // HTTPChaos is the Schema for the HTTPchaos API.
 type HttpChaosProps struct {
 	Metadata *cdk8s.ApiObjectMetadata `field:"optional" json:"metadata" yaml:"metadata"`
-	Spec     *HttpChaosSpec           `field:"optional" json:"spec" yaml:"spec"`
+	Spec *HttpChaosSpec `field:"optional" json:"spec" yaml:"spec"`
 }
 
 type HttpChaosSpec struct {
@@ -450,3 +451,4 @@ const (
 	// Response.
 	HttpChaosSpecTarget_RESPONSE HttpChaosSpecTarget = "RESPONSE"
 )
+

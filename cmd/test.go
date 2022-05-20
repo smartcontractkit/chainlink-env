@@ -46,8 +46,10 @@ func main() {
 		"chainlink-ocr-cluster-multiver.k8s.yaml",
 		chainlink.NewChart,
 		&chainlink.Props{
-			Namespace:  ns,
-			ChainProps: []interface{}{ethereum.DefaultDevProps()},
+			Namespace: ns,
+			ChainProps: []interface{}{
+				&ethereum.Props{},
+			},
 			AppVersions: []chainlink.VersionProps{
 				{
 					Image:     "public.ecr.aws/z0b1w9r9/chainlink",
@@ -68,8 +70,10 @@ func main() {
 		"chainlink-ocr-cluster.k8s.yaml",
 		chainlink.NewChart,
 		&chainlink.Props{
-			Namespace:  ns,
-			ChainProps: []interface{}{ethereum.DefaultDevProps()},
+			Namespace: ns,
+			ChainProps: []interface{}{
+				&ethereum.Props{},
+			},
 			AppVersions: []chainlink.VersionProps{
 				{
 					Image:     "public.ecr.aws/z0b1w9r9/chainlink",
@@ -85,8 +89,10 @@ func main() {
 		"chainlink-ocr-cluster-persistence.k8s.yaml",
 		chainlink.NewChart,
 		&chainlink.Props{
-			Namespace:  ns,
-			ChainProps: []interface{}{ethereum.DefaultDevProps()},
+			Namespace: ns,
+			ChainProps: []interface{}{
+				&ethereum.Props{},
+			},
 			AppVersions: []chainlink.VersionProps{
 				{
 					Image:       "public.ecr.aws/z0b1w9r9/chainlink",
@@ -113,7 +119,9 @@ func main() {
 				TestBinarySize:     100,
 				AccessPort:         8080,
 			},
-			ChainProps: []interface{}{ethereum.DefaultDevProps()},
+			ChainProps: []interface{}{
+				&ethereum.Props{},
+			},
 			AppVersions: []chainlink.VersionProps{
 				{
 					Image:       "public.ecr.aws/z0b1w9r9/chainlink",

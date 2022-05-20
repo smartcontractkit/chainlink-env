@@ -123,6 +123,7 @@ func (j *jsiiProxy_PodIoChaos) Node() constructs.Node {
 	return returns
 }
 
+
 // Defines a "PodIOChaos" API object.
 func NewPodIoChaos(scope constructs.Construct, id *string, props *PodIoChaosProps) PodIoChaos {
 	_init_.Initialize()
@@ -310,14 +311,14 @@ type PodIoChaosSpecActions struct {
 	// IOChaosType represents the type of an IOChaos Action.
 	Type *string `field:"required" json:"type" yaml:"type"`
 	// Timespec represents a time.
-	Atime  *PodIoChaosSpecActionsAtime `field:"optional" json:"atime" yaml:"atime"`
-	Blocks *float64                    `field:"optional" json:"blocks" yaml:"blocks"`
+	Atime *PodIoChaosSpecActionsAtime `field:"optional" json:"atime" yaml:"atime"`
+	Blocks *float64 `field:"optional" json:"blocks" yaml:"blocks"`
 	// Timespec represents a time.
 	Ctime *PodIoChaosSpecActionsCtime `field:"optional" json:"ctime" yaml:"ctime"`
 	// Faults represents the fault to inject.
 	Faults *[]*PodIoChaosSpecActionsFaults `field:"optional" json:"faults" yaml:"faults"`
-	Gid    *float64                        `field:"optional" json:"gid" yaml:"gid"`
-	Ino    *float64                        `field:"optional" json:"ino" yaml:"ino"`
+	Gid *float64 `field:"optional" json:"gid" yaml:"gid"`
+	Ino *float64 `field:"optional" json:"ino" yaml:"ino"`
 	// FileType represents type of a file.
 	Kind *string `field:"optional" json:"kind" yaml:"kind"`
 	// Latency represents the latency to inject.
@@ -328,30 +329,30 @@ type PodIoChaosSpecActions struct {
 	Mistake *PodIoChaosSpecActionsMistake `field:"optional" json:"mistake" yaml:"mistake"`
 	// Timespec represents a time.
 	Mtime *PodIoChaosSpecActionsMtime `field:"optional" json:"mtime" yaml:"mtime"`
-	Nlink *float64                    `field:"optional" json:"nlink" yaml:"nlink"`
-	Perm  *float64                    `field:"optional" json:"perm" yaml:"perm"`
-	Rdev  *float64                    `field:"optional" json:"rdev" yaml:"rdev"`
-	Size  *float64                    `field:"optional" json:"size" yaml:"size"`
+	Nlink *float64 `field:"optional" json:"nlink" yaml:"nlink"`
+	Perm *float64 `field:"optional" json:"perm" yaml:"perm"`
+	Rdev *float64 `field:"optional" json:"rdev" yaml:"rdev"`
+	Size *float64 `field:"optional" json:"size" yaml:"size"`
 	// Source represents the source of current rules.
-	Source *string  `field:"optional" json:"source" yaml:"source"`
-	Uid    *float64 `field:"optional" json:"uid" yaml:"uid"`
+	Source *string `field:"optional" json:"source" yaml:"source"`
+	Uid *float64 `field:"optional" json:"uid" yaml:"uid"`
 }
 
 // Timespec represents a time.
 type PodIoChaosSpecActionsAtime struct {
 	Nsec *float64 `field:"required" json:"nsec" yaml:"nsec"`
-	Sec  *float64 `field:"required" json:"sec" yaml:"sec"`
+	Sec *float64 `field:"required" json:"sec" yaml:"sec"`
 }
 
 // Timespec represents a time.
 type PodIoChaosSpecActionsCtime struct {
 	Nsec *float64 `field:"required" json:"nsec" yaml:"nsec"`
-	Sec  *float64 `field:"required" json:"sec" yaml:"sec"`
+	Sec *float64 `field:"required" json:"sec" yaml:"sec"`
 }
 
 // IoFault represents the fault to inject and their weight.
 type PodIoChaosSpecActionsFaults struct {
-	Errno  *float64 `field:"required" json:"errno" yaml:"errno"`
+	Errno *float64 `field:"required" json:"errno" yaml:"errno"`
 	Weight *float64 `field:"required" json:"weight" yaml:"weight"`
 }
 
@@ -378,5 +379,6 @@ const (
 // Timespec represents a time.
 type PodIoChaosSpecActionsMtime struct {
 	Nsec *float64 `field:"required" json:"nsec" yaml:"nsec"`
-	Sec  *float64 `field:"required" json:"sec" yaml:"sec"`
+	Sec *float64 `field:"required" json:"sec" yaml:"sec"`
 }
+

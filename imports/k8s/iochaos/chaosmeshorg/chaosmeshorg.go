@@ -123,6 +123,7 @@ func (j *jsiiProxy_IoChaos) Node() constructs.Node {
 	return returns
 }
 
+
 // Defines a "IOChaos" API object.
 func NewIoChaos(scope constructs.Construct, id *string, props *IoChaosProps) IoChaos {
 	_init_.Initialize()
@@ -358,39 +359,39 @@ const (
 // Attr defines the overrided attribution.
 type IoChaosSpecAttr struct {
 	// Timespec represents a time.
-	Atime  *IoChaosSpecAttrAtime `field:"optional" json:"atime" yaml:"atime"`
-	Blocks *float64              `field:"optional" json:"blocks" yaml:"blocks"`
+	Atime *IoChaosSpecAttrAtime `field:"optional" json:"atime" yaml:"atime"`
+	Blocks *float64 `field:"optional" json:"blocks" yaml:"blocks"`
 	// Timespec represents a time.
 	Ctime *IoChaosSpecAttrCtime `field:"optional" json:"ctime" yaml:"ctime"`
-	Gid   *float64              `field:"optional" json:"gid" yaml:"gid"`
-	Ino   *float64              `field:"optional" json:"ino" yaml:"ino"`
+	Gid *float64 `field:"optional" json:"gid" yaml:"gid"`
+	Ino *float64 `field:"optional" json:"ino" yaml:"ino"`
 	// FileType represents type of a file.
 	Kind *string `field:"optional" json:"kind" yaml:"kind"`
 	// Timespec represents a time.
 	Mtime *IoChaosSpecAttrMtime `field:"optional" json:"mtime" yaml:"mtime"`
-	Nlink *float64              `field:"optional" json:"nlink" yaml:"nlink"`
-	Perm  *float64              `field:"optional" json:"perm" yaml:"perm"`
-	Rdev  *float64              `field:"optional" json:"rdev" yaml:"rdev"`
-	Size  *float64              `field:"optional" json:"size" yaml:"size"`
-	Uid   *float64              `field:"optional" json:"uid" yaml:"uid"`
+	Nlink *float64 `field:"optional" json:"nlink" yaml:"nlink"`
+	Perm *float64 `field:"optional" json:"perm" yaml:"perm"`
+	Rdev *float64 `field:"optional" json:"rdev" yaml:"rdev"`
+	Size *float64 `field:"optional" json:"size" yaml:"size"`
+	Uid *float64 `field:"optional" json:"uid" yaml:"uid"`
 }
 
 // Timespec represents a time.
 type IoChaosSpecAttrAtime struct {
 	Nsec *float64 `field:"required" json:"nsec" yaml:"nsec"`
-	Sec  *float64 `field:"required" json:"sec" yaml:"sec"`
+	Sec *float64 `field:"required" json:"sec" yaml:"sec"`
 }
 
 // Timespec represents a time.
 type IoChaosSpecAttrCtime struct {
 	Nsec *float64 `field:"required" json:"nsec" yaml:"nsec"`
-	Sec  *float64 `field:"required" json:"sec" yaml:"sec"`
+	Sec *float64 `field:"required" json:"sec" yaml:"sec"`
 }
 
 // Timespec represents a time.
 type IoChaosSpecAttrMtime struct {
 	Nsec *float64 `field:"required" json:"nsec" yaml:"nsec"`
-	Sec  *float64 `field:"required" json:"sec" yaml:"sec"`
+	Sec *float64 `field:"required" json:"sec" yaml:"sec"`
 }
 
 // Mistake defines what types of incorrectness are injected to IO operations.
@@ -480,3 +481,4 @@ type IoChaosSpecSelectorExpressionSelectors struct {
 	// If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 	Values *[]*string `field:"optional" json:"values" yaml:"values"`
 }
+

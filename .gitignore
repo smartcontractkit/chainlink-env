@@ -2,8 +2,5 @@ cmd/chaos
 bin/
 # temp manifest for deployment and validation
 tmp-manifest.yaml
-# tars and version of cdk8s imports ( version is empty for now )
-imports/k8s/**/*.tgz
-imports/k8s/**/version
 # remote runner binary
 remote.test

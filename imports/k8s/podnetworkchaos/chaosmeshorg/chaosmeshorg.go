@@ -123,6 +123,7 @@ func (j *jsiiProxy_PodNetworkChaos) Node() constructs.Node {
 	return returns
 }
 
+
 // Defines a "PodNetworkChaos" API object.
 func NewPodNetworkChaos(scope constructs.Construct, id *string, props *PodNetworkChaosProps) PodNetworkChaos {
 	_init_.Initialize()
@@ -285,7 +286,7 @@ func (p *jsiiProxy_PodNetworkChaos) ToString() *string {
 // PodNetworkChaos is the Schema for the PodNetworkChaos API.
 type PodNetworkChaosProps struct {
 	// Spec defines the behavior of a pod chaos experiment.
-	Spec     *PodNetworkChaosSpec     `field:"required" json:"spec" yaml:"spec"`
+	Spec *PodNetworkChaosSpec `field:"required" json:"spec" yaml:"spec"`
 	Metadata *cdk8s.ApiObjectMetadata `field:"optional" json:"metadata" yaml:"metadata"`
 }
 
@@ -304,7 +305,7 @@ type PodNetworkChaosSpecIpsets struct {
 	// The contents of ipset.
 	Cidrs *[]*string `field:"required" json:"cidrs" yaml:"cidrs"`
 	// The name of ipset.
-	Name   *string `field:"required" json:"name" yaml:"name"`
+	Name *string `field:"required" json:"name" yaml:"name"`
 	Source *string `field:"required" json:"source" yaml:"source"`
 }
 
@@ -313,7 +314,7 @@ type PodNetworkChaosSpecIptables struct {
 	// The block direction of this iptables rule.
 	Direction *string `field:"required" json:"direction" yaml:"direction"`
 	// The name of iptables chain.
-	Name   *string `field:"required" json:"name" yaml:"name"`
+	Name *string `field:"required" json:"name" yaml:"name"`
 	Source *string `field:"required" json:"source" yaml:"source"`
 	// The name of related ipset.
 	Ipsets *[]*string `field:"optional" json:"ipsets" yaml:"ipsets"`
@@ -361,34 +362,35 @@ type PodNetworkChaosSpecTcsBandwidth struct {
 
 // Corrupt represents the detail about corrupt action.
 type PodNetworkChaosSpecTcsCorrupt struct {
-	Corrupt     *string `field:"required" json:"corrupt" yaml:"corrupt"`
+	Corrupt *string `field:"required" json:"corrupt" yaml:"corrupt"`
 	Correlation *string `field:"optional" json:"correlation" yaml:"correlation"`
 }
 
 // Delay represents the detail about delay action.
 type PodNetworkChaosSpecTcsDelay struct {
-	Latency     *string `field:"required" json:"latency" yaml:"latency"`
+	Latency *string `field:"required" json:"latency" yaml:"latency"`
 	Correlation *string `field:"optional" json:"correlation" yaml:"correlation"`
-	Jitter      *string `field:"optional" json:"jitter" yaml:"jitter"`
+	Jitter *string `field:"optional" json:"jitter" yaml:"jitter"`
 	// ReorderSpec defines details of packet reorder.
 	Reorder *PodNetworkChaosSpecTcsDelayReorder `field:"optional" json:"reorder" yaml:"reorder"`
 }
 
 // ReorderSpec defines details of packet reorder.
 type PodNetworkChaosSpecTcsDelayReorder struct {
-	Gap         *float64 `field:"required" json:"gap" yaml:"gap"`
-	Reorder     *string  `field:"required" json:"reorder" yaml:"reorder"`
-	Correlation *string  `field:"optional" json:"correlation" yaml:"correlation"`
+	Gap *float64 `field:"required" json:"gap" yaml:"gap"`
+	Reorder *string `field:"required" json:"reorder" yaml:"reorder"`
+	Correlation *string `field:"optional" json:"correlation" yaml:"correlation"`
 }
 
 // DuplicateSpec represents the detail about loss action.
 type PodNetworkChaosSpecTcsDuplicate struct {
-	Duplicate   *string `field:"required" json:"duplicate" yaml:"duplicate"`
+	Duplicate *string `field:"required" json:"duplicate" yaml:"duplicate"`
 	Correlation *string `field:"optional" json:"correlation" yaml:"correlation"`
 }
 
 // Loss represents the detail about loss action.
 type PodNetworkChaosSpecTcsLoss struct {
-	Loss        *string `field:"required" json:"loss" yaml:"loss"`
+	Loss *string `field:"required" json:"loss" yaml:"loss"`
 	Correlation *string `field:"optional" json:"correlation" yaml:"correlation"`
 }
+
