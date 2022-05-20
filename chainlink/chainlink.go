@@ -75,6 +75,8 @@ func chains(chart cdk8s.Chart, chains []interface{}) {
 			ethereum.NewEthereum(chart, c.(*ethereum.Props))
 		case *solana.Props:
 			solana.NewSolana(chart, c.(*solana.Props))
+		default:
+			log.Fatal().Msg("no chain props found, provide one of a supported chain props")
 		}
 	}
 }
@@ -470,7 +472,7 @@ func (m *ManifestOutputData) ProcessConnections(fwd *client.Forwarder) (map[stri
 	return urlsByApp, nil
 }
 
-func mockserver(chart cdk8s.Chart, props *Props) {
+func mockserver(chart cdk8s.Chart, _ *Props) {
 	ms.NewChart(chart, &ms.Props{})
 }
 
