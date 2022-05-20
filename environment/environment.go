@@ -28,6 +28,7 @@ type Environment struct {
 	URLs      map[string][]string
 }
 
+// New creates new environment
 func New(cfg *Config) *Environment {
 	c := client.NewK8sClient()
 	e := &Environment{
@@ -38,6 +39,7 @@ func New(cfg *Config) *Environment {
 	return e
 }
 
+// DeployOrConnect deploys or connects to already created environment
 func (m *Environment) DeployOrConnect(app cdk8s.App, out client.ManifestOutput) error {
 	ns := os.Getenv("ENV_NAMESPACE")
 	if !m.Client.NamespaceExists(ns) {
@@ -60,7 +62,7 @@ func (m *Environment) DeployOrConnect(app cdk8s.App, out client.ManifestOutput) 
 	m.Out = out
 	a, err := NewArtifacts(m)
 	if err != nil {
-		log.Fatal().Err(err).Send()
+		log.Fatal().Err(err).Msg("failed to create artifacts client")
 	}
 	m.Artifacts = a
 	if m.Cfg.KeepConnection {
@@ -79,6 +81,7 @@ func (m *Environment) DeployOrConnect(app cdk8s.App, out client.ManifestOutput) 
 	return nil
 }
 
+// Deploy deploy synthesized manifest and check logs for readiness
 func (m *Environment) Deploy(app cdk8s.App, c client.ManifestOutput) error {
 	manifest := app.SynthYaml().(string)
 	if err := m.Client.Create(manifest); err != nil {
@@ -87,6 +90,7 @@ func (m *Environment) Deploy(app cdk8s.App, c client.ManifestOutput) error {
 	return m.Client.CheckReady(c)
 }
 
+// Shutdown shutdown environment, remove namespace
 func (m *Environment) Shutdown() error {
 	return m.Client.RemoveNamespace(m.Out.GetNamespace())
 }

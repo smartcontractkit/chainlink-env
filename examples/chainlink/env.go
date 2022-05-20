@@ -16,14 +16,14 @@ func main() {
 				Namespace: "zclcdk-deployment",
 				ChainProps: []interface{}{
 					&ethereum.Props{
-						DevPeriod: "5",
+						DevPeriod: "1",
 					},
 				},
 				AppVersions: []chainlink.VersionProps{
 					{
 						Image:     "public.ecr.aws/chainlink/chainlink",
 						Tag:       "1.4.1-root",
-						Instances: 2,
+						Instances: 5,
 					},
 				},
 			}))
