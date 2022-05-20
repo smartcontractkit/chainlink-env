@@ -27,6 +27,7 @@ import (
 
 const (
 	TempDebugManifest = "tmp-manifest.yaml"
+	LogPollInterval   = 2 * time.Second
 )
 
 // K8sClient high level k8s client
@@ -35,6 +36,7 @@ type K8sClient struct {
 	RESTConfig *rest.Config
 }
 
+// GetLocalK8sDeps get local k8s context config
 func GetLocalK8sDeps() (*kubernetes.Clientset, *rest.Config, error) {
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, &clientcmd.ConfigOverrides{})
@@ -49,6 +51,7 @@ func GetLocalK8sDeps() (*kubernetes.Clientset, *rest.Config, error) {
 	return k8sClient, k8sConfig, nil
 }
 
+// NewK8sClient creates a new k8s client with a REST config
 func NewK8sClient() *K8sClient {
 	cs, cfg, err := GetLocalK8sDeps()
 	if err != nil {
@@ -60,6 +63,7 @@ func NewK8sClient() *K8sClient {
 	}
 }
 
+// ListPods lists pods for a namespace and selector
 func (m *K8sClient) ListPods(namespace, selector string) (*v1.PodList, error) {
 	listOptions := metaV1.ListOptions{LabelSelector: selector}
 	podList, err := m.ClientSet.CoreV1().Pods(namespace).List(context.Background(), listOptions)
@@ -96,6 +100,7 @@ func isPodRunning(c kubernetes.Interface, podName, namespace string) wait.Condit
 	}
 }
 
+// ManifestOutput and interface to interact with a deployed environment
 type ManifestOutput interface {
 	SetNamespace(ns string)
 	GetNamespace() string
@@ -123,20 +128,21 @@ func (m *K8sClient) WaitForPodBySelectorRunning(c ManifestOutput) error {
 	return nil
 }
 
+// WaitLogMessages waits for log messages substrings
 func (m *K8sClient) WaitLogMessages(c ManifestOutput) error {
 	pods, err := m.ListPods(c.GetNamespace(), c.GetReadyCheckData().Selector)
 	if err != nil {
 		return err
 	}
 
-	zlog.Info().Interface("Pods", podNames(pods)).Str("Substring", c.GetReadyCheckData().LogSubStr).Msg("Awaiting log substring")
+	zlog.Info().Interface("Pods", podNames(pods)).Str("Substring", c.GetReadyCheckData().LogSubStr).Msg("Searching logs")
 	logLinesFound := 0
 	tail := int64(1000)
 	ctx, cancel := context.WithTimeout(context.Background(), c.GetReadyCheckData().Timeout)
 	defer cancel()
 	// we can't stream and iterate, because container may crash, so send new request every time
 	for {
-		time.Sleep(2 * time.Second)
+		time.Sleep(LogPollInterval)
 		for _, pod := range pods.Items {
 			stream, err := m.ClientSet.CoreV1().
 				Pods(c.GetNamespace()).
@@ -169,6 +175,7 @@ func (m *K8sClient) WaitLogMessages(c ManifestOutput) error {
 	}
 }
 
+// NamespaceExists check if namespace exists
 func (m *K8sClient) NamespaceExists(namespace string) bool {
 	if _, err := m.ClientSet.CoreV1().Namespaces().Get(context.Background(), namespace, metaV1.GetOptions{}); err != nil {
 		return false
@@ -176,34 +183,13 @@ func (m *K8sClient) NamespaceExists(namespace string) bool {
 	return true
 }
 
+// RemoveNamespace removes namespace
 func (m *K8sClient) RemoveNamespace(namespace string) error {
 	zlog.Info().Str("Namespace", namespace).Msg("Removing namespace")
 	if err := m.ClientSet.CoreV1().Namespaces().Delete(context.Background(), namespace, metaV1.DeleteOptions{}); err != nil {
 		return err
 	}
 	return nil
-}
-
-func (m *K8sClient) CheckContainersEvents(ns string, container string) error {
-	w, _ := m.ClientSet.CoreV1().Events(ns).Watch(
-		context.Background(),
-		metaV1.ListOptions{
-			Watch:         true,
-			FieldSelector: fmt.Sprintf("involvedObject.fieldPath=spec.containers{%s}", container),
-			TypeMeta:      metaV1.TypeMeta{Kind: "Pod"}},
-	)
-	defer w.Stop()
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancel()
-	updateCh := w.ResultChan()
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case event := <-updateCh:
-			zlog.Info().Interface("Event", event).Msg("Pod event")
-		}
-	}
 }
 
 type ReadyCheckData struct {
@@ -226,7 +212,7 @@ func (m *K8sClient) Apply(manifest string) error {
 	if err := os.WriteFile(TempDebugManifest, []byte(manifest), os.ModePerm); err != nil {
 		return err
 	}
-	cmd := fmt.Sprintf("./bin/kubectl apply -f %s", TempDebugManifest)
+	cmd := fmt.Sprintf("kubectl apply -f %s", TempDebugManifest)
 	return ExecCmd(cmd)
 }
 
@@ -235,7 +221,7 @@ func (m *K8sClient) Create(manifest string) error {
 	if err := os.WriteFile(TempDebugManifest, []byte(manifest), os.ModePerm); err != nil {
 		return err
 	}
-	cmd := fmt.Sprintf("./bin/kubectl create -f %s", TempDebugManifest)
+	cmd := fmt.Sprintf("kubectl create -f %s", TempDebugManifest)
 	return ExecCmd(cmd)
 }
 
@@ -258,7 +244,7 @@ func (m *K8sClient) CopyToPod(namespace, src, destination, containername string)
 		return nil, nil, nil, fmt.Errorf("Could not run copy operation: %v", err)
 	}
 	if !formatted {
-		return nil, nil, nil, fmt.Errorf("Destination string improperly formatted, see reference 'NAMESPACE/POD_NAME:folder/FILE_NAME'")
+		return nil, nil, nil, fmt.Errorf("destination string improperly formatted, see reference 'NAMESPACE/POD_NAME:folder/FILE_NAME'")
 	}
 
 	zlog.Debug().

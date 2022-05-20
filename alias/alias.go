@@ -3,32 +3,22 @@ package alias
 import (
 	jsii "github.com/aws/jsii-runtime-go"
 	"github.com/fatih/structs"
-	"github.com/imdario/mergo"
-	"github.com/kelseyhightower/envconfig"
-	"github.com/rs/zerolog/log"
+	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
 	"reflect"
 )
 
-func Jss(value string) *string {
+func Str(value string) *string {
 	return jsii.String(value)
 }
 
-func Jsn(value float64) *float64 {
+func Num(value float64) *float64 {
 	return jsii.Number(value)
 }
 
-func MustOverrideStruct(prefix string, s interface{}) {
-	if err := envconfig.Process(prefix, s); err != nil {
-		log.Fatal().Err(err).Send()
-	}
-}
-
-func MustEnvVarsFromEnvconfigPrefix(prefix string, defaults interface{}, s interface{}) *[]*k8s.EnvVar {
-	if err := mergo.Merge(defaults, s, mergo.WithOverride); err != nil {
-		log.Fatal().Err(err).Send()
-	}
-	MustOverrideStruct(prefix, defaults)
+// MustChartEnvVarsFromStruct parses typed configs into manifest env vars
+func MustChartEnvVarsFromStruct(prefix string, defaults interface{}, s interface{}) *[]*k8s.EnvVar {
+	config.MustEnvCodeOverrideStruct(prefix, defaults, s)
 	var e []*k8s.EnvVar
 	ma := structs.Map(defaults)
 	for k, v := range ma {
@@ -42,8 +32,8 @@ func MustEnvVarsFromEnvconfigPrefix(prefix string, defaults interface{}, s inter
 // EnvVarStr quick shortcut for string/string key/value var
 func EnvVarStr(k, v string) *k8s.EnvVar {
 	return &k8s.EnvVar{
-		Name:  Jss(k),
-		Value: Jss(v),
+		Name:  Str(k),
+		Value: Str(v),
 	}
 }
 
@@ -51,12 +41,12 @@ func EnvVarStr(k, v string) *k8s.EnvVar {
 func ContainerResources(reqCPU, reqMEM, limCPU, limMEM string) *k8s.ResourceRequirements {
 	return &k8s.ResourceRequirements{
 		Requests: &map[string]k8s.Quantity{
-			"cpu":    k8s.Quantity_FromString(Jss(reqCPU)),
-			"memory": k8s.Quantity_FromString(Jss(reqMEM)),
+			"cpu":    k8s.Quantity_FromString(Str(reqCPU)),
+			"memory": k8s.Quantity_FromString(Str(reqMEM)),
 		},
 		Limits: &map[string]k8s.Quantity{
-			"cpu":    k8s.Quantity_FromString(Jss(limCPU)),
-			"memory": k8s.Quantity_FromString(Jss(limMEM)),
+			"cpu":    k8s.Quantity_FromString(Str(limCPU)),
+			"memory": k8s.Quantity_FromString(Str(limMEM)),
 		},
 	}
 }

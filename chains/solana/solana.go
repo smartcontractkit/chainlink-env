@@ -2,36 +2,32 @@ package solana
 
 import (
 	"fmt"
-	"github.com/aws/constructs-go/constructs/v10"
+	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 
 	a "github.com/smartcontractkit/chainlink-env/alias"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
 )
 
-const (
-	ChainType = "solana"
-)
-
 type Props struct{}
 
-// SharedConstructVars some shared labels/selectors and names that must match in resources
-type SharedConstructVars struct {
+// internalChartVars some shared labels/selectors and names that must match in resources
+type internalChartVars struct {
 	SolLabels      *map[string]*string
 	DeploymentName string
 	ConfigMapName  string
 }
 
-func configMap(chart constructs.Construct, shared SharedConstructVars) {
-	k8s.NewKubeConfigMap(chart, a.Jss(shared.ConfigMapName), &k8s.KubeConfigMapProps{
+func configMap(chart cdk8s.Chart, shared internalChartVars) {
+	k8s.NewKubeConfigMap(chart, a.Str(shared.ConfigMapName), &k8s.KubeConfigMapProps{
 		Metadata: &k8s.ObjectMeta{
-			Name: a.Jss(shared.ConfigMapName),
+			Name: a.Str(shared.ConfigMapName),
 			Labels: &map[string]*string{
-				"app": a.Jss(shared.ConfigMapName),
+				"app": a.Str(shared.ConfigMapName),
 			},
 		},
 		Data: &map[string]*string{
-			"id.json": a.Jss(`[205,246,252,222,193,57,3,13,164,146,52,162,143,135,8,254,37,4,250,48,137,61,49,57,187,210,209,118,108,125,81,235,136,69,202,17,24,209,91,226,206,92,80,45,83,14,222,113,229,190,94,142,188,124,102,122,15,246,40,190,24,247,69,133]`),
-			"config.yml": a.Jss(
+			"id.json": a.Str(`[205,246,252,222,193,57,3,13,164,146,52,162,143,135,8,254,37,4,250,48,137,61,49,57,187,210,209,118,108,125,81,235,136,69,202,17,24,209,91,226,206,92,80,45,83,14,222,113,229,190,94,142,188,124,102,122,15,246,40,190,24,247,69,133]`),
+			"config.yml": a.Str(
 				`json_rpc_url: http://0.0.0.0:8899
 websocket_url: ws://0.0.0.0:8900
 keypair_path: /root/.config/solana/cli/id.json
@@ -40,35 +36,35 @@ commitment: finalized`),
 	})
 }
 
-func service(chart constructs.Construct, shared SharedConstructVars) {
-	k8s.NewKubeService(chart, a.Jss("sol"), &k8s.KubeServiceProps{
+func service(chart cdk8s.Chart, shared internalChartVars) {
+	k8s.NewKubeService(chart, a.Str("sol"), &k8s.KubeServiceProps{
 		Metadata: &k8s.ObjectMeta{
-			Name: a.Jss("sol"),
+			Name: a.Str("sol"),
 		},
 		Spec: &k8s.ServiceSpec{
 			Ports: &[]*k8s.ServicePort{
 				{
-					Name:       a.Jss("ws-rpc"),
-					Port:       a.Jsn(8900),
-					TargetPort: k8s.IntOrString_FromNumber(a.Jsn(8900)),
+					Name:       a.Str("ws-rpc"),
+					Port:       a.Num(8900),
+					TargetPort: k8s.IntOrString_FromNumber(a.Num(8900)),
 				},
 				{
-					Name:       a.Jss("http-rpc"),
-					Port:       a.Jsn(8899),
-					TargetPort: k8s.IntOrString_FromNumber(a.Jsn(8899)),
+					Name:       a.Str("http-rpc"),
+					Port:       a.Num(8899),
+					TargetPort: k8s.IntOrString_FromNumber(a.Num(8899)),
 				}},
 			Selector: shared.SolLabels,
 		},
 	})
 }
 
-func deployment(chart constructs.Construct, shared SharedConstructVars) {
+func deployment(chart cdk8s.Chart, shared internalChartVars) {
 	k8s.NewKubeDeployment(
 		chart,
-		a.Jss("sol-deployment"),
+		a.Str("sol-deployment"),
 		&k8s.KubeDeploymentProps{
 			Metadata: &k8s.ObjectMeta{
-				Name: a.Jss(shared.DeploymentName),
+				Name: a.Str(shared.DeploymentName),
 			},
 			Spec: &k8s.DeploymentSpec{
 				Selector: &k8s.LabelSelector{
@@ -81,13 +77,13 @@ func deployment(chart constructs.Construct, shared SharedConstructVars) {
 					Spec: &k8s.PodSpec{
 						Volumes: &[]*k8s.Volume{
 							{
-								Name: a.Jss(shared.ConfigMapName),
+								Name: a.Str(shared.ConfigMapName),
 								ConfigMap: &k8s.ConfigMapVolumeSource{
-									Name: a.Jss(shared.ConfigMapName),
+									Name: a.Str(shared.ConfigMapName),
 								},
 							},
 						},
-						ServiceAccountName: a.Jss("default"),
+						ServiceAccountName: a.Str("default"),
 						Containers: &[]*k8s.Container{
 							container(shared),
 						},
@@ -97,25 +93,25 @@ func deployment(chart constructs.Construct, shared SharedConstructVars) {
 		})
 }
 
-func container(shared SharedConstructVars) *k8s.Container {
+func container(shared internalChartVars) *k8s.Container {
 	return &k8s.Container{
-		Name:            a.Jss("sol-val"),
-		Image:           a.Jss(fmt.Sprintf("%s:%s", "f4hrenh9it/sol-val", "v1")),
-		ImagePullPolicy: a.Jss("Always"),
+		Name:            a.Str("sol-val"),
+		Image:           a.Str(fmt.Sprintf("%s:%s", "f4hrenh9it/sol-val", "v1")),
+		ImagePullPolicy: a.Str("Always"),
 		VolumeMounts: &[]*k8s.VolumeMount{
 			{
-				Name:      a.Jss(shared.ConfigMapName),
-				MountPath: a.Jss("/root/.config/solana/cli"),
+				Name:      a.Str(shared.ConfigMapName),
+				MountPath: a.Str("/root/.config/solana/cli"),
 			},
 		},
 		Ports: &[]*k8s.ContainerPort{
 			{
-				Name:          a.Jss("http-rpc"),
-				ContainerPort: a.Jsn(8899),
+				Name:          a.Str("http-rpc"),
+				ContainerPort: a.Num(8899),
 			},
 			{
-				Name:          a.Jss("ws-rpc"),
-				ContainerPort: a.Jsn(8900),
+				Name:          a.Str("ws-rpc"),
+				ContainerPort: a.Num(8900),
 			},
 		},
 		Env:       &[]*k8s.EnvVar{},
@@ -123,10 +119,10 @@ func container(shared SharedConstructVars) *k8s.Container {
 	}
 }
 
-func NewSolanaChart(chart constructs.Construct, props *Props) constructs.Construct {
-	s := SharedConstructVars{
+func NewSolana(chart cdk8s.Chart, props *Props) cdk8s.Chart {
+	s := internalChartVars{
 		SolLabels: &map[string]*string{
-			"app": a.Jss("sol"),
+			"app": a.Str("sol"),
 		},
 		ConfigMapName:  "sol-cm",
 		DeploymentName: "sol",

@@ -11,17 +11,14 @@ func main() {
 		KeepConnection:    true,
 		RemoveOnInterrupt: true,
 	}).DeployOrConnect(
-		chainlink.Manifest(
+		chainlink.NewChart(
 			&chainlink.Props{
 				Namespace:  "zclcdk-deployment",
 				ChainProps: []interface{}{ethereum.DefaultDevProps()},
 				AppVersions: []chainlink.VersionProps{
 					{
-						Image: "public.ecr.aws/chainlink/chainlink",
-						Tag:   "1.4.1-root",
-						Env: &chainlink.NodeEnvVars{
-							KeeperRegistrySyncInterval: "10s",
-						},
+						Image:     "public.ecr.aws/chainlink/chainlink",
+						Tag:       "1.4.1-root",
 						Instances: 2,
 					},
 				},

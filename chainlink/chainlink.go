@@ -2,14 +2,15 @@ package chainlink
 
 import (
 	"fmt"
-	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/rs/zerolog/log"
 	a "github.com/smartcontractkit/chainlink-env/alias"
 	"github.com/smartcontractkit/chainlink-env/chains/ethereum"
 	"github.com/smartcontractkit/chainlink-env/chains/solana"
 	"github.com/smartcontractkit/chainlink-env/client"
+	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
+	ms "github.com/smartcontractkit/chainlink-env/mockserver"
 	"time"
 )
 
@@ -20,10 +21,11 @@ const (
 	NodesLocalURLsKey = "chainlink_local"
 	NodesInternalKey  = "chainlink_internal"
 	DBsInternalKey    = "chainlink_db"
+	MockServerURLsKey = "mockserver"
 )
 
 var (
-	scrapeAnnotation = &map[string]*string{"prometheus.io/scrape": a.Jss("true")}
+	scrapeAnnotation = &map[string]*string{"prometheus.io/scrape": a.Str("true")}
 )
 
 // internalChartVars some shared labels/selectors and names that must match in resources
@@ -60,35 +62,34 @@ type Props struct {
 
 func pgIsReadyCheck() *[]*string {
 	return &[]*string{
-		a.Jss("pg_isready"),
-		a.Jss("-U"),
-		a.Jss("postgres"),
+		a.Str("pg_isready"),
+		a.Str("-U"),
+		a.Str("postgres"),
 	}
 }
 
-func chains(chart constructs.Construct, chains []interface{}) {
+func chains(chart cdk8s.Chart, chains []interface{}) {
 	for _, c := range chains {
 		switch c.(type) {
 		case *ethereum.Props:
-			ethereum.NewEthereumChart(chart, c.(*ethereum.Props))
+			ethereum.NewEthereum(chart, c.(*ethereum.Props))
 		case *solana.Props:
-			solana.NewSolanaChart(chart, c.(*solana.Props))
+			solana.NewSolana(chart, c.(*solana.Props))
 		}
 	}
 }
 
 // versionedDeployments creates Deployment or StatefulSet for each selected CL version
 func versionedDeployments(chart cdk8s.Chart, p *Props) {
-	p.vars = &internalChartVars{InstanceCounter: 0}
 	for _, verProps := range p.AppVersions {
-		a.MustOverrideStruct("", &verProps)
+		config.MustEnvOverrideStruct("", &verProps)
 		for sameVersionInstance := 0; sameVersionInstance < verProps.Instances; sameVersionInstance++ {
 			p.vars.DeploymentName = fmt.Sprintf("chainlink-%d", p.vars.InstanceCounter)
 			p.vars.ConfigMapName = fmt.Sprintf("chainlink-cm-%d", p.vars.InstanceCounter)
 			p.vars.ServiceName = fmt.Sprintf("chainlink-service-%d", p.vars.InstanceCounter)
 			p.vars.NodeLabels = map[string]*string{
-				"app":      a.Jss(AppName),
-				"instance": a.Jss(fmt.Sprintf("%d", p.vars.InstanceCounter)),
+				"app":      a.Str(AppName),
+				"instance": a.Str(fmt.Sprintf("%d", p.vars.InstanceCounter)),
 			}
 			configMap(chart, p)
 			service(chart, p)
@@ -139,7 +140,7 @@ type NodeEnvVars struct {
 	KeeperRegistryPerformGasOverhead   string `envconfig:"KEEPER_REGISTRY_PERFORM_GAS_OVERHEAD" `
 }
 
-func DefaultNodeEnvVars() *NodeEnvVars {
+func defaultNodeEnvVars() *NodeEnvVars {
 	return &NodeEnvVars{
 		DatabaseURL:               "postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable",
 		DatabaseName:              "chainlink",
@@ -178,52 +179,52 @@ func DefaultNodeEnvVars() *NodeEnvVars {
 // chainlinkContainer CL container spec
 func chainlinkContainer(verProps VersionProps) *k8s.Container {
 	c := &k8s.Container{
-		Name:            a.Jss(NodeContainerName),
-		Image:           a.Jss(fmt.Sprintf("%s:%s", verProps.Image, verProps.Tag)),
-		ImagePullPolicy: a.Jss("Always"),
+		Name:            a.Str(NodeContainerName),
+		Image:           a.Str(fmt.Sprintf("%s:%s", verProps.Image, verProps.Tag)),
+		ImagePullPolicy: a.Str("Always"),
 		Args: &[]*string{
-			a.Jss("node"),
-			a.Jss("start"),
-			a.Jss("-d"),
-			a.Jss("-p"),
-			a.Jss("/etc/node-secrets-volume/node-password"),
-			a.Jss("-a"),
-			a.Jss("/etc/node-secrets-volume/apicredentials"),
-			a.Jss("--vrfpassword=/etc/node-secrets-volume/apicredentials"),
+			a.Str("node"),
+			a.Str("start"),
+			a.Str("-d"),
+			a.Str("-p"),
+			a.Str("/etc/node-secrets-volume/node-password"),
+			a.Str("-a"),
+			a.Str("/etc/node-secrets-volume/apicredentials"),
+			a.Str("--vrfpassword=/etc/node-secrets-volume/apicredentials"),
 		},
 		VolumeMounts: &[]*k8s.VolumeMount{
 			{
-				Name:      a.Jss("chainlink-config-map"),
-				MountPath: a.Jss("/etc/node-secrets-volume"),
+				Name:      a.Str("chainlink-config-map"),
+				MountPath: a.Str("/etc/node-secrets-volume"),
 			},
 		},
 		LivenessProbe: &k8s.Probe{
 			HttpGet: &k8s.HttpGetAction{
-				Port: k8s.IntOrString_FromNumber(a.Jsn(6688)),
-				Path: a.Jss("/"),
+				Port: k8s.IntOrString_FromNumber(a.Num(6688)),
+				Path: a.Str("/"),
 			},
-			InitialDelaySeconds: a.Jsn(20),
-			PeriodSeconds:       a.Jsn(5),
+			InitialDelaySeconds: a.Num(20),
+			PeriodSeconds:       a.Num(5),
 		},
 		ReadinessProbe: &k8s.Probe{
 			HttpGet: &k8s.HttpGetAction{
-				Port: k8s.IntOrString_FromNumber(a.Jsn(6688)),
-				Path: a.Jss("/"),
+				Port: k8s.IntOrString_FromNumber(a.Num(6688)),
+				Path: a.Str("/"),
 			},
-			InitialDelaySeconds: a.Jsn(10),
-			PeriodSeconds:       a.Jsn(5),
+			InitialDelaySeconds: a.Num(10),
+			PeriodSeconds:       a.Num(5),
 		},
 		Ports: &[]*k8s.ContainerPort{
 			{
-				Name:          a.Jss("access"),
-				ContainerPort: a.Jsn(6688),
+				Name:          a.Str("access"),
+				ContainerPort: a.Num(6688),
 			},
 			{
-				Name:          a.Jss("p2p"),
-				ContainerPort: a.Jsn(8899),
+				Name:          a.Str("p2p"),
+				ContainerPort: a.Num(8899),
 			},
 		},
-		Env:       a.MustEnvVarsFromEnvconfigPrefix("", DefaultNodeEnvVars(), verProps.Env),
+		Env:       a.MustChartEnvVarsFromStruct("", defaultNodeEnvVars(), verProps.Env),
 		Resources: a.ContainerResources("200m", "1024Mi", "200m", "1024Mi"),
 	}
 	return c
@@ -232,12 +233,12 @@ func chainlinkContainer(verProps VersionProps) *k8s.Container {
 // postgresContainer postgres container spec
 func postgresContainer(verProps VersionProps) *k8s.Container {
 	c := &k8s.Container{
-		Name:  a.Jss("chainlink-db"),
-		Image: a.Jss("postgres:11.6"),
+		Name:  a.Str("chainlink-db"),
+		Image: a.Str("postgres:11.6"),
 		Ports: &[]*k8s.ContainerPort{
 			{
-				Name:          a.Jss("postgres"),
-				ContainerPort: a.Jsn(5432),
+				Name:          a.Str("postgres"),
+				ContainerPort: a.Num(5432),
 			},
 		},
 		Env: &[]*k8s.EnvVar{
@@ -249,23 +250,23 @@ func postgresContainer(verProps VersionProps) *k8s.Container {
 		LivenessProbe: &k8s.Probe{
 			Exec: &k8s.ExecAction{
 				Command: pgIsReadyCheck()},
-			InitialDelaySeconds: a.Jsn(60),
-			PeriodSeconds:       a.Jsn(60),
+			InitialDelaySeconds: a.Num(60),
+			PeriodSeconds:       a.Num(60),
 		},
 		ReadinessProbe: &k8s.Probe{
 			Exec: &k8s.ExecAction{
 				Command: pgIsReadyCheck()},
-			InitialDelaySeconds: a.Jsn(2),
-			PeriodSeconds:       a.Jsn(2),
+			InitialDelaySeconds: a.Num(2),
+			PeriodSeconds:       a.Num(2),
 		},
 		Resources: a.ContainerResources("450m", "1024Mi", "450m", "1024Mi"),
 	}
 	if verProps.Persistence.Capacity != "" {
 		c.VolumeMounts = &[]*k8s.VolumeMount{
 			{
-				Name:      a.Jss("postgres"),
-				SubPath:   a.Jss("postgres-db"),
-				MountPath: a.Jss("/var/lib/postgresql/data"),
+				Name:      a.Str("postgres"),
+				SubPath:   a.Str("postgres-db"),
+				MountPath: a.Str("/var/lib/postgresql/data"),
 			},
 		}
 	}
@@ -275,10 +276,10 @@ func postgresContainer(verProps VersionProps) *k8s.Container {
 func deploymentConstruct(chart cdk8s.Chart, props *Props, verProps VersionProps) {
 	k8s.NewKubeDeployment(
 		chart,
-		a.Jss(props.vars.DeploymentName),
+		a.Str(props.vars.DeploymentName),
 		&k8s.KubeDeploymentProps{
 			Metadata: &k8s.ObjectMeta{
-				Name: a.Jss(props.vars.DeploymentName),
+				Name: a.Str(props.vars.DeploymentName),
 			},
 			Spec: &k8s.DeploymentSpec{
 				Selector: &k8s.LabelSelector{
@@ -292,13 +293,13 @@ func deploymentConstruct(chart cdk8s.Chart, props *Props, verProps VersionProps)
 					Spec: &k8s.PodSpec{
 						Volumes: &[]*k8s.Volume{
 							{
-								Name: a.Jss("chainlink-config-map"),
+								Name: a.Str("chainlink-config-map"),
 								ConfigMap: &k8s.ConfigMapVolumeSource{
-									Name: a.Jss(props.vars.ConfigMapName),
+									Name: a.Str(props.vars.ConfigMapName),
 								},
 							},
 						},
-						ServiceAccountName: a.Jss("default"),
+						ServiceAccountName: a.Str("default"),
 						Containers: &[]*k8s.Container{
 							postgresContainer(verProps),
 							chainlinkContainer(verProps),
@@ -312,27 +313,27 @@ func deploymentConstruct(chart cdk8s.Chart, props *Props, verProps VersionProps)
 func statefulConstruct(chart cdk8s.Chart, props *Props, verProps VersionProps) {
 	k8s.NewKubeStatefulSet(
 		chart,
-		a.Jss(props.vars.DeploymentName),
+		a.Str(props.vars.DeploymentName),
 		&k8s.KubeStatefulSetProps{
 			Metadata: &k8s.ObjectMeta{
-				Name: a.Jss(props.vars.DeploymentName),
+				Name: a.Str(props.vars.DeploymentName),
 			},
 			Spec: &k8s.StatefulSetSpec{
 				Selector: &k8s.LabelSelector{
 					MatchLabels: &props.vars.NodeLabels,
 				},
-				ServiceName:         a.Jss(props.vars.ServiceName),
-				PodManagementPolicy: a.Jss("Parallel"),
+				ServiceName:         a.Str(props.vars.ServiceName),
+				PodManagementPolicy: a.Str("Parallel"),
 				VolumeClaimTemplates: &[]*k8s.KubePersistentVolumeClaimProps{
 					{
 						Metadata: &k8s.ObjectMeta{
-							Name: a.Jss("postgres"),
+							Name: a.Str("postgres"),
 						},
 						Spec: &k8s.PersistentVolumeClaimSpec{
-							AccessModes: &[]*string{a.Jss("ReadWriteOnce")},
+							AccessModes: &[]*string{a.Str("ReadWriteOnce")},
 							Resources: &k8s.ResourceRequirements{
 								Requests: &map[string]k8s.Quantity{
-									"storage": k8s.Quantity_FromString(a.Jss(verProps.Persistence.Capacity)),
+									"storage": k8s.Quantity_FromString(a.Str(verProps.Persistence.Capacity)),
 								},
 							},
 						},
@@ -346,13 +347,13 @@ func statefulConstruct(chart cdk8s.Chart, props *Props, verProps VersionProps) {
 					Spec: &k8s.PodSpec{
 						Volumes: &[]*k8s.Volume{
 							{
-								Name: a.Jss("chainlink-config-map"),
+								Name: a.Str("chainlink-config-map"),
 								ConfigMap: &k8s.ConfigMapVolumeSource{
-									Name: a.Jss(props.vars.ConfigMapName),
+									Name: a.Str(props.vars.ConfigMapName),
 								},
 							},
 						},
-						ServiceAccountName: a.Jss("default"),
+						ServiceAccountName: a.Str("default"),
 						Containers: &[]*k8s.Container{
 							postgresContainer(verProps),
 							chainlinkContainer(verProps),
@@ -365,21 +366,21 @@ func statefulConstruct(chart cdk8s.Chart, props *Props, verProps VersionProps) {
 
 // service k8s service spec
 func service(chart cdk8s.Chart, props *Props) {
-	k8s.NewKubeService(chart, a.Jss(props.vars.ServiceName), &k8s.KubeServiceProps{
+	k8s.NewKubeService(chart, a.Str(props.vars.ServiceName), &k8s.KubeServiceProps{
 		Metadata: &k8s.ObjectMeta{
-			Name: a.Jss(props.vars.ServiceName),
+			Name: a.Str(props.vars.ServiceName),
 		},
 		Spec: &k8s.ServiceSpec{
 			Ports: &[]*k8s.ServicePort{
 				{
-					Name:       a.Jss("access"),
-					Port:       a.Jsn(6688),
-					TargetPort: k8s.IntOrString_FromNumber(a.Jsn(6688)),
+					Name:       a.Str("access"),
+					Port:       a.Num(6688),
+					TargetPort: k8s.IntOrString_FromNumber(a.Num(6688)),
 				},
 				{
-					Name:       a.Jss("p2p"),
-					Port:       a.Jsn(8899),
-					TargetPort: k8s.IntOrString_FromNumber(a.Jsn(8899)),
+					Name:       a.Str("p2p"),
+					Port:       a.Num(8899),
+					TargetPort: k8s.IntOrString_FromNumber(a.Num(8899)),
 				}},
 			Selector: &props.vars.NodeLabels,
 		},
@@ -388,15 +389,15 @@ func service(chart cdk8s.Chart, props *Props) {
 
 // configMap k8s configMap spec
 func configMap(chart cdk8s.Chart, props *Props) {
-	k8s.NewKubeConfigMap(chart, a.Jss(props.vars.ConfigMapName), &k8s.KubeConfigMapProps{
+	k8s.NewKubeConfigMap(chart, a.Str(props.vars.ConfigMapName), &k8s.KubeConfigMapProps{
 		Data: &map[string]*string{
-			"apicredentials": a.Jss("notreal@fakeemail.ch\ntwochains"),
-			"node-password":  a.Jss("T.tLHkcmwePT/p,]sYuntjwHKAsrhm#4eRs4LuKHwvHejWYAC2JP4M8HimwgmbaZ"),
+			"apicredentials": a.Str("notreal@fakeemail.ch\ntwochains"),
+			"node-password":  a.Str("T.tLHkcmwePT/p,]sYuntjwHKAsrhm#4eRs4LuKHwvHejWYAC2JP4M8HimwgmbaZ"),
 		},
 		Metadata: &k8s.ObjectMeta{
-			Name: a.Jss(props.vars.ConfigMapName),
+			Name: a.Str(props.vars.ConfigMapName),
 			Labels: &map[string]*string{
-				"app": a.Jss(props.vars.ConfigMapName),
+				"app": a.Str(props.vars.ConfigMapName),
 			},
 		},
 	})
@@ -427,11 +428,17 @@ func (m *ManifestOutputData) ProcessConnections(fwd *client.Forwarder) (map[stri
 	if err != nil {
 		return nil, err
 	}
+	urlsByApp[GethURLsKey] = append(urlsByApp[GethURLsKey], geth)
+
+	mock, err := fwd.FindPort("mockserver:", "mockserver", "serviceport").As(client.LocalConnection, client.HTTP)
+	if err != nil {
+		return nil, err
+	}
+	urlsByApp[MockServerURLsKey] = append(urlsByApp[MockServerURLsKey], mock)
 	pods, err := fwd.Client.ListPods(m.Namespace, fmt.Sprintf("app=%s", AppName))
 	if err != nil {
 		return nil, err
 	}
-	urlsByApp[GethURLsKey] = append(urlsByApp[GethURLsKey], geth)
 	log.Info().Str("URL", geth).Msg("Geth network")
 	for i := 0; i < len(pods.Items); i++ {
 		n, err := fwd.FindPort(fmt.Sprintf("%s:%d", AppName, i), "node", "access").
@@ -463,25 +470,32 @@ func (m *ManifestOutputData) ProcessConnections(fwd *client.Forwarder) (map[stri
 	return urlsByApp, nil
 }
 
-// Manifest root manifest creation function
-func Manifest(props interface{}) (cdk8s.App, client.ManifestOutput) {
+func mockserver(chart cdk8s.Chart, props *Props) {
+	ms.NewChart(chart, &ms.Props{})
+}
+
+// NewChart root manifest creation function
+func NewChart(props interface{}) (cdk8s.App, client.ManifestOutput) {
 	p := props.(*Props)
 	app := cdk8s.NewApp(&cdk8s.AppProps{
 		YamlOutputType: cdk8s.YamlOutputType_FILE_PER_APP,
 	})
-	chart := cdk8s.NewChart(app, a.Jss("chainlink"), &cdk8s.ChartProps{
+	chart := cdk8s.NewChart(app, a.Str("chainlink"), &cdk8s.ChartProps{
 		Labels:    nil,
-		Namespace: a.Jss(p.Namespace),
+		Namespace: a.Str(p.Namespace),
 	})
-	k8s.NewKubeNamespace(chart.(constructs.Construct), a.Jss("namespace"), &k8s.KubeNamespaceProps{
+	k8s.NewKubeNamespace(chart, a.Str("namespace"), &k8s.KubeNamespaceProps{
 		Metadata: &k8s.ObjectMeta{
-			Name:   a.Jss(p.Namespace),
-			Labels: &map[string]*string{"generatedBy": a.Jss("cdk8s")},
+			Name:   a.Str(p.Namespace),
+			Labels: &map[string]*string{"generatedBy": a.Str("cdk8s")},
 		},
 	})
+	p.vars = &internalChartVars{InstanceCounter: 0}
+
 	versionedDeployments(chart, p)
-	chains(chart.(constructs.Construct), p.ChainProps)
-	checkData := &ManifestOutputData{
+	chains(chart, p.ChainProps)
+	mockserver(chart, p)
+	return app, &ManifestOutputData{
 		Namespace: p.Namespace,
 		ReadyCheckData: client.ReadyCheckData{
 			Timeout:   3 * time.Minute,
@@ -490,5 +504,4 @@ func Manifest(props interface{}) (cdk8s.App, client.ManifestOutput) {
 			LogSubStr: "Subscribed to heads on chain",
 		},
 	}
-	return app, checkData
 }

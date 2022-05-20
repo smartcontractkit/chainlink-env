@@ -30,16 +30,16 @@ type SharedConstructVars struct {
 }
 
 func configMap(chart cdk8s.Chart, shared SharedConstructVars) {
-	k8s.NewKubeConfigMap(chart, a.Jss(shared.ConfigMapName), &k8s.KubeConfigMapProps{
+	k8s.NewKubeConfigMap(chart, a.Str(shared.ConfigMapName), &k8s.KubeConfigMapProps{
 		Metadata: &k8s.ObjectMeta{
-			Name: a.Jss(shared.ConfigMapName),
+			Name: a.Str(shared.ConfigMapName),
 			Labels: &map[string]*string{
-				"app": a.Jss(shared.ConfigMapName),
+				"app": a.Str(shared.ConfigMapName),
 			},
 		},
 		Data: &map[string]*string{
-			"test-env.json": a.Jss(shared.Props.ConfigFileContents),
-			"init.sh": a.Jss(`#!/bin/sh
+			"test-env.json": a.Str(shared.Props.ConfigFileContents),
+			"init.sh": a.Str(`#!/bin/sh
 
     echo "Installing dependencies"
     apk add build-base
@@ -74,16 +74,16 @@ func configMap(chart cdk8s.Chart, shared SharedConstructVars) {
 }
 
 func service(chart cdk8s.Chart, shared SharedConstructVars) {
-	k8s.NewKubeService(chart, a.Jss(fmt.Sprintf("%s-service", shared.BaseName)), &k8s.KubeServiceProps{
+	k8s.NewKubeService(chart, a.Str(fmt.Sprintf("%s-service", shared.BaseName)), &k8s.KubeServiceProps{
 		Metadata: &k8s.ObjectMeta{
-			Name: a.Jss(shared.BaseName),
+			Name: a.Str(shared.BaseName),
 		},
 		Spec: &k8s.ServiceSpec{
 			Ports: &[]*k8s.ServicePort{
 				{
-					Name:       a.Jss("access"),
-					Port:       a.Jsn(shared.Props.AccessPort),
-					TargetPort: k8s.IntOrString_FromNumber(a.Jsn(shared.Props.AccessPort)),
+					Name:       a.Str("access"),
+					Port:       a.Num(shared.Props.AccessPort),
+					TargetPort: k8s.IntOrString_FromNumber(a.Num(shared.Props.AccessPort)),
 				},
 			},
 			Selector: shared.Labels,
@@ -94,10 +94,10 @@ func service(chart cdk8s.Chart, shared SharedConstructVars) {
 func deployment(chart cdk8s.Chart, shared SharedConstructVars) {
 	k8s.NewKubeDeployment(
 		chart,
-		a.Jss(fmt.Sprintf("%s-deployment", shared.BaseName)),
+		a.Str(fmt.Sprintf("%s-deployment", shared.BaseName)),
 		&k8s.KubeDeploymentProps{
 			Metadata: &k8s.ObjectMeta{
-				Name: a.Jss(shared.BaseName),
+				Name: a.Str(shared.BaseName),
 			},
 			Spec: &k8s.DeploymentSpec{
 				Selector: &k8s.LabelSelector{
@@ -110,13 +110,13 @@ func deployment(chart cdk8s.Chart, shared SharedConstructVars) {
 					Spec: &k8s.PodSpec{
 						Volumes: &[]*k8s.Volume{
 							{
-								Name: a.Jss(shared.ConfigMapName),
+								Name: a.Str(shared.ConfigMapName),
 								ConfigMap: &k8s.ConfigMapVolumeSource{
-									Name: a.Jss(shared.ConfigMapName),
+									Name: a.Str(shared.ConfigMapName),
 								},
 							},
 						},
-						ServiceAccountName: a.Jss("default"),
+						ServiceAccountName: a.Str("default"),
 						Containers: &[]*k8s.Container{
 							container(shared),
 						},
@@ -128,29 +128,29 @@ func deployment(chart cdk8s.Chart, shared SharedConstructVars) {
 
 func container(shared SharedConstructVars) *k8s.Container {
 	return &k8s.Container{
-		Name:            a.Jss(shared.BaseName),
-		Image:           a.Jss(fmt.Sprintf("%s:%s", "ethereum/client-go", "v1.10.17")),
-		ImagePullPolicy: a.Jss("Always"),
+		Name:            a.Str(shared.BaseName),
+		Image:           a.Str(fmt.Sprintf("%s:%s", "ethereum/client-go", "v1.10.17")),
+		ImagePullPolicy: a.Str("Always"),
 		Command: &[]*string{
-			a.Jss(`sh`),
-			a.Jss(`./root/init.sh`),
+			a.Str(`sh`),
+			a.Str(`./root/init.sh`),
 		},
 		VolumeMounts: &[]*k8s.VolumeMount{
 			{
-				Name:      a.Jss(shared.ConfigMapName),
-				MountPath: a.Jss("/root/init.sh"),
-				SubPath:   a.Jss("init.sh"),
+				Name:      a.Str(shared.ConfigMapName),
+				MountPath: a.Str("/root/init.sh"),
+				SubPath:   a.Str("init.sh"),
 			},
 			{
-				Name:      a.Jss(shared.ConfigMapName),
-				MountPath: a.Jss("/root/test-env.json"),
-				SubPath:   a.Jss("test-env.json"),
+				Name:      a.Str(shared.ConfigMapName),
+				MountPath: a.Str("/root/test-env.json"),
+				SubPath:   a.Str("test-env.json"),
 			},
 		},
 		Ports: &[]*k8s.ContainerPort{
 			{
-				Name:          a.Jss("access"),
-				ContainerPort: a.Jsn(shared.Props.AccessPort),
+				Name:          a.Str("access"),
+				ContainerPort: a.Num(shared.Props.AccessPort),
 			},
 		},
 		Env: &[]*k8s.EnvVar{
@@ -173,7 +173,7 @@ func container(shared SharedConstructVars) *k8s.Container {
 func NewTestRunnerChart(chart cdk8s.Chart, props *Props) cdk8s.Chart {
 	s := SharedConstructVars{
 		Labels: &map[string]*string{
-			"app": a.Jss("testrunner"),
+			"app": a.Str("testrunner"),
 		},
 		ConfigMapName: "testrunner-cm",
 		BaseName:      "testrunner",

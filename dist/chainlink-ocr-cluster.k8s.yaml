@@ -102,68 +102,68 @@ spec:
             - /etc/node-secrets-volume/apicredentials
             - --vrfpassword=/etc/node-secrets-volume/apicredentials
           env:
-            - name: DEFAULT_HTTP_ALLOW_UNRESTRICTED_NETWORK_ACCESS
-              value: "true"
-            - name: MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
-              value: "0"
-            - name: P2P_LISTEN_PORT
-              value: "6690"
-            - name: DATABASE_NAME
-              value: chainlink
-            - name: P2P_LISTEN_IP
-              value: 0.0.0.0
-            - name: FEATURE_OFFCHAIN_REPORTING
-              value: "true"
-            - name: ETH_MAX_IN_FLIGHT_TRANSACTIONS
-              value: "5000"
-            - name: EXPLORER_URL
-              value: ""
-            - name: ETH_DISABLED
-              value: "false"
-            - name: CHAINLINK_PGPASSWORD
-              value: node
-            - name: LOG_LEVEL
-              value: debug
-            - name: EXPLORER_SECRET
-              value: ""
-            - name: KEEPER_REGISTRY_SYNC_INTERVAL
-              value: 5s
-            - name: KEEPER_MINIMUM_REQUIRED_CONFIRMATIONS
-              value: "1"
-            - name: ALLOW_ORIGINS
-              value: "*"
-            - name: JSON_CONSOLE
-              value: "false"
-            - name: ROOT
-              value: ./clroot
-            - name: MAX_EXPORT_HTML_THREADS
-              value: "2"
-            - name: EXPLORER_ACCESS_KEY
-              value: ""
-            - name: ETH_CHAIN_ID
-              value: "1337"
-            - name: FEATURE_EXTERNAL_INITIATORS
-              value: "false"
-            - name: CHAINLINK_PORT
-              value: "6688"
-            - name: SECURE_COOKIES
-              value: "false"
-            - name: KEEPER_DEFAULT_TRANSACTION_QUEUE_DEPTH
-              value: "1"
-            - name: KEEPER_REGISTRY_PERFORM_GAS_OVERHEAD
-              value: "1"
-            - name: DATABASE_URL
-              value: postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable
-            - name: CHAINLINK_TLS_PORT
-              value: "0"
-            - name: OCR_TRACE_LOGGING
-              value: "true"
             - name: ETH_URL
               value: ws://geth:8546
+            - name: KEEPER_REGISTRY_SYNC_INTERVAL
+              value: 5s
+            - name: ETH_DISABLED
+              value: "false"
+            - name: LOG_LEVEL
+              value: debug
+            - name: MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
+              value: "0"
+            - name: EXPLORER_SECRET
+              value: ""
+            - name: CHAINLINK_PGPASSWORD
+              value: node
+            - name: JSON_CONSOLE
+              value: "false"
+            - name: MAX_EXPORT_HTML_THREADS
+              value: "2"
+            - name: OCR_TRACE_LOGGING
+              value: "true"
+            - name: P2P_LISTEN_PORT
+              value: "6690"
+            - name: KEEPER_MINIMUM_REQUIRED_CONFIRMATIONS
+              value: "1"
+            - name: CHAINLINK_PORT
+              value: "6688"
+            - name: DATABASE_NAME
+              value: chainlink
             - name: CHAINLINK_DEV
               value: "true"
             - name: ENABLE_BULLETPROOF_TX_MANAGER
               value: "true"
+            - name: ALLOW_ORIGINS
+              value: "*"
+            - name: FEATURE_EXTERNAL_INITIATORS
+              value: "false"
+            - name: CHAINLINK_TLS_PORT
+              value: "0"
+            - name: FEATURE_OFFCHAIN_REPORTING
+              value: "true"
+            - name: EXPLORER_URL
+              value: ""
+            - name: KEEPER_DEFAULT_TRANSACTION_QUEUE_DEPTH
+              value: "1"
+            - name: ETH_CHAIN_ID
+              value: "1337"
+            - name: DEFAULT_HTTP_ALLOW_UNRESTRICTED_NETWORK_ACCESS
+              value: "true"
+            - name: P2P_LISTEN_IP
+              value: 0.0.0.0
+            - name: ROOT
+              value: ./clroot
+            - name: ETH_MAX_IN_FLIGHT_TRANSACTIONS
+              value: "5000"
+            - name: EXPLORER_ACCESS_KEY
+              value: ""
+            - name: KEEPER_REGISTRY_PERFORM_GAS_OVERHEAD
+              value: "1"
+            - name: DATABASE_URL
+              value: postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable
+            - name: SECURE_COOKIES
+              value: "false"
           image: public.ecr.aws/z0b1w9r9/chainlink:develop.d2b337227bc5d4c4b6ee4f605017f205e01e5d16
           imagePullPolicy: Always
           livenessProbe:
@@ -187,10 +187,10 @@ spec:
           resources:
             limits:
               cpu: 200m
-              memory: 500Mi
+              memory: 1024Mi
             requests:
               cpu: 200m
-              memory: 500Mi
+              memory: 1024Mi
           volumeMounts:
             - mountPath: /etc/node-secrets-volume
               name: chainlink-config-map
@@ -296,68 +296,68 @@ spec:
             - /etc/node-secrets-volume/apicredentials
             - --vrfpassword=/etc/node-secrets-volume/apicredentials
           env:
-            - name: JSON_CONSOLE
-              value: "false"
-            - name: ROOT
-              value: ./clroot
-            - name: SECURE_COOKIES
-              value: "false"
-            - name: EXPLORER_ACCESS_KEY
-              value: ""
-            - name: ENABLE_BULLETPROOF_TX_MANAGER
-              value: "true"
-            - name: LOG_LEVEL
-              value: debug
-            - name: KEEPER_REGISTRY_SYNC_INTERVAL
-              value: 5s
-            - name: DATABASE_URL
-              value: postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable
-            - name: P2P_LISTEN_PORT
-              value: "6690"
-            - name: FEATURE_OFFCHAIN_REPORTING
-              value: "true"
-            - name: EXPLORER_SECRET
-              value: ""
-            - name: CHAINLINK_DEV
-              value: "true"
-            - name: ETH_DISABLED
-              value: "false"
-            - name: MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
-              value: "0"
-            - name: ALLOW_ORIGINS
-              value: "*"
-            - name: FEATURE_EXTERNAL_INITIATORS
-              value: "false"
-            - name: CHAINLINK_TLS_PORT
-              value: "0"
-            - name: KEEPER_MINIMUM_REQUIRED_CONFIRMATIONS
-              value: "1"
-            - name: KEEPER_REGISTRY_PERFORM_GAS_OVERHEAD
-              value: "1"
-            - name: ETH_CHAIN_ID
-              value: "1337"
             - name: CHAINLINK_PGPASSWORD
               value: node
             - name: CHAINLINK_PORT
               value: "6688"
-            - name: KEEPER_DEFAULT_TRANSACTION_QUEUE_DEPTH
-              value: "1"
-            - name: DATABASE_NAME
-              value: chainlink
+            - name: FEATURE_OFFCHAIN_REPORTING
+              value: "true"
+            - name: JSON_CONSOLE
+              value: "false"
+            - name: P2P_LISTEN_PORT
+              value: "6690"
+            - name: KEEPER_REGISTRY_SYNC_INTERVAL
+              value: 5s
             - name: ETH_URL
               value: ws://geth:8546
-            - name: DEFAULT_HTTP_ALLOW_UNRESTRICTED_NETWORK_ACCESS
-              value: "true"
-            - name: MAX_EXPORT_HTML_THREADS
-              value: "2"
+            - name: LOG_LEVEL
+              value: debug
+            - name: KEEPER_DEFAULT_TRANSACTION_QUEUE_DEPTH
+              value: "1"
             - name: OCR_TRACE_LOGGING
               value: "true"
-            - name: P2P_LISTEN_IP
-              value: 0.0.0.0
+            - name: EXPLORER_SECRET
+              value: ""
+            - name: ETH_CHAIN_ID
+              value: "1337"
+            - name: CHAINLINK_TLS_PORT
+              value: "0"
             - name: ETH_MAX_IN_FLIGHT_TRANSACTIONS
               value: "5000"
             - name: EXPLORER_URL
               value: ""
+            - name: DATABASE_NAME
+              value: chainlink
+            - name: ETH_DISABLED
+              value: "false"
+            - name: MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
+              value: "0"
+            - name: DEFAULT_HTTP_ALLOW_UNRESTRICTED_NETWORK_ACCESS
+              value: "true"
+            - name: ENABLE_BULLETPROOF_TX_MANAGER
+              value: "true"
+            - name: MAX_EXPORT_HTML_THREADS
+              value: "2"
+            - name: ROOT
+              value: ./clroot
+            - name: KEEPER_REGISTRY_PERFORM_GAS_OVERHEAD
+              value: "1"
+            - name: DATABASE_URL
+              value: postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable
+            - name: ALLOW_ORIGINS
+              value: "*"
+            - name: FEATURE_EXTERNAL_INITIATORS
+              value: "false"
+            - name: CHAINLINK_DEV
+              value: "true"
+            - name: P2P_LISTEN_IP
+              value: 0.0.0.0
+            - name: SECURE_COOKIES
+              value: "false"
+            - name: EXPLORER_ACCESS_KEY
+              value: ""
+            - name: KEEPER_MINIMUM_REQUIRED_CONFIRMATIONS
+              value: "1"
           image: public.ecr.aws/z0b1w9r9/chainlink:develop.d2b337227bc5d4c4b6ee4f605017f205e01e5d16
           imagePullPolicy: Always
           livenessProbe:
@@ -381,10 +381,10 @@ spec:
           resources:
             limits:
               cpu: 200m
-              memory: 500Mi
+              memory: 1024Mi
             requests:
               cpu: 200m
-              memory: 500Mi
+              memory: 1024Mi
           volumeMounts:
             - mountPath: /etc/node-secrets-volume
               name: chainlink-config-map
@@ -490,68 +490,68 @@ spec:
             - /etc/node-secrets-volume/apicredentials
             - --vrfpassword=/etc/node-secrets-volume/apicredentials
           env:
-            - name: ALLOW_ORIGINS
-              value: "*"
-            - name: MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
-              value: "0"
-            - name: P2P_LISTEN_PORT
-              value: "6690"
-            - name: SECURE_COOKIES
-              value: "false"
-            - name: KEEPER_REGISTRY_PERFORM_GAS_OVERHEAD
-              value: "1"
-            - name: CHAINLINK_DEV
-              value: "true"
+            - name: ETH_MAX_IN_FLIGHT_TRANSACTIONS
+              value: "5000"
+            - name: CHAINLINK_PGPASSWORD
+              value: node
+            - name: ROOT
+              value: ./clroot
             - name: EXPLORER_URL
               value: ""
-            - name: KEEPER_MINIMUM_REQUIRED_CONFIRMATIONS
-              value: "1"
+            - name: MAX_EXPORT_HTML_THREADS
+              value: "2"
             - name: DATABASE_URL
               value: postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable
-            - name: CHAINLINK_PORT
-              value: "6688"
-            - name: CHAINLINK_TLS_PORT
-              value: "0"
-            - name: DEFAULT_HTTP_ALLOW_UNRESTRICTED_NETWORK_ACCESS
+            - name: CHAINLINK_DEV
               value: "true"
-            - name: KEEPER_DEFAULT_TRANSACTION_QUEUE_DEPTH
-              value: "1"
+            - name: FEATURE_OFFCHAIN_REPORTING
+              value: "true"
+            - name: JSON_CONSOLE
+              value: "false"
+            - name: EXPLORER_ACCESS_KEY
+              value: ""
             - name: DATABASE_NAME
               value: chainlink
             - name: FEATURE_EXTERNAL_INITIATORS
               value: "false"
-            - name: MAX_EXPORT_HTML_THREADS
-              value: "2"
-            - name: ROOT
-              value: ./clroot
-            - name: ETH_DISABLED
-              value: "false"
-            - name: CHAINLINK_PGPASSWORD
-              value: node
             - name: ENABLE_BULLETPROOF_TX_MANAGER
               value: "true"
+            - name: ETH_DISABLED
+              value: "false"
+            - name: CHAINLINK_PORT
+              value: "6688"
+            - name: P2P_LISTEN_PORT
+              value: "6690"
+            - name: CHAINLINK_TLS_PORT
+              value: "0"
+            - name: LOG_LEVEL
+              value: debug
+            - name: P2P_LISTEN_IP
+              value: 0.0.0.0
+            - name: EXPLORER_SECRET
+              value: ""
             - name: KEEPER_REGISTRY_SYNC_INTERVAL
               value: 5s
             - name: ETH_URL
               value: ws://geth:8546
-            - name: JSON_CONSOLE
-              value: "false"
-            - name: OCR_TRACE_LOGGING
-              value: "true"
-            - name: P2P_LISTEN_IP
-              value: 0.0.0.0
             - name: ETH_CHAIN_ID
               value: "1337"
-            - name: FEATURE_OFFCHAIN_REPORTING
+            - name: ALLOW_ORIGINS
+              value: "*"
+            - name: KEEPER_MINIMUM_REQUIRED_CONFIRMATIONS
+              value: "1"
+            - name: KEEPER_REGISTRY_PERFORM_GAS_OVERHEAD
+              value: "1"
+            - name: MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
+              value: "0"
+            - name: OCR_TRACE_LOGGING
               value: "true"
-            - name: ETH_MAX_IN_FLIGHT_TRANSACTIONS
-              value: "5000"
-            - name: EXPLORER_ACCESS_KEY
-              value: ""
-            - name: EXPLORER_SECRET
-              value: ""
-            - name: LOG_LEVEL
-              value: debug
+            - name: SECURE_COOKIES
+              value: "false"
+            - name: DEFAULT_HTTP_ALLOW_UNRESTRICTED_NETWORK_ACCESS
+              value: "true"
+            - name: KEEPER_DEFAULT_TRANSACTION_QUEUE_DEPTH
+              value: "1"
           image: public.ecr.aws/z0b1w9r9/chainlink:develop.d2b337227bc5d4c4b6ee4f605017f205e01e5d16
           imagePullPolicy: Always
           livenessProbe:
@@ -575,10 +575,10 @@ spec:
           resources:
             limits:
               cpu: 200m
-              memory: 500Mi
+              memory: 1024Mi
             requests:
               cpu: 200m
-              memory: 500Mi
+              memory: 1024Mi
           volumeMounts:
             - mountPath: /etc/node-secrets-volume
               name: chainlink-config-map
@@ -684,68 +684,68 @@ spec:
             - /etc/node-secrets-volume/apicredentials
             - --vrfpassword=/etc/node-secrets-volume/apicredentials
           env:
-            - name: LOG_LEVEL
-              value: debug
-            - name: DATABASE_NAME
-              value: chainlink
+            - name: MAX_EXPORT_HTML_THREADS
+              value: "2"
             - name: SECURE_COOKIES
               value: "false"
-            - name: JSON_CONSOLE
+            - name: ALLOW_ORIGINS
+              value: "*"
+            - name: CHAINLINK_DEV
+              value: "true"
+            - name: FEATURE_EXTERNAL_INITIATORS
               value: "false"
+            - name: LOG_LEVEL
+              value: debug
             - name: ETH_URL
               value: ws://geth:8546
-            - name: ETH_DISABLED
+            - name: P2P_LISTEN_PORT
+              value: "6690"
+            - name: EXPLORER_URL
+              value: ""
+            - name: KEEPER_REGISTRY_SYNC_INTERVAL
+              value: 5s
+            - name: CHAINLINK_PORT
+              value: "6688"
+            - name: JSON_CONSOLE
               value: "false"
+            - name: ETH_MAX_IN_FLIGHT_TRANSACTIONS
+              value: "5000"
+            - name: KEEPER_DEFAULT_TRANSACTION_QUEUE_DEPTH
+              value: "1"
+            - name: DATABASE_URL
+              value: postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable
+            - name: FEATURE_OFFCHAIN_REPORTING
+              value: "true"
+            - name: MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
+              value: "0"
+            - name: KEEPER_REGISTRY_PERFORM_GAS_OVERHEAD
+              value: "1"
+            - name: DATABASE_NAME
+              value: chainlink
             - name: CHAINLINK_TLS_PORT
               value: "0"
             - name: DEFAULT_HTTP_ALLOW_UNRESTRICTED_NETWORK_ACCESS
               value: "true"
-            - name: MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
-              value: "0"
+            - name: ENABLE_BULLETPROOF_TX_MANAGER
+              value: "true"
+            - name: ETH_CHAIN_ID
+              value: "1337"
+            - name: ETH_DISABLED
+              value: "false"
+            - name: CHAINLINK_PGPASSWORD
+              value: node
             - name: OCR_TRACE_LOGGING
               value: "true"
             - name: EXPLORER_ACCESS_KEY
               value: ""
-            - name: DATABASE_URL
-              value: postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable
-            - name: ENABLE_BULLETPROOF_TX_MANAGER
-              value: "true"
-            - name: MAX_EXPORT_HTML_THREADS
-              value: "2"
-            - name: ROOT
-              value: ./clroot
-            - name: ETH_MAX_IN_FLIGHT_TRANSACTIONS
-              value: "5000"
-            - name: ALLOW_ORIGINS
-              value: "*"
-            - name: EXPLORER_SECRET
-              value: ""
             - name: P2P_LISTEN_IP
               value: 0.0.0.0
-            - name: CHAINLINK_PORT
-              value: "6688"
-            - name: FEATURE_OFFCHAIN_REPORTING
-              value: "true"
-            - name: P2P_LISTEN_PORT
-              value: "6690"
-            - name: KEEPER_DEFAULT_TRANSACTION_QUEUE_DEPTH
-              value: "1"
-            - name: KEEPER_REGISTRY_SYNC_INTERVAL
-              value: 5s
-            - name: ETH_CHAIN_ID
-              value: "1337"
+            - name: ROOT
+              value: ./clroot
+            - name: EXPLORER_SECRET
+              value: ""
             - name: KEEPER_MINIMUM_REQUIRED_CONFIRMATIONS
               value: "1"
-            - name: CHAINLINK_DEV
-              value: "true"
-            - name: CHAINLINK_PGPASSWORD
-              value: node
-            - name: EXPLORER_URL
-              value: ""
-            - name: KEEPER_REGISTRY_PERFORM_GAS_OVERHEAD
-              value: "1"
-            - name: FEATURE_EXTERNAL_INITIATORS
-              value: "false"
           image: public.ecr.aws/z0b1w9r9/chainlink:develop.d2b337227bc5d4c4b6ee4f605017f205e01e5d16
           imagePullPolicy: Always
           livenessProbe:
@@ -769,10 +769,10 @@ spec:
           resources:
             limits:
               cpu: 200m
-              memory: 500Mi
+              memory: 1024Mi
             requests:
               cpu: 200m
-              memory: 500Mi
+              memory: 1024Mi
           volumeMounts:
             - mountPath: /etc/node-secrets-volume
               name: chainlink-config-map
@@ -878,66 +878,66 @@ spec:
             - /etc/node-secrets-volume/apicredentials
             - --vrfpassword=/etc/node-secrets-volume/apicredentials
           env:
-            - name: DATABASE_URL
-              value: postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable
-            - name: ETH_CHAIN_ID
-              value: "1337"
-            - name: ETH_DISABLED
-              value: "false"
+            - name: P2P_LISTEN_PORT
+              value: "6690"
+            - name: KEEPER_DEFAULT_TRANSACTION_QUEUE_DEPTH
+              value: "1"
             - name: CHAINLINK_PGPASSWORD
               value: node
-            - name: CHAINLINK_TLS_PORT
-              value: "0"
-            - name: DEFAULT_HTTP_ALLOW_UNRESTRICTED_NETWORK_ACCESS
-              value: "true"
             - name: FEATURE_OFFCHAIN_REPORTING
+              value: "true"
+            - name: OCR_TRACE_LOGGING
               value: "true"
             - name: ETH_MAX_IN_FLIGHT_TRANSACTIONS
               value: "5000"
             - name: EXPLORER_ACCESS_KEY
               value: ""
-            - name: ENABLE_BULLETPROOF_TX_MANAGER
-              value: "true"
-            - name: MAX_EXPORT_HTML_THREADS
-              value: "2"
-            - name: CHAINLINK_DEV
-              value: "true"
-            - name: FEATURE_EXTERNAL_INITIATORS
-              value: "false"
-            - name: CHAINLINK_PORT
-              value: "6688"
-            - name: MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
-              value: "0"
-            - name: OCR_TRACE_LOGGING
-              value: "true"
-            - name: P2P_LISTEN_PORT
-              value: "6690"
-            - name: DATABASE_NAME
-              value: chainlink
-            - name: ETH_URL
-              value: ws://geth:8546
-            - name: P2P_LISTEN_IP
-              value: 0.0.0.0
-            - name: SECURE_COOKIES
-              value: "false"
-            - name: EXPLORER_URL
-              value: ""
-            - name: KEEPER_DEFAULT_TRANSACTION_QUEUE_DEPTH
-              value: "1"
-            - name: KEEPER_REGISTRY_SYNC_INTERVAL
-              value: 5s
-            - name: LOG_LEVEL
-              value: debug
-            - name: EXPLORER_SECRET
-              value: ""
-            - name: KEEPER_MINIMUM_REQUIRED_CONFIRMATIONS
-              value: "1"
             - name: ALLOW_ORIGINS
               value: "*"
+            - name: MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
+              value: "0"
+            - name: KEEPER_MINIMUM_REQUIRED_CONFIRMATIONS
+              value: "1"
+            - name: ETH_DISABLED
+              value: "false"
+            - name: ENABLE_BULLETPROOF_TX_MANAGER
+              value: "true"
             - name: JSON_CONSOLE
               value: "false"
+            - name: MAX_EXPORT_HTML_THREADS
+              value: "2"
+            - name: P2P_LISTEN_IP
+              value: 0.0.0.0
+            - name: DATABASE_URL
+              value: postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable
+            - name: DATABASE_NAME
+              value: chainlink
+            - name: FEATURE_EXTERNAL_INITIATORS
+              value: "false"
+            - name: CHAINLINK_TLS_PORT
+              value: "0"
+            - name: ETH_URL
+              value: ws://geth:8546
+            - name: ETH_CHAIN_ID
+              value: "1337"
+            - name: CHAINLINK_DEV
+              value: "true"
+            - name: CHAINLINK_PORT
+              value: "6688"
+            - name: DEFAULT_HTTP_ALLOW_UNRESTRICTED_NETWORK_ACCESS
+              value: "true"
             - name: ROOT
               value: ./clroot
+            - name: EXPLORER_URL
+              value: ""
+            - name: EXPLORER_SECRET
+              value: ""
+            - name: LOG_LEVEL
+              value: debug
+            - name: SECURE_COOKIES
+              value: "false"
+            - name: KEEPER_REGISTRY_SYNC_INTERVAL
+              value: 5s
             - name: KEEPER_REGISTRY_PERFORM_GAS_OVERHEAD
               value: "1"
           image: public.ecr.aws/z0b1w9r9/chainlink:develop.d2b337227bc5d4c4b6ee4f605017f205e01e5d16
@@ -963,10 +963,10 @@ spec:
           resources:
             limits:
               cpu: 200m
-              memory: 500Mi
+              memory: 1024Mi
             requests:
               cpu: 200m
-              memory: 500Mi
+              memory: 1024Mi
           volumeMounts:
             - mountPath: /etc/node-secrets-volume
               name: chainlink-config-map
@@ -1102,9 +1102,9 @@ spec:
           imagePullPolicy: Always
           name: geth
           ports:
-            - containerPort: 8899
+            - containerPort: 8544
               name: http-rpc
-            - containerPort: 8900
+            - containerPort: 8546
               name: ws-rpc
           resources:
             limits:
@@ -1133,3 +1133,85 @@ spec:
         - configMap:
             name: geth-cm
           name: geth-cm
+---
+apiVersion: v1
+kind: ConfigMap
+data:
+  mockserver.properties: |-
+    ###############################
+    # MockServer & Proxy Settings #
+    ###############################
+
+    # Socket & Port Settings
+
+    # socket timeout in milliseconds (default 120000)
+    mockserver.maxSocketTimeout=120000
+
+    # Json Initialization
+
+    mockserver.initializationJsonPath=/config/initializerJson.json
+    mockserver.watchInitializationJson=true
+
+    mockserver.livenessHttpGetPath=/liveness/probe
+metadata:
+  labels:
+    app: mockserver-cm
+  name: mockserver-cm
+  namespace: zclcdk-test-1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mockserver
+  namespace: zclcdk-test-1
+spec:
+  ports:
+    - name: serviceport
+      port: 1080
+      targetPort: 1080
+  selector:
+    app: mockserver
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mockserver
+  namespace: zclcdk-test-1
+spec:
+  selector:
+    matchLabels:
+      app: mockserver
+  template:
+    metadata:
+      labels:
+        app: mockserver
+    spec:
+      containers:
+        - env:
+            - name: MOCKSERVER_LOG_LEVEL
+              value: DEBUG
+            - name: SERVER_PORT
+              value: "1080"
+          image: mockserver/mockserver:mockserver-5.13.2
+          imagePullPolicy: Always
+          name: mockserver
+          ports:
+            - containerPort: 1080
+              name: serviceport
+          resources:
+            limits:
+              cpu: 200m
+              memory: 528Mi
+            requests:
+              cpu: 200m
+              memory: 528Mi
+          volumeMounts:
+            - mountPath: /config
+              name: mockserver-cm
+            - mountPath: /libs
+              name: mockserver-cm
+      serviceAccountName: default
+      volumes:
+        - configMap:
+            name: mockserver-cm
+          name: mockserver-cm

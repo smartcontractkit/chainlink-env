@@ -25,7 +25,7 @@ func main() {
 		"Create Solana OCR cluster",
 		ns,
 		"chainlink-ocr-solana-cluster.k8s.yaml",
-		chainlink.Manifest,
+		chainlink.NewChart,
 		&chainlink.Props{
 			Namespace: ns,
 			ChainProps: []interface{}{
@@ -44,7 +44,7 @@ func main() {
 		"Create generic multi-versions cluster",
 		ns,
 		"chainlink-ocr-cluster-multiver.k8s.yaml",
-		chainlink.Manifest,
+		chainlink.NewChart,
 		&chainlink.Props{
 			Namespace:  ns,
 			ChainProps: []interface{}{ethereum.DefaultDevProps()},
@@ -66,7 +66,7 @@ func main() {
 		"Create generic OCR 5 node cluster",
 		ns,
 		"chainlink-ocr-cluster.k8s.yaml",
-		chainlink.Manifest,
+		chainlink.NewChart,
 		&chainlink.Props{
 			Namespace:  ns,
 			ChainProps: []interface{}{ethereum.DefaultDevProps()},
@@ -83,7 +83,7 @@ func main() {
 		"Create generic OCR 5 node cluster with persistence",
 		ns,
 		"chainlink-ocr-cluster-persistence.k8s.yaml",
-		chainlink.Manifest,
+		chainlink.NewChart,
 		&chainlink.Props{
 			Namespace:  ns,
 			ChainProps: []interface{}{ethereum.DefaultDevProps()},
@@ -101,7 +101,7 @@ func main() {
 		"Create generic OCR 5 node cluster with remote test runner",
 		ns,
 		"chainlink-ocr-cluster-remote-testrunner.k8s.yaml",
-		chainlink.Manifest,
+		chainlink.NewChart,
 		&chainlink.Props{
 			Namespace: ns,
 			TestRunnerProps: testrunner.Props{

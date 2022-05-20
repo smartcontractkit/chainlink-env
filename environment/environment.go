@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).Level(zerolog.TraceLevel)
 }
 
 type Config struct {
@@ -20,20 +20,22 @@ type Config struct {
 }
 
 type Environment struct {
-	Cfg    *Config
-	Client *client.K8sClient
-	Fwd    *client.Forwarder
-	Out    client.ManifestOutput
-	URLs   map[string][]string
+	Cfg       *Config
+	Client    *client.K8sClient
+	Artifacts *Artifacts
+	Fwd       *client.Forwarder
+	Out       client.ManifestOutput
+	URLs      map[string][]string
 }
 
 func New(cfg *Config) *Environment {
 	c := client.NewK8sClient()
-	return &Environment{
+	e := &Environment{
 		Client: c,
 		Cfg:    cfg,
 		Fwd:    client.NewForwarder(c, cfg.KeepConnection),
 	}
+	return e
 }
 
 func (m *Environment) DeployOrConnect(app cdk8s.App, out client.ManifestOutput) error {
@@ -56,7 +58,11 @@ func (m *Environment) DeployOrConnect(app cdk8s.App, out client.ManifestOutput) 
 		return err
 	}
 	m.Out = out
-	log.Warn().Interface("Connections", m.URLs).Send()
+	a, err := NewArtifacts(m)
+	if err != nil {
+		log.Fatal().Err(err).Send()
+	}
+	m.Artifacts = a
 	if m.Cfg.KeepConnection {
 		log.Info().Msg("Keeping forwarder connections, press Ctrl+C to interrupt")
 		if m.Cfg.RemoveOnInterrupt {
@@ -79,4 +85,8 @@ func (m *Environment) Deploy(app cdk8s.App, c client.ManifestOutput) error {
 		return err
 	}
 	return m.Client.CheckReady(c)
+}
+
+func (m *Environment) Shutdown() error {
+	return m.Client.RemoveNamespace(m.Out.GetNamespace())
 }
