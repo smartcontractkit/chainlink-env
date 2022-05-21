@@ -74,7 +74,6 @@ github.com/aws/constructs-go/constructs/v10 v10.0.0/go.mod h1:bqGOmGScZgQxmWlFkH
 github.com/aws/constructs-go/constructs/v10 v10.1.11 h1:I8XSO6wfEensuX20uU7JPffdXDnBbeKcEWQw1FMVcMQ=
 github.com/aws/constructs-go/constructs/v10 v10.1.11/go.mod h1:XFwFvzuX38hhTlpNVlC1tpgjCpRAAVr7a6+O0/9VB9c=
 github.com/aws/jsii-runtime-go v1.26.0/go.mod h1:9ddMDdGQwew6pQrfuTID/LxDDrpyrybwsWN84etzjQ8=
-github.com/aws/jsii-runtime-go v1.58.0/go.mod h1:OPeobFzUctDjq8EXbRZbIphpzQg3lzMs8KH09xuHyk0=
 github.com/aws/jsii-runtime-go v1.59.0 h1:QEnIpd17oKv/UMFD2bPxLbT3B3S+QlYTmnPHEdKJkic=
 github.com/aws/jsii-runtime-go v1.59.0/go.mod h1:OPeobFzUctDjq8EXbRZbIphpzQg3lzMs8KH09xuHyk0=
 github.com/benbjohnson/clock v1.0.3/go.mod h1:bGMdMPoPVvcYyt1gHDf4J2KE153Yf9BuiUKYMaxlTDM=
@@ -87,8 +86,8 @@ github.com/bketelsen/crypt v0.0.4/go.mod h1:aI6NrJ0pMGgvZKL1iVgXLnfIFJtfV+bKCoqO
 github.com/blang/semver/v4 v4.0.0/go.mod h1:IbckMUScFkM3pff0VJDNKRiT6TG/YpiHIM2yvyW5YoQ=
 github.com/c-bata/go-prompt v0.2.6 h1:POP+nrHE+DfLYx370bedwNhsqmpCUynWPxuHi0C5vZI=
 github.com/c-bata/go-prompt v0.2.6/go.mod h1:/LMAke8wD2FsNu9EXNdHxNLbd9MedkPnCdfpU9wwHfY=
-github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.2.86 h1:B0lH/7pBR0+LyGH2uEkxOAYAr7oWA3U8lQAqCIZS3Z0=
-github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.2.86/go.mod h1:s9G5fM8oNQ1NyRmzbC0P00OOCMbUe6yTTbDsxRUpy+U=
+github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.3.1 h1:nCCYQ3cZeB0//5KwaAdswLNbuZu9wdMUWAHXkdc6puA=
+github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.3.1/go.mod h1:8bH7NrqqD1Egl5sooTghr+q4/l5jNcum9xhOk5fJyb8=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/cespare/xxhash/v2 v2.1.1/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
