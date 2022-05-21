@@ -1,11 +1,13 @@
 package alias
 
 import (
+	"errors"
 	jsii "github.com/aws/jsii-runtime-go"
 	"github.com/fatih/structs"
 	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
 	"reflect"
+	"strings"
 )
 
 func Str(value string) *string {
@@ -27,6 +29,18 @@ func MustChartEnvVarsFromStruct(prefix string, defaults interface{}, s interface
 		e = append(e, EnvVarStr(tag, v.(string)))
 	}
 	return &e
+}
+
+func ConvertLabels(labels []string) (*map[string]*string, error) {
+	cdk8sLabels := make(map[string]*string)
+	for _, s := range labels {
+		a := strings.Split(s, "=")
+		if len(a) != 2 {
+			return nil, errors.New("please provide labels in format key=value")
+		}
+		cdk8sLabels[a[0]] = Str(a[1])
+	}
+	return &cdk8sLabels, nil
 }
 
 // EnvVarStr quick shortcut for string/string key/value var

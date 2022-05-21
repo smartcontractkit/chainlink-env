@@ -14,6 +14,18 @@ import (
 	"time"
 )
 
+// Control labels used to list envs created by the wizard
+const (
+	ControlLabelKey        = "generatedBy"
+	ControlLabelValue      = "cdk8s"
+	ControlLabelEnvTypeKey = "envType"
+)
+
+const (
+	EnvTypeEVM5    = "evm-5-default"
+	EnvTypeSolana5 = "solana-5-default"
+)
+
 const (
 	AppName           = "chainlink-node"
 	NodeContainerName = "node"
@@ -54,6 +66,7 @@ type VersionProps struct {
 // Props root Chainlink props
 type Props struct {
 	Namespace       string
+	Labels          []string
 	ChainProps      []interface{}
 	AppVersions     []VersionProps
 	TestRunnerProps interface{}
@@ -75,6 +88,8 @@ func chains(chart cdk8s.Chart, chains []interface{}) {
 			ethereum.NewEthereum(chart, c.(*ethereum.Props))
 		case *solana.Props:
 			solana.NewSolana(chart, c.(*solana.Props))
+		default:
+			log.Fatal().Msg("no chain props found, provide one of a supported chain props")
 		}
 	}
 }
@@ -470,7 +485,7 @@ func (m *ManifestOutputData) ProcessConnections(fwd *client.Forwarder) (map[stri
 	return urlsByApp, nil
 }
 
-func mockserver(chart cdk8s.Chart, props *Props) {
+func mockserver(chart cdk8s.Chart, _ *Props) {
 	ms.NewChart(chart, &ms.Props{})
 }
 
@@ -484,10 +499,15 @@ func NewChart(props interface{}) (cdk8s.App, client.ManifestOutput) {
 		Labels:    nil,
 		Namespace: a.Str(p.Namespace),
 	})
+	p.Labels = append(p.Labels, "generatedBy=cdk8s")
+	labels, err := a.ConvertLabels(p.Labels)
+	if err != nil {
+		log.Fatal().Err(err).Send()
+	}
 	k8s.NewKubeNamespace(chart, a.Str("namespace"), &k8s.KubeNamespaceProps{
 		Metadata: &k8s.ObjectMeta{
 			Name:   a.Str(p.Namespace),
-			Labels: &map[string]*string{"generatedBy": a.Str("cdk8s")},
+			Labels: labels,
 		},
 	})
 	p.vars = &internalChartVars{InstanceCounter: 0}
@@ -498,7 +518,7 @@ func NewChart(props interface{}) (cdk8s.App, client.ManifestOutput) {
 	return app, &ManifestOutputData{
 		Namespace: p.Namespace,
 		ReadyCheckData: client.ReadyCheckData{
-			Timeout:   3 * time.Minute,
+			Timeout:   1 * time.Minute,
 			Selector:  "app=chainlink-node",
 			Container: "node",
 			LogSubStr: "Subscribed to heads on chain",

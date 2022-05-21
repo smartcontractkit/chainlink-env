@@ -14,16 +14,15 @@ func main() {
 		chainlink.NewChart(
 			&chainlink.Props{
 				Namespace: "zclcdk-deployment",
+				Labels:    []string{"envType=evm-5-default"},
 				ChainProps: []interface{}{
-					&ethereum.Props{
-						DevPeriod: "1",
-					},
+					&ethereum.Props{},
 				},
 				AppVersions: []chainlink.VersionProps{
 					{
 						Image:     "public.ecr.aws/chainlink/chainlink",
 						Tag:       "1.4.1-root",
-						Instances: 5,
+						Instances: 1,
 					},
 				},
 			}))

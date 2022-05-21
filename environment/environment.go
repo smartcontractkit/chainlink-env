@@ -44,7 +44,7 @@ func (m *Environment) DeployOrConnect(app cdk8s.App, out client.ManifestOutput) 
 	ns := os.Getenv("ENV_NAMESPACE")
 	if !m.Client.NamespaceExists(ns) {
 		if err := m.Deploy(app, out); err != nil {
-			return err
+			return m.Shutdown()
 		}
 	} else {
 		log.Info().Str("Namespace", ns).Msg("Namespace found")
