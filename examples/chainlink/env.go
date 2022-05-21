@@ -13,7 +13,7 @@ func main() {
 	}).DeployOrConnect(
 		chainlink.NewChart(
 			&chainlink.Props{
-				Namespace: "zclcdk-deployment",
+				Namespace: "chainlink-env",
 				Labels:    []string{"envType=evm-5-default"},
 				ChainProps: []interface{}{
 					&ethereum.Props{},
@@ -22,7 +22,7 @@ func main() {
 					{
 						Image:     "public.ecr.aws/chainlink/chainlink",
 						Tag:       "1.4.1-root",
-						Instances: 1,
+						Instances: 5,
 					},
 				},
 			}))

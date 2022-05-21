@@ -228,6 +228,14 @@ func (m *K8sClient) Create(manifest string) error {
 	return ExecCmd(cmd)
 }
 
+func (m *K8sClient) DryRun(manifest string) error {
+	zlog.Info().Msg("Creating manifest")
+	if err := os.WriteFile(TempDebugManifest, []byte(manifest), os.ModePerm); err != nil {
+		return err
+	}
+	return nil
+}
+
 // CopyToPod copies src to a particular container. Destination should be in the form of a proper K8s destination path
 // NAMESPACE/POD_NAME:folder/FILE_NAME
 func (m *K8sClient) CopyToPod(namespace, src, destination, containername string) (*bytes.Buffer, *bytes.Buffer, *bytes.Buffer, error) {

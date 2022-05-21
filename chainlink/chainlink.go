@@ -3,6 +3,7 @@ package chainlink
 import (
 	"fmt"
 	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	a "github.com/smartcontractkit/chainlink-env/alias"
 	"github.com/smartcontractkit/chainlink-env/chains/ethereum"
@@ -495,15 +496,17 @@ func NewChart(props interface{}) (cdk8s.App, client.ManifestOutput) {
 	app := cdk8s.NewApp(&cdk8s.AppProps{
 		YamlOutputType: cdk8s.YamlOutputType_FILE_PER_APP,
 	})
-	chart := cdk8s.NewChart(app, a.Str("chainlink"), &cdk8s.ChartProps{
-		Labels:    nil,
-		Namespace: a.Str(p.Namespace),
-	})
+	p.Namespace = fmt.Sprintf("%s-%s", p.Namespace, uuid.NewString()[0:5])
 	p.Labels = append(p.Labels, "generatedBy=cdk8s")
 	labels, err := a.ConvertLabels(p.Labels)
 	if err != nil {
 		log.Fatal().Err(err).Send()
 	}
+
+	chart := cdk8s.NewChart(app, a.Str("chainlink"), &cdk8s.ChartProps{
+		Labels:    nil,
+		Namespace: a.Str(p.Namespace),
+	})
 	k8s.NewKubeNamespace(chart, a.Str("namespace"), &k8s.KubeNamespaceProps{
 		Metadata: &k8s.ObjectMeta{
 			Name:   a.Str(p.Namespace),
@@ -518,7 +521,7 @@ func NewChart(props interface{}) (cdk8s.App, client.ManifestOutput) {
 	return app, &ManifestOutputData{
 		Namespace: p.Namespace,
 		ReadyCheckData: client.ReadyCheckData{
-			Timeout:   1 * time.Minute,
+			Timeout:   3 * time.Minute,
 			Selector:  "app=chainlink-node",
 			Container: "node",
 			LogSubStr: "Subscribed to heads on chain",

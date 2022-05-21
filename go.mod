@@ -6,14 +6,18 @@ require (
 	github.com/aws/constructs-go/constructs/v10 v10.1.11
 	github.com/aws/jsii-runtime-go v1.59.0
 	github.com/c-bata/go-prompt v0.2.6
-	github.com/cdk8s-team/cdk8s-core-go/cdk8s v1.4.15
 	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.2.86
+	github.com/fatih/color v1.13.0
 	github.com/fatih/structs v1.1.0
-	github.com/hexops/gotextdiff v1.0.3
+	github.com/google/uuid v1.3.0
 	github.com/imdario/mergo v0.3.12
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/pkg/errors v0.9.1
+	github.com/pkg/term v1.2.0-beta.2
 	github.com/rs/zerolog v1.26.1
+	github.com/stretchr/testify v1.7.1
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+	golang.org/x/sys v0.0.0-20220209214540-3681064d5158
 	k8s.io/api v0.24.0
 	k8s.io/apimachinery v0.24.0
 	k8s.io/cli-runtime v0.24.0
@@ -27,14 +31,12 @@ require (
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
-	github.com/aws/constructs-go/constructs/v3 v3.3.201 // indirect
 	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
-	github.com/fatih/color v1.13.0 // indirect
 	github.com/fvbommel/sortorder v1.0.1 // indirect
 	github.com/go-errors/errors v1.0.1 // indirect
 	github.com/go-logr/logr v1.2.0 // indirect
@@ -48,7 +50,6 @@ require (
 	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
-	github.com/google/uuid v1.1.2 // indirect
 	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -69,20 +70,15 @@ require (
 	github.com/onsi/ginkgo v1.16.1 // indirect
 	github.com/onsi/gomega v1.11.0 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
-	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pkg/term v1.2.0-beta.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/russross/blackfriday v1.5.2 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/spf13/cobra v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/stretchr/objx v0.2.0 // indirect
-	github.com/stretchr/testify v1.7.1 // indirect
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
-	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect

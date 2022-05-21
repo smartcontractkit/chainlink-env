@@ -15,6 +15,7 @@ func init() {
 }
 
 type Config struct {
+	DryRun            bool
 	KeepConnection    bool
 	RemoveOnInterrupt bool
 }
@@ -30,6 +31,9 @@ type Environment struct {
 
 // New creates new environment
 func New(cfg *Config) *Environment {
+	if cfg == nil {
+		cfg = &Config{}
+	}
 	c := client.NewK8sClient()
 	e := &Environment{
 		Client: c,
@@ -50,6 +54,10 @@ func (m *Environment) DeployOrConnect(app cdk8s.App, out client.ManifestOutput) 
 		log.Info().Str("Namespace", ns).Msg("Namespace found")
 		out.SetNamespace(ns)
 	}
+	if m.Cfg.DryRun {
+		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
+		return nil
+	}
 	if err := m.Fwd.Connect(out.GetNamespace(), ""); err != nil {
 		return err
 	}
@@ -60,7 +68,7 @@ func (m *Environment) DeployOrConnect(app cdk8s.App, out client.ManifestOutput) 
 		return err
 	}
 	m.Out = out
-	a, err := NewArtifacts(m)
+	a, err := NewArtifacts(m.Client, m.Out.GetNamespace())
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create artifacts client")
 	}
@@ -84,6 +92,13 @@ func (m *Environment) DeployOrConnect(app cdk8s.App, out client.ManifestOutput) 
 // Deploy deploy synthesized manifest and check logs for readiness
 func (m *Environment) Deploy(app cdk8s.App, c client.ManifestOutput) error {
 	manifest := app.SynthYaml().(string)
+	log.Info().Str("Namespace", c.GetNamespace()).Msg("Deploying namespace")
+	if m.Cfg.DryRun {
+		if err := m.Client.DryRun(manifest); err != nil {
+			return err
+		}
+		return nil
+	}
 	if err := m.Client.Create(manifest); err != nil {
 		return err
 	}
