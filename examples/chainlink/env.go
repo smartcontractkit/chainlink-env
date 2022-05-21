@@ -14,10 +14,9 @@ func main() {
 		chainlink.NewChart(
 			&chainlink.Props{
 				Namespace: "zclcdk-deployment",
+				Labels:    []string{"envType=evm-5-default"},
 				ChainProps: []interface{}{
-					&ethereum.Props{
-						DevPeriod: "2",
-					},
+					&ethereum.Props{},
 				},
 				AppVersions: []chainlink.VersionProps{
 					{

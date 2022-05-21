@@ -65,13 +65,11 @@ func NewK8sClient() *K8sClient {
 
 // ListPods lists pods for a namespace and selector
 func (m *K8sClient) ListPods(namespace, selector string) (*v1.PodList, error) {
-	listOptions := metaV1.ListOptions{LabelSelector: selector}
-	podList, err := m.ClientSet.CoreV1().Pods(namespace).List(context.Background(), listOptions)
+	return m.ClientSet.CoreV1().Pods(namespace).List(context.Background(), metaV1.ListOptions{LabelSelector: selector})
+}
 
-	if err != nil {
-		return nil, err
-	}
-	return podList, nil
+func (m *K8sClient) ListNamespaces(selector string) (*v1.NamespaceList, error) {
+	return m.ClientSet.CoreV1().Namespaces().List(context.Background(), metaV1.ListOptions{LabelSelector: selector})
 }
 
 // Poll up to timeout seconds for pod to enter running state.
@@ -142,34 +140,39 @@ func (m *K8sClient) WaitLogMessages(c ManifestOutput) error {
 	defer cancel()
 	// we can't stream and iterate, because container may crash, so send new request every time
 	for {
-		time.Sleep(LogPollInterval)
-		for _, pod := range pods.Items {
-			stream, err := m.ClientSet.CoreV1().
-				Pods(c.GetNamespace()).
-				GetLogs(pod.Name, &v1.PodLogOptions{
-					Follow:    false,
-					Container: c.GetReadyCheckData().Container,
-					TailLines: &tail,
-				}).Stream(ctx)
-			if err != nil {
-				return err
-			}
-			reader := bufio.NewScanner(stream)
-			for reader.Scan() {
-				select {
-				case <-ctx.Done():
-					return nil
-				default:
-					if strings.Contains(reader.Text(), c.GetReadyCheckData().LogSubStr) {
-						logLinesFound++
+		select {
+		case <-ctx.Done():
+			return errors.New("timeout waiting for logs")
+		default:
+			time.Sleep(LogPollInterval)
+			for _, pod := range pods.Items {
+				stream, err := m.ClientSet.CoreV1().
+					Pods(c.GetNamespace()).
+					GetLogs(pod.Name, &v1.PodLogOptions{
+						Follow:    false,
+						Container: c.GetReadyCheckData().Container,
+						TailLines: &tail,
+					}).Stream(ctx)
+				if err != nil {
+					return err
+				}
+				reader := bufio.NewScanner(stream)
+				for reader.Scan() {
+					select {
+					case <-ctx.Done():
+						return nil
+					default:
+						if strings.Contains(reader.Text(), c.GetReadyCheckData().LogSubStr) {
+							logLinesFound++
+						}
 					}
 				}
-			}
-			zlog.Debug().Int("Logs", logLinesFound).Msg("Searching logs")
-			if logLinesFound == len(pods.Items) {
-				zlog.Info().Msg("All log substrings have been found")
-				cancel()
-				return nil
+				zlog.Debug().Int("Logs", logLinesFound).Msg("Searching logs")
+				if logLinesFound == len(pods.Items) {
+					zlog.Info().Msg("All log substrings have been found")
+					cancel()
+					return nil
+				}
 			}
 		}
 	}
