@@ -41,7 +41,7 @@ func (m *Forwarder) forwardPodPorts(pod v1.Pod, namespaceName string) error {
 		return err
 	}
 	httpPath := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", namespaceName, pod.Name)
-	hostIP := strings.TrimLeft(m.Client.RESTConfig.Host, "https:/")
+	hostIP := strings.TrimLeft(m.Client.RESTConfig.Host, "htps:/")
 	serverURL := url.URL{Scheme: "https", Path: httpPath, Host: hostIP}
 
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: roundTripper}, http.MethodPost, &serverURL)
@@ -69,6 +69,9 @@ func (m *Forwarder) forwardPodPorts(pod v1.Pod, namespaceName string) error {
 		return fmt.Errorf("error on forwarding k8s port: %v", errOut.String())
 	}
 	forwardedPorts, err := forwarder.GetPorts()
+	if err != nil {
+		return err
+	}
 	namedPorts := m.podPortsByName(pod, forwardedPorts)
 	m.mu.Lock()
 	defer m.mu.Unlock()

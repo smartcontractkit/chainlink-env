@@ -2,7 +2,7 @@ package chainlink
 
 import (
 	"fmt"
-	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
+	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	a "github.com/smartcontractkit/chainlink-env/alias"
@@ -84,11 +84,11 @@ func pgIsReadyCheck() *[]*string {
 
 func chains(chart cdk8s.Chart, chains []interface{}) {
 	for _, c := range chains {
-		switch c.(type) {
+		switch c := c.(type) {
 		case *ethereum.Props:
-			ethereum.NewEthereum(chart, c.(*ethereum.Props))
+			ethereum.NewEthereum(chart, c)
 		case *solana.Props:
-			solana.NewSolana(chart, c.(*solana.Props))
+			solana.NewSolana(chart, c)
 		default:
 			log.Fatal().Msg("no chain props found, provide one of a supported chain props")
 		}

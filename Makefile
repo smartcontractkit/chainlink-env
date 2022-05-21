@@ -4,19 +4,22 @@ export GO111MODULE ?= on
 
 .PHONY: lint
 lint:
-	${BIN_DIR}/golangci-lint --color=always run ./... -v
+	${BIN_DIR}/golangci-lint --color=always run -v
 
 .PHONY: golangci
 golangci:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${BIN_DIR} v1.42.0
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${BIN_DIR} v1.46.2
 
-.PHONY: install, golangci
-install:
-	sudo npm install -g cdk8s-cli@2.0.0-rc.1
+.PHONY: install_cli
+install_cli: # installs CLI wizard
+	go install cmd/wizard/chainlink-env.go
+
+.PHONY: install_deps, golangci
+install_deps: golangci
+	yarn global add cdk8s-cli@2.0.0-rc.1
 	curl -LO https://dl.k8s.io/release/v1.24.0/bin/darwin/amd64/kubectl
 	chmod +x ./kubectl
 	mv kubectl ./bin
-	brew install cdk8s@1.1.1
 	cdk8s import
 
 .PHONY: test

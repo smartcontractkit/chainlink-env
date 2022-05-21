@@ -38,6 +38,7 @@ func TestOverrideCodeEnv(t *testing.T) {
 			Name: "DefaultName",
 		}
 		overridenName := "EnvName"
+		// nolint
 		os.Setenv("PREFIX_MY_NAME", overridenName)
 		MustEnvCodeOverrideStruct("PREFIX", defaultCodeProps, codeProps)
 		require.Equal(t, overridenName, defaultCodeProps.Name)
@@ -50,6 +51,7 @@ func TestOverrideCodeEnv(t *testing.T) {
 			Name: "DefaultName",
 		}
 		overridenName := "EnvName"
+		// nolint
 		os.Setenv("PREFIX_SOME_MY_NAME", overridenName)
 		MustEnvCodeOverrideStruct("prEfix_sOme", defaultCodeProps, codeProps)
 		require.Equal(t, overridenName, defaultCodeProps.Name)
