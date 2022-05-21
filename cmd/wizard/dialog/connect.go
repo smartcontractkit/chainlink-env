@@ -28,6 +28,10 @@ func getNamespacesData() (prompt.Completer, map[string]string) {
 			Description: string(labels),
 		})
 	}
+	if len(envNameToType) == 0 {
+		color.Red("No chainlink-env environments found")
+		NewInitDialogue()
+	}
 	color.Green("Found environments, use autocomplete to select")
 	return defaultCompleter(sug), envNameToType
 }
@@ -48,5 +52,7 @@ func NewConnectDialogue() {
 	default:
 		fmt.Printf("not a valid type, please select from suggested")
 	}
+	// nolint
+	os.Unsetenv("ENV_NAMESPACE")
 	NewInitDialogue()
 }

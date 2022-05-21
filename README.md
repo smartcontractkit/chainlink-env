@@ -1,9 +1,9 @@
 ## Chainlink environment
-
+Disclaimer: This software is in early Alpha stage, use at your own risk
 ### Local k8s cluster
 Read [here](KUBERNETES.md) about how to spin up a local cluster
 
-### Install
+### Install from source
 Set up deps
 ```shell
 make install_deps
@@ -26,5 +26,5 @@ make chaosmesh
 ```
 #### Running standalone example environment
 ```shell
-ENV_NAMESPACE="zclcdk-deployment" go run examples/chainlink/env.go
+ENV_NAMESPACE="..." go run examples/chainlink/env.go
 ```
