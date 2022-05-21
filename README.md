@@ -16,6 +16,7 @@ make install
 ### Use
 Start up a wizard to create/connect to environments and more
 ```
+export CHAINLINK_ENV_USER="Satoshi" 
 chainlink-env
 ```
 
@@ -28,3 +29,7 @@ make chaosmesh
 ```shell
 ENV_NAMESPACE="..." go run examples/chainlink/env.go
 ```
+
+Add more CLI presets [here](./cmd/wizard/presets)
+
+Add more programmatic examples [here](./examples/)

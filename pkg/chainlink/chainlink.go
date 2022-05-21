@@ -5,13 +5,14 @@ import (
 	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
-	a "github.com/smartcontractkit/chainlink-env/alias"
-	"github.com/smartcontractkit/chainlink-env/chains/ethereum"
-	"github.com/smartcontractkit/chainlink-env/chains/solana"
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
-	ms "github.com/smartcontractkit/chainlink-env/mockserver"
+	"github.com/smartcontractkit/chainlink-env/pkg"
+	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
+	"github.com/smartcontractkit/chainlink-env/pkg/chains/ethereum"
+	ms "github.com/smartcontractkit/chainlink-env/pkg/mockserver"
+	"os"
 	"time"
 )
 
@@ -23,8 +24,9 @@ const (
 )
 
 const (
-	EnvTypeEVM5    = "evm-5-default"
-	EnvTypeSolana5 = "solana-5-default"
+	EnvTypeEVM5     = "evm-5-minimal-local"
+	EnvTypeEVM5Soak = "evm-5-soak"
+	EnvTypeSolana5  = "solana-5-default"
 )
 
 const (
@@ -57,11 +59,11 @@ type PersistenceProps struct {
 
 // VersionProps CL application props for a particular version
 type VersionProps struct {
-	Image       string `envconfig:"IMAGE"`
-	Tag         string `envconfig:"TAG"`
-	Instances   int
-	Env         *NodeEnvVars
-	Persistence PersistenceProps
+	Image         string `envconfig:"IMAGE"`
+	Tag           string `envconfig:"TAG"`
+	Instances     int
+	Env           *NodeEnvVars
+	ResourcesMode pkg.ResourcesMode
 }
 
 // Props root Chainlink props
@@ -71,6 +73,8 @@ type Props struct {
 	ChainProps      []interface{}
 	AppVersions     []VersionProps
 	TestRunnerProps interface{}
+	Persistence     PersistenceProps
+	ResourcesMode   pkg.ResourcesMode
 	vars            *internalChartVars
 }
 
@@ -82,13 +86,11 @@ func pgIsReadyCheck() *[]*string {
 	}
 }
 
-func chains(chart cdk8s.Chart, chains []interface{}) {
-	for _, c := range chains {
-		switch c := c.(type) {
+func chains(chart cdk8s.Chart, p *Props) {
+	for _, chainProps := range p.ChainProps {
+		switch c := chainProps.(type) {
 		case *ethereum.Props:
-			ethereum.NewEthereum(chart, c)
-		case *solana.Props:
-			solana.NewSolana(chart, c)
+			ethereum.NewEthereum(chart, c, p.ResourcesMode)
 		default:
 			log.Fatal().Msg("no chain props found, provide one of a supported chain props")
 		}
@@ -109,7 +111,7 @@ func versionedDeployments(chart cdk8s.Chart, p *Props) {
 			}
 			configMap(chart, p)
 			service(chart, p)
-			if verProps.Persistence.Capacity != "" {
+			if p.Persistence.Capacity != "" {
 				statefulConstruct(chart, p, verProps)
 			} else {
 				deploymentConstruct(chart, p, verProps)
@@ -193,7 +195,7 @@ func defaultNodeEnvVars() *NodeEnvVars {
 }
 
 // chainlinkContainer CL container spec
-func chainlinkContainer(verProps VersionProps) *k8s.Container {
+func chainlinkContainer(p *Props, verProps VersionProps) *k8s.Container {
 	c := &k8s.Container{
 		Name:            a.Str(NodeContainerName),
 		Image:           a.Str(fmt.Sprintf("%s:%s", verProps.Image, verProps.Tag)),
@@ -240,14 +242,21 @@ func chainlinkContainer(verProps VersionProps) *k8s.Container {
 				ContainerPort: a.Num(8899),
 			},
 		},
-		Env:       a.MustChartEnvVarsFromStruct("", defaultNodeEnvVars(), verProps.Env),
-		Resources: a.ContainerResources("200m", "1024Mi", "200m", "1024Mi"),
+		Env: a.MustChartEnvVarsFromStruct("", defaultNodeEnvVars(), verProps.Env),
+	}
+	switch p.ResourcesMode {
+	case pkg.MinimalLocalResourcesMode:
+		c.Resources = a.ContainerResources("200m", "1024Mi", "200m", "1024Mi")
+	case pkg.SoakResourcesMode:
+		c.Resources = a.ContainerResources("1000m", "2048Mi", "1000m", "2048Mi")
+	default:
+		log.Fatal().Msg("unrecognized resources mode")
 	}
 	return c
 }
 
 // postgresContainer postgres container spec
-func postgresContainer(verProps VersionProps) *k8s.Container {
+func postgresContainer(p *Props, verProps VersionProps) *k8s.Container {
 	c := &k8s.Container{
 		Name:  a.Str("chainlink-db"),
 		Image: a.Str("postgres:11.6"),
@@ -277,7 +286,15 @@ func postgresContainer(verProps VersionProps) *k8s.Container {
 		},
 		Resources: a.ContainerResources("450m", "1024Mi", "450m", "1024Mi"),
 	}
-	if verProps.Persistence.Capacity != "" {
+	switch p.ResourcesMode {
+	case pkg.MinimalLocalResourcesMode:
+		c.Resources = a.ContainerResources("300m", "1024Mi", "300m", "1024Mi")
+	case pkg.SoakResourcesMode:
+		c.Resources = a.ContainerResources("2000m", "4086Mi", "2000m", "4086Mi")
+	default:
+		log.Fatal().Msg("unrecognized resources mode")
+	}
+	if p.Persistence.Capacity != "" {
 		c.VolumeMounts = &[]*k8s.VolumeMount{
 			{
 				Name:      a.Str("postgres"),
@@ -317,8 +334,8 @@ func deploymentConstruct(chart cdk8s.Chart, props *Props, verProps VersionProps)
 						},
 						ServiceAccountName: a.Str("default"),
 						Containers: &[]*k8s.Container{
-							postgresContainer(verProps),
-							chainlinkContainer(verProps),
+							postgresContainer(props, verProps),
+							chainlinkContainer(props, verProps),
 						},
 					},
 				},
@@ -326,19 +343,19 @@ func deploymentConstruct(chart cdk8s.Chart, props *Props, verProps VersionProps)
 		})
 }
 
-func statefulConstruct(chart cdk8s.Chart, props *Props, verProps VersionProps) {
+func statefulConstruct(chart cdk8s.Chart, p *Props, verProps VersionProps) {
 	k8s.NewKubeStatefulSet(
 		chart,
-		a.Str(props.vars.DeploymentName),
+		a.Str(p.vars.DeploymentName),
 		&k8s.KubeStatefulSetProps{
 			Metadata: &k8s.ObjectMeta{
-				Name: a.Str(props.vars.DeploymentName),
+				Name: a.Str(p.vars.DeploymentName),
 			},
 			Spec: &k8s.StatefulSetSpec{
 				Selector: &k8s.LabelSelector{
-					MatchLabels: &props.vars.NodeLabels,
+					MatchLabels: &p.vars.NodeLabels,
 				},
-				ServiceName:         a.Str(props.vars.ServiceName),
+				ServiceName:         a.Str(p.vars.ServiceName),
 				PodManagementPolicy: a.Str("Parallel"),
 				VolumeClaimTemplates: &[]*k8s.KubePersistentVolumeClaimProps{
 					{
@@ -349,7 +366,7 @@ func statefulConstruct(chart cdk8s.Chart, props *Props, verProps VersionProps) {
 							AccessModes: &[]*string{a.Str("ReadWriteOnce")},
 							Resources: &k8s.ResourceRequirements{
 								Requests: &map[string]k8s.Quantity{
-									"storage": k8s.Quantity_FromString(a.Str(verProps.Persistence.Capacity)),
+									"storage": k8s.Quantity_FromString(a.Str(p.Persistence.Capacity)),
 								},
 							},
 						},
@@ -358,21 +375,21 @@ func statefulConstruct(chart cdk8s.Chart, props *Props, verProps VersionProps) {
 				Template: &k8s.PodTemplateSpec{
 					Metadata: &k8s.ObjectMeta{
 						Annotations: scrapeAnnotation,
-						Labels:      &props.vars.NodeLabels,
+						Labels:      &p.vars.NodeLabels,
 					},
 					Spec: &k8s.PodSpec{
 						Volumes: &[]*k8s.Volume{
 							{
 								Name: a.Str("chainlink-config-map"),
 								ConfigMap: &k8s.ConfigMapVolumeSource{
-									Name: a.Str(props.vars.ConfigMapName),
+									Name: a.Str(p.vars.ConfigMapName),
 								},
 							},
 						},
 						ServiceAccountName: a.Str("default"),
 						Containers: &[]*k8s.Container{
-							postgresContainer(verProps),
-							chainlinkContainer(verProps),
+							postgresContainer(p, verProps),
+							chainlinkContainer(p, verProps),
 						},
 					},
 				},
@@ -498,6 +515,7 @@ func NewChart(props interface{}) (cdk8s.App, client.ManifestOutput) {
 	})
 	p.Namespace = fmt.Sprintf("%s-%s", p.Namespace, uuid.NewString()[0:5])
 	p.Labels = append(p.Labels, "generatedBy=cdk8s")
+	p.Labels = append(p.Labels, fmt.Sprintf("owner=%s", os.Getenv("CHAINLINK_ENV_USER")))
 	labels, err := a.ConvertLabels(p.Labels)
 	if err != nil {
 		log.Fatal().Err(err).Send()
@@ -516,7 +534,7 @@ func NewChart(props interface{}) (cdk8s.App, client.ManifestOutput) {
 	p.vars = &internalChartVars{InstanceCounter: 0}
 
 	versionedDeployments(chart, p)
-	chains(chart, p.ChainProps)
+	chains(chart, p)
 	mockserver(chart, p)
 	return app, &ManifestOutputData{
 		Namespace: p.Namespace,

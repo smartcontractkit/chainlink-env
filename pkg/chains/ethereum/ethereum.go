@@ -3,9 +3,11 @@ package ethereum
 import (
 	"fmt"
 	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
-	a "github.com/smartcontractkit/chainlink-env/alias"
+	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
+	"github.com/smartcontractkit/chainlink-env/pkg"
+	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
 )
 
 type Props struct {
@@ -28,6 +30,7 @@ type chartData struct {
 	BaseName      string
 	ConfigMapName string
 	Props         *Props
+	ResourcesMode pkg.ResourcesMode
 }
 
 func configMap(chart cdk8s.Chart, data chartData) {
@@ -113,34 +116,34 @@ func service(chart cdk8s.Chart, data chartData) {
 	})
 }
 
-func deployment(chart cdk8s.Chart, shared chartData) {
+func deployment(chart cdk8s.Chart, data chartData) {
 	k8s.NewKubeDeployment(
 		chart,
-		a.Str(fmt.Sprintf("%s-deployment", shared.BaseName)),
+		a.Str(fmt.Sprintf("%s-deployment", data.BaseName)),
 		&k8s.KubeDeploymentProps{
 			Metadata: &k8s.ObjectMeta{
-				Name: a.Str(shared.BaseName),
+				Name: a.Str(data.BaseName),
 			},
 			Spec: &k8s.DeploymentSpec{
 				Selector: &k8s.LabelSelector{
-					MatchLabels: shared.Labels,
+					MatchLabels: data.Labels,
 				},
 				Template: &k8s.PodTemplateSpec{
 					Metadata: &k8s.ObjectMeta{
-						Labels: shared.Labels,
+						Labels: data.Labels,
 					},
 					Spec: &k8s.PodSpec{
 						Volumes: &[]*k8s.Volume{
 							{
-								Name: a.Str(shared.ConfigMapName),
+								Name: a.Str(data.ConfigMapName),
 								ConfigMap: &k8s.ConfigMapVolumeSource{
-									Name: a.Str(shared.ConfigMapName),
+									Name: a.Str(data.ConfigMapName),
 								},
 							},
 						},
 						ServiceAccountName: a.Str("default"),
 						Containers: &[]*k8s.Container{
-							container(shared),
+							container(data),
 						},
 					},
 				},
@@ -151,7 +154,7 @@ func deployment(chart cdk8s.Chart, shared chartData) {
 func container(data chartData) *k8s.Container {
 	props := defaultDevChainProps()
 	config.MustEnvCodeOverrideStruct("", props, data.Props)
-	return &k8s.Container{
+	c := &k8s.Container{
 		Name:            a.Str(data.BaseName),
 		Image:           a.Str(fmt.Sprintf("%s:%s", "ethereum/client-go", "v1.10.17")),
 		ImagePullPolicy: a.Str("Always"),
@@ -228,9 +231,18 @@ func container(data chartData) *k8s.Container {
 		},
 		Resources: a.ContainerResources("200m", "528Mi", "200m", "528Mi"),
 	}
+	switch data.ResourcesMode {
+	case pkg.MinimalLocalResourcesMode:
+		c.Resources = a.ContainerResources("200m", "528Mi", "200m", "528Mi")
+	case pkg.SoakResourcesMode:
+		c.Resources = a.ContainerResources("1000m", "1024Mi", "1000m", "1024Mi")
+	default:
+		log.Fatal().Msg("unrecognized resources mode")
+	}
+	return c
 }
 
-func NewEthereum(chart cdk8s.Chart, props *Props) cdk8s.Chart {
+func NewEthereum(chart cdk8s.Chart, props *Props, resources pkg.ResourcesMode) cdk8s.Chart {
 	s := chartData{
 		Labels: &map[string]*string{
 			"app": a.Str("geth"),
@@ -238,6 +250,7 @@ func NewEthereum(chart cdk8s.Chart, props *Props) cdk8s.Chart {
 		ConfigMapName: "geth-cm",
 		BaseName:      "geth",
 		Props:         props,
+		ResourcesMode: resources,
 	}
 	service(chart, s)
 	configMap(chart, s)

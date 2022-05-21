@@ -1,12 +1,14 @@
 package main
 
 import (
-	"github.com/smartcontractkit/chainlink-env/chainlink"
-	"github.com/smartcontractkit/chainlink-env/chains/ethereum"
+	"fmt"
 	"github.com/smartcontractkit/chainlink-env/environment"
+	"github.com/smartcontractkit/chainlink-env/pkg/chainlink"
+	"github.com/smartcontractkit/chainlink-env/pkg/chains/ethereum"
 )
 
 func main() {
+	// example of quick usage to debug env, removed on SIGINT
 	err := environment.New(&environment.Config{
 		KeepConnection:    true,
 		RemoveOnInterrupt: true,
@@ -14,7 +16,7 @@ func main() {
 		chainlink.NewChart(
 			&chainlink.Props{
 				Namespace: "chainlink-env",
-				Labels:    []string{"envType=evm-5-default"},
+				Labels:    []string{fmt.Sprintf("envType=%s", chainlink.EnvTypeEVM5)},
 				ChainProps: []interface{}{
 					&ethereum.Props{},
 				},

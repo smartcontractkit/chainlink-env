@@ -3,8 +3,8 @@ package testrunner
 import (
 	"fmt"
 	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
-	a "github.com/smartcontractkit/chainlink-env/alias"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
+	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
 )
 
 type Props struct {
