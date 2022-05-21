@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/smartcontractkit/chainlink-env/client"
 	"io"
 	"os"
 	"path/filepath"
@@ -20,17 +21,18 @@ import (
 
 // Artifacts is an artifacts dumping structure that copies logs and database dumps for all deployed pods
 type Artifacts struct {
-	env        *Environment
+	Namespace  string
 	DBName     string
+	Client     *client.K8sClient
 	podsClient clientV1.PodInterface
 }
 
 // NewArtifacts create new artifacts instance for provided environment
-func NewArtifacts(env *Environment) (*Artifacts, error) {
-	podsClient := env.Client.ClientSet.CoreV1().Pods(env.Out.GetNamespace())
+func NewArtifacts(client *client.K8sClient, namespace string) (*Artifacts, error) {
 	return &Artifacts{
-		env:        env,
-		podsClient: podsClient,
+		Namespace:  namespace,
+		Client:     client,
+		podsClient: client.ClientSet.CoreV1().Pods(namespace),
 	}, nil
 }
 
@@ -53,7 +55,7 @@ func (a *Artifacts) writePodArtifacts(testDir string) error {
 	podsList, err := a.podsClient.List(context.Background(), metaV1.ListOptions{})
 	if err != nil {
 		log.Err(err).
-			Str("Namespace", a.env.Out.GetNamespace()).
+			Str("Namespace", a.Namespace).
 			Msg("Error retrieving pod list from K8s environment")
 		return err
 	}
@@ -70,7 +72,7 @@ func (a *Artifacts) writePodArtifacts(testDir string) error {
 		err = a.writePodLogs(pod, appDir)
 		if err != nil {
 			log.Err(err).
-				Str("Namespace", a.env.Out.GetNamespace()).
+				Str("Namespace", a.Namespace).
 				Str("Pod", pod.Name).
 				Msg("Error writing logs for pod")
 		}
@@ -79,7 +81,7 @@ func (a *Artifacts) writePodArtifacts(testDir string) error {
 }
 
 func (a *Artifacts) dumpDB(pod coreV1.Pod, container coreV1.Container) (string, error) {
-	postRequestBase := a.env.Client.ClientSet.CoreV1().RESTClient().Post().
+	postRequestBase := a.Client.ClientSet.CoreV1().RESTClient().Post().
 		Namespace(pod.Namespace).Resource("pods").Name(pod.Name).SubResource("exec")
 	exportDBRequest := postRequestBase.VersionedParams(
 		&coreV1.PodExecOptions{
@@ -90,7 +92,7 @@ func (a *Artifacts) dumpDB(pod coreV1.Pod, container coreV1.Container) (string, 
 			Stderr:    true,
 			TTY:       false,
 		}, scheme.ParameterCodec)
-	exec, err := remotecommand.NewSPDYExecutor(a.env.Client.RESTConfig, "POST", exportDBRequest.URL())
+	exec, err := remotecommand.NewSPDYExecutor(a.Client.RESTConfig, "POST", exportDBRequest.URL())
 	if err != nil {
 		return "", err
 	}

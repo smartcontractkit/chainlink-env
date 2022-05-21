@@ -7,7 +7,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/chainlink"
 	"github.com/smartcontractkit/chainlink-env/cmd/wizard/presets"
-	"github.com/smartcontractkit/chainlink-env/environment"
 )
 
 func envTypeSuggester(d prompt.Document) []prompt.Suggest {
@@ -22,7 +21,7 @@ func NewEnvDialogue() {
 	choice := Input(envTypeSuggester)
 	switch choice {
 	case chainlink.EnvTypeEVM5:
-		if err := presets.EnvEVMDefault(&environment.Config{}); err != nil {
+		if err := presets.EnvEVMDefault(nil); err != nil {
 			log.Fatal().Err(err).Send()
 		}
 		color.Yellow("Environment is up and connected")

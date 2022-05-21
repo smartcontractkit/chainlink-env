@@ -67,7 +67,7 @@ func signalAwareEnv(taskFunc func(config *environment.Config) error, config *env
 }
 
 func Input(suggester prompt.Completer) string {
-	return prompt.Input(PromptHeader, suggester)
+	return prompt.Input(PromptHeader, suggester, prompt.OptionInputTextColor(prompt.Green))
 }
 
 func defaultSuggester(d prompt.Document, s []prompt.Suggest) []prompt.Suggest {
