@@ -2,7 +2,7 @@ package solana
 
 import (
 	"fmt"
-	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
+	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 
 	a "github.com/smartcontractkit/chainlink-env/alias"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"

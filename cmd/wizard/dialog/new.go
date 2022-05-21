@@ -2,7 +2,7 @@ package dialog
 
 import (
 	"fmt"
-	"github.com/c-bata/go-prompt"
+	prompt "github.com/c-bata/go-prompt"
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/chainlink"

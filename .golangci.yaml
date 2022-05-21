@@ -9,9 +9,7 @@ linters-settings:
   revive:
     rules:
       - name: exported
-        severity: error
+        severity: warning
       - name: dot-imports
         disabled: true
 linters:
-  enable:
-    - revive

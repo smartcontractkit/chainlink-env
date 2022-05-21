@@ -1,7 +1,7 @@
 package environment
 
 import (
-	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
+	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
@@ -78,7 +78,7 @@ func (m *Environment) DeployOrConnect(app cdk8s.App, out client.ManifestOutput) 
 		if m.Cfg.RemoveOnInterrupt {
 			log.Warn().Msg("Environment will be removed on interrupt")
 		}
-		ch := make(chan os.Signal)
+		ch := make(chan os.Signal, 1)
 		signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 		<-ch
 		log.Warn().Msg("Interrupted")
