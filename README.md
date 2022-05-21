@@ -4,15 +4,27 @@
 Read [here](KUBERNETES.md) about how to spin up a local cluster
 
 ### Install
+Set up deps
 ```shell
+make install_deps
+```
+Install CLI wizard
+```
 make install
 ```
-If you have chaos-mesh installed in your cluster use, that will download CRDs from your current k8s ctx
-```shell
-make chaosmesh
+
+### Use
+Start up a wizard to create/connect to environments and more
+```
+chainlink-env
 ```
 
-### Running example environment
+# Develop
+#### Pull chaosmesh CRD from your current k8s context (Optional)
+```
+make chaosmesh
+```
+#### Running standalone example environment
 ```shell
 ENV_NAMESPACE="zclcdk-deployment" go run examples/chainlink/env.go
 ```
