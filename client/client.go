@@ -167,7 +167,6 @@ func (m *K8sClient) WaitLogMessages(c ManifestOutput) error {
 						}
 					}
 				}
-				zlog.Debug().Int("Logs", logLinesFound).Msg("Searching logs")
 				if logLinesFound == len(pods.Items) {
 					zlog.Info().Msg("All log substrings have been found")
 					cancel()

@@ -6,9 +6,9 @@ import (
 	prompt "github.com/c-bata/go-prompt"
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
-	"github.com/smartcontractkit/chainlink-env/chainlink"
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/cmd/wizard/presets"
+	"github.com/smartcontractkit/chainlink-env/pkg/chainlink"
 	"os"
 )
 
@@ -45,7 +45,12 @@ func NewConnectDialogue() {
 	selectedType := nsTypesMap[selectedNs]
 	switch selectedType {
 	case chainlink.EnvTypeEVM5:
-		if err := presets.EnvEVMDefault(nil); err != nil {
+		if err := presets.EnvEVMMinimalLocal(nil); err != nil {
+			log.Fatal().Err(err).Send()
+		}
+		color.Yellow("Environment is up and connected")
+	case chainlink.EnvTypeEVM5Soak:
+		if err := presets.EnvEVMSoak(nil); err != nil {
 			log.Fatal().Err(err).Send()
 		}
 		color.Yellow("Environment is up and connected")
