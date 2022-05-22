@@ -5,6 +5,7 @@ import (
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg/chainlink"
 	"github.com/smartcontractkit/chainlink-env/pkg/chains/ethereum"
+	"time"
 )
 
 func main() {
@@ -16,6 +17,7 @@ func main() {
 		chainlink.NewChart(
 			&chainlink.Props{
 				Namespace: "chainlink-env",
+				TTL:       2 * time.Minute,
 				Labels:    []string{fmt.Sprintf("envType=%s", chainlink.EnvTypeEVM5)},
 				ChainProps: []interface{}{
 					&ethereum.Props{},

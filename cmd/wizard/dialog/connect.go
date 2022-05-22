@@ -13,6 +13,7 @@ import (
 )
 
 func getNamespacesData() (prompt.Completer, map[string]string) {
+	color.Yellow("Searching for environments..")
 	c := client.NewK8sClient()
 	nss, err := c.ListNamespaces(fmt.Sprintf("%s=%s", chainlink.ControlLabelKey, chainlink.ControlLabelValue))
 	if err != nil {
@@ -37,7 +38,6 @@ func getNamespacesData() (prompt.Completer, map[string]string) {
 }
 
 func NewConnectDialogue() {
-	color.Yellow("Searching for environments..")
 	completer, nsTypesMap := getNamespacesData()
 	selectedNs := Input(completer)
 	// nolint

@@ -8,6 +8,7 @@ import (
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
 	"reflect"
 	"strings"
+	"time"
 )
 
 func Str(value string) *string {
@@ -16,6 +17,18 @@ func Str(value string) *string {
 
 func Num(value float64) *float64 {
 	return jsii.Number(value)
+}
+
+// ShortDur is a helper method for kube-janitor duration format
+func ShortDur(d time.Duration) *string {
+	s := d.String()
+	if strings.HasSuffix(s, "m0s") {
+		s = s[:len(s)-2]
+	}
+	if strings.HasSuffix(s, "h0m") {
+		s = s[:len(s)-2]
+	}
+	return Str(s)
 }
 
 // MustChartEnvVarsFromStruct parses typed configs into manifest env vars
