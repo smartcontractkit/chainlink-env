@@ -17,7 +17,9 @@ const (
 	OptionDryRun  = "dry-run"
 	OptionConnect = "connect"
 	OptionDump    = "dump"
+	OptionRemove  = "remove"
 	OptionQuit    = "quit"
+	OptionNone    = ""
 )
 
 func rootSuggester(d prompt.Document) []prompt.Suggest {
@@ -26,27 +28,34 @@ func rootSuggester(d prompt.Document) []prompt.Suggest {
 		{Text: OptionDryRun, Description: "Generate environment manifest and save in tmp-manifest.yaml"},
 		{Text: OptionConnect, Description: "Connect to already created environment"},
 		{Text: OptionDump, Description: "Dump environment logs to a dir"},
+		{Text: OptionRemove, Description: "Remove an environment"},
 		{Text: OptionQuit, Description: "Exit application"},
 	})
 }
 
 func NewInitDialogue() {
-	var choice string
-	color.Green("Chainlink interactive environments control")
-	choice = Input(rootSuggester)
-	switch choice {
-	case OptionNew:
-		NewEnvDialogue()
-	case OptionDryRun:
-		Ctx.DryRun = true
-		NewEnvDialogue()
-	case OptionConnect:
-		NewConnectDialogue()
-	case OptionDump:
-		NewDumpDialogue()
-	case OptionQuit:
-		color.Green("terminating process, bye!")
-	default:
-		color.Red("no such option, please choose what is available")
+	for {
+		var choice string
+		color.Green("Chainlink environment wizard")
+		choice = Input(rootSuggester)
+		switch choice {
+		case OptionNew:
+			NewEnvDialogue()
+		case OptionDryRun:
+			Ctx.DryRun = true
+			NewEnvDialogue()
+		case OptionConnect:
+			NewConnectDialogue()
+		case OptionDump:
+			NewDumpDialogue()
+		case OptionRemove:
+			NewRemoveDialogue()
+		case OptionQuit:
+			fallthrough
+		case OptionNone:
+			return
+		default:
+			color.Red("no such option, please choose what is available")
+		}
 	}
 }

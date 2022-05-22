@@ -1,7 +1,6 @@
 package dialog
 
 import (
-	"fmt"
 	prompt "github.com/c-bata/go-prompt"
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
@@ -30,16 +29,18 @@ func NewEnvDialogue() {
 		}); err != nil {
 			log.Fatal().Err(err).Send()
 		}
-		color.Yellow("Environment is up and connected")
+		return
 	case chainlink.EnvTypeEVM5Soak:
 		if err := presets.EnvEVMSoak(&environment.Config{
 			DryRun: Ctx.DryRun,
 		}); err != nil {
 			log.Fatal().Err(err).Send()
 		}
+		return
 	case chainlink.EnvTypeSolana5:
 	default:
-		fmt.Println("no environment preset found")
+		color.Red("No environment preset found")
+		return
 	}
-	NewInitDialogue()
+	color.Yellow("Environment is up and connected")
 }

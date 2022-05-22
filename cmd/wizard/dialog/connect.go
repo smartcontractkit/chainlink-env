@@ -19,6 +19,10 @@ func getNamespacesData() (prompt.Completer, map[string]string) {
 	if err != nil {
 		log.Fatal().Err(err).Send()
 	}
+	if len(nss.Items) == 0 {
+		color.Red("No suitable environments found")
+		return nil, nil
+	}
 	sug := make([]prompt.Suggest, 0)
 	envNameToType := make(map[string]string)
 	for _, ns := range nss.Items {
@@ -39,7 +43,14 @@ func getNamespacesData() (prompt.Completer, map[string]string) {
 
 func NewConnectDialogue() {
 	completer, nsTypesMap := getNamespacesData()
+	if nsTypesMap == nil {
+		return
+	}
 	selectedNs := Input(completer)
+	if selectedNs == "" {
+		color.Red("No environment selected")
+		return
+	}
 	// nolint
 	os.Setenv("ENV_NAMESPACE", selectedNs)
 	selectedType := nsTypesMap[selectedNs]
@@ -59,5 +70,4 @@ func NewConnectDialogue() {
 	}
 	// nolint
 	os.Unsetenv("ENV_NAMESPACE")
-	NewInitDialogue()
 }

@@ -17,11 +17,16 @@ func main() {
 		chainlink.NewChart(
 			&chainlink.Props{
 				Namespace: "chainlink-env",
-				TTL:       2 * time.Minute,
-				Labels:    []string{fmt.Sprintf("envType=%s", chainlink.EnvTypeEVM5)},
+				// you can set TTL if you are using https://codeberg.org/hjacobs/kube-janitor
+				TTL: 2 * time.Minute,
+				// envType field is required to properly connect the environment
+				Labels: []string{fmt.Sprintf("envType=%s", chainlink.EnvTypeEVM5)},
+				// additional chains can be deployed and connected, props can be overridden using default method
 				ChainProps: []interface{}{
 					&ethereum.Props{},
 				},
+				// almost all vars can be overridden in order ENV_VARS -> Code -> Code defaults
+				// see config package for more examples
 				AppVersions: []chainlink.VersionProps{
 					{
 						Image:     "public.ecr.aws/chainlink/chainlink",

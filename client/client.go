@@ -133,7 +133,7 @@ func (m *K8sClient) WaitLogMessages(c ManifestOutput) error {
 		return err
 	}
 
-	zlog.Info().Interface("Pods", podNames(pods)).Str("Substring", c.GetReadyCheckData().LogSubStr).Msg("Searching logs")
+	zlog.Info().Interface("Pods", podNames(pods)).Str("Substring", c.GetReadyCheckData().LogSubStr).Msg("Searching for logs")
 	logLinesFound := 0
 	tail := int64(1000)
 	ctx, cancel := context.WithTimeout(context.Background(), c.GetReadyCheckData().Timeout)
