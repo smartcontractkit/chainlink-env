@@ -40,7 +40,7 @@ const (
 )
 
 var (
-	scrapeAnnotation = &map[string]*string{"prometheus.io/scrape": a.Str("true")}
+	defaultAnnotations = map[string]*string{"prometheus.io/scrape": a.Str("true")}
 )
 
 // internalChartVars some shared labels/selectors and names that must match in resources
@@ -69,6 +69,7 @@ type VersionProps struct {
 // Props root Chainlink props
 type Props struct {
 	Namespace       string
+	TTL             time.Duration
 	Labels          []string
 	ChainProps      []interface{}
 	AppVersions     []VersionProps
@@ -320,8 +321,7 @@ func deploymentConstruct(chart cdk8s.Chart, props *Props, verProps VersionProps)
 				},
 				Template: &k8s.PodTemplateSpec{
 					Metadata: &k8s.ObjectMeta{
-						Annotations: scrapeAnnotation,
-						Labels:      &props.vars.NodeLabels,
+						Labels: &props.vars.NodeLabels,
 					},
 					Spec: &k8s.PodSpec{
 						Volumes: &[]*k8s.Volume{
@@ -374,8 +374,7 @@ func statefulConstruct(chart cdk8s.Chart, p *Props, verProps VersionProps) {
 				},
 				Template: &k8s.PodTemplateSpec{
 					Metadata: &k8s.ObjectMeta{
-						Annotations: scrapeAnnotation,
-						Labels:      &p.vars.NodeLabels,
+						Labels: &p.vars.NodeLabels,
 					},
 					Spec: &k8s.PodSpec{
 						Volumes: &[]*k8s.Volume{
@@ -525,10 +524,12 @@ func NewChart(props interface{}) (cdk8s.App, client.ManifestOutput) {
 		Labels:    nil,
 		Namespace: a.Str(p.Namespace),
 	})
+	defaultAnnotations["janitor/ttl"] = a.ShortDur(p.TTL)
 	k8s.NewKubeNamespace(chart, a.Str("namespace"), &k8s.KubeNamespaceProps{
 		Metadata: &k8s.ObjectMeta{
-			Name:   a.Str(p.Namespace),
-			Labels: labels,
+			Name:        a.Str(p.Namespace),
+			Labels:      labels,
+			Annotations: &defaultAnnotations,
 		},
 	})
 	p.vars = &internalChartVars{InstanceCounter: 0}

@@ -8,6 +8,7 @@ import (
 	"github.com/smartcontractkit/chainlink-env/pkg/chains/ethereum"
 )
 
+// EnvEVMMinimalLocal local development Chainlink deployment
 func EnvEVMMinimalLocal(config *environment.Config) error {
 	return environment.New(config).
 		DeployOrConnect(
@@ -29,6 +30,7 @@ func EnvEVMMinimalLocal(config *environment.Config) error {
 				}))
 }
 
+// EnvEVMSoak deployment for a long running soak tests
 func EnvEVMSoak(config *environment.Config) error {
 	return environment.New(config).
 		DeployOrConnect(

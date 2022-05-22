@@ -5,11 +5,19 @@ import (
 )
 
 const (
-	PromptHeader = "> "
+	PromptHeader = ">> "
 )
 
 func Input(suggester prompt.Completer) string {
-	return prompt.Input(PromptHeader, suggester, prompt.OptionInputTextColor(prompt.Green))
+	return prompt.Input(
+		PromptHeader,
+		suggester,
+		prompt.OptionInputTextColor(prompt.DarkGreen),
+		prompt.OptionSelectedSuggestionBGColor(prompt.Black),
+		prompt.OptionSelectedSuggestionTextColor(prompt.DarkGreen),
+		prompt.OptionDescriptionBGColor(prompt.DarkGray),
+		prompt.OptionDescriptionTextColor(prompt.DarkGreen),
+	)
 }
 
 func defaultSuggester(d prompt.Document, s []prompt.Suggest) []prompt.Suggest {
