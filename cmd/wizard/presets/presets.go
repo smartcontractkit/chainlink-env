@@ -24,7 +24,7 @@ func EnvEVMMinimalLocal(config *environment.Config) error {
 						{
 							Image:     "public.ecr.aws/chainlink/chainlink",
 							Tag:       "1.4.1-root",
-							Instances: 5,
+							Instances: 1,
 						},
 					},
 				}))

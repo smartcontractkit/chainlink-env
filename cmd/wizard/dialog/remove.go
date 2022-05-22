@@ -4,10 +4,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
-	"github.com/smartcontractkit/chainlink-env/environment"
 )
 
-func NewDumpDialogue() {
+func NewRemoveDialogue() {
 	completer, envNameToType := getNamespacesData()
 	if envNameToType == nil {
 		return
@@ -18,11 +17,7 @@ func NewDumpDialogue() {
 		return
 	}
 	c := client.NewK8sClient()
-	a, err := environment.NewArtifacts(c, selectedNs)
-	if err != nil {
-		log.Fatal().Err(err).Send()
-	}
-	if err = a.DumpTestResult("logs", "chainlink"); err != nil {
+	if err := c.RemoveNamespace(selectedNs); err != nil {
 		log.Fatal().Err(err).Send()
 	}
 }
