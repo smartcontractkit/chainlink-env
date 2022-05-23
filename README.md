@@ -3,7 +3,10 @@ Disclaimer: This software is in early Alpha stage, use at your own risk
 ### Local k8s cluster
 Read [here](KUBERNETES.md) about how to spin up a local cluster
 
-### Install from source
+### Install
+Easiest way is to use a release [binaries](https://github.com/smartcontractkit/chainlink-env/releases)
+
+#### From source
 Set up deps, you need to have [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable)
 ```shell
 make install_deps
