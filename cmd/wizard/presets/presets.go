@@ -8,7 +8,30 @@ import (
 	"github.com/smartcontractkit/chainlink-env/pkg/chains/ethereum"
 )
 
-// EnvEVMMinimalLocal local development Chainlink deployment
+// EnvEVMOneNode local development Chainlink deployment
+func EnvEVMOneNode(config *environment.Config) error {
+	return environment.New(config).
+		DeployOrConnect(
+			chainlink.NewChart(
+				&chainlink.Props{
+					Namespace: "chainlink-env",
+					Labels:    []string{fmt.Sprintf("envType=%s", chainlink.EnvTypeEVM1)},
+					ChainProps: []interface{}{
+						&ethereum.Props{},
+					},
+					ResourcesMode: pkg.MinimalLocalResourcesMode,
+					AppVersions: []chainlink.VersionProps{
+						{
+							Image:     "public.ecr.aws/chainlink/chainlink",
+							Tag:       "1.4.1-root",
+							Instances: 1,
+						},
+					},
+				}))
+}
+
+// EnvEVMMinimalLocal local development Chainlink deployment,
+// 1 bootstrap + 4 oracles (minimal requirements for OCR)
 func EnvEVMMinimalLocal(config *environment.Config) error {
 	return environment.New(config).
 		DeployOrConnect(

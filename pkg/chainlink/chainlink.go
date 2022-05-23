@@ -24,6 +24,7 @@ const (
 )
 
 const (
+	EnvTypeEVM1     = "evm-1-minimal-local"
 	EnvTypeEVM5     = "evm-5-minimal-local"
 	EnvTypeEVM5Soak = "evm-5-soak"
 	EnvTypeSolana5  = "solana-5-default"
