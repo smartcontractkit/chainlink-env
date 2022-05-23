@@ -1,10 +1,12 @@
 package dialog
 
 import (
+	"fmt"
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/environment"
+	"time"
 )
 
 func NewDumpDialogue() {
@@ -22,7 +24,8 @@ func NewDumpDialogue() {
 	if err != nil {
 		log.Fatal().Err(err).Send()
 	}
-	if err = a.DumpTestResult("logs", "chainlink"); err != nil {
+	logDirName := fmt.Sprintf("logs/%s-%d", selectedNs, time.Now().Unix())
+	if err = a.DumpTestResult(logDirName, "chainlink"); err != nil {
 		log.Fatal().Err(err).Send()
 	}
 }

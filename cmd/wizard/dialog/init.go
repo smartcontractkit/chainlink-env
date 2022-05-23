@@ -36,7 +36,7 @@ func rootSuggester(d prompt.Document) []prompt.Suggest {
 func NewInitDialogue() {
 	for {
 		var choice string
-		color.Green("Chainlink environment wizard")
+		color.Green("Chainlink environments wizard")
 		choice = Input(rootSuggester)
 		switch choice {
 		case OptionNew:
