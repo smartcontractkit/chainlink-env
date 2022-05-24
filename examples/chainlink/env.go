@@ -18,7 +18,7 @@ func main() {
 			&chainlink.Props{
 				Namespace: "chainlink-env",
 				// you can set TTL if you are using https://codeberg.org/hjacobs/kube-janitor
-				TTL: 2 * time.Minute,
+				TTL: 12 * time.Hour,
 				// envType field is required to properly connect the environment
 				Labels: []string{fmt.Sprintf("envType=%s", chainlink.EnvTypeEVM5)},
 				// additional chains can be deployed and connected, props can be overridden using default method

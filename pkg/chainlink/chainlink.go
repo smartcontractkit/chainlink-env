@@ -10,6 +10,7 @@ import (
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
 	"github.com/smartcontractkit/chainlink-env/pkg"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
+	"github.com/smartcontractkit/chainlink-env/pkg/blockscout"
 	"github.com/smartcontractkit/chainlink-env/pkg/chains/ethereum"
 	ms "github.com/smartcontractkit/chainlink-env/pkg/mockserver"
 	"os"
@@ -24,20 +25,22 @@ const (
 )
 
 const (
-	EnvTypeEVM1     = "evm-1-minimal-local"
-	EnvTypeEVM5     = "evm-5-minimal-local"
+	EnvTypeEVM1     = "evm-1-minimal"
+	EnvTypeEVM5     = "evm-5-minimal"
+	EnvTypeEVM5BS   = "evm-5-minimal-blockscout"
 	EnvTypeEVM5Soak = "evm-5-soak"
 	EnvTypeSolana5  = "solana-5-default"
 )
 
 const (
-	AppName           = "chainlink-node"
-	NodeContainerName = "node"
-	GethURLsKey       = "geth"
-	NodesLocalURLsKey = "chainlink_local"
-	NodesInternalKey  = "chainlink_internal"
-	DBsInternalKey    = "chainlink_db"
-	MockServerURLsKey = "mockserver"
+	AppName              = "chainlink-node"
+	NodeContainerName    = "node"
+	GethURLsKey          = "geth"
+	BlockscoutURLsKey    = "blockscout"
+	NodesLocalURLsKey    = "chainlink_local"
+	NodesInternalURLsKey = "chainlink_internal"
+	DBsLocalURLsKey      = "chainlink_db"
+	MockServerURLsKey    = "mockserver"
 )
 
 var (
@@ -69,23 +72,16 @@ type VersionProps struct {
 
 // Props root Chainlink props
 type Props struct {
-	Namespace       string
-	TTL             time.Duration
-	Labels          []string
-	ChainProps      []interface{}
-	AppVersions     []VersionProps
-	TestRunnerProps interface{}
-	Persistence     PersistenceProps
-	ResourcesMode   pkg.ResourcesMode
-	vars            *internalChartVars
-}
-
-func pgIsReadyCheck() *[]*string {
-	return &[]*string{
-		a.Str("pg_isready"),
-		a.Str("-U"),
-		a.Str("postgres"),
-	}
+	Namespace         string
+	BlockscoutEnabled bool
+	TTL               time.Duration
+	Labels            []string
+	ChainProps        []interface{}
+	AppVersions       []VersionProps
+	TestRunnerProps   interface{}
+	Persistence       PersistenceProps
+	ResourcesMode     pkg.ResourcesMode
+	vars              *internalChartVars
 }
 
 func chains(chart cdk8s.Chart, p *Props) {
@@ -258,7 +254,7 @@ func chainlinkContainer(p *Props, verProps VersionProps) *k8s.Container {
 }
 
 // postgresContainer postgres container spec
-func postgresContainer(p *Props, verProps VersionProps) *k8s.Container {
+func postgresContainer(p *Props) *k8s.Container {
 	c := &k8s.Container{
 		Name:  a.Str("chainlink-db"),
 		Image: a.Str("postgres:11.6"),
@@ -276,13 +272,13 @@ func postgresContainer(p *Props, verProps VersionProps) *k8s.Container {
 		},
 		LivenessProbe: &k8s.Probe{
 			Exec: &k8s.ExecAction{
-				Command: pgIsReadyCheck()},
+				Command: pkg.PGIsReadyCheck()},
 			InitialDelaySeconds: a.Num(60),
 			PeriodSeconds:       a.Num(60),
 		},
 		ReadinessProbe: &k8s.Probe{
 			Exec: &k8s.ExecAction{
-				Command: pgIsReadyCheck()},
+				Command: pkg.PGIsReadyCheck()},
 			InitialDelaySeconds: a.Num(2),
 			PeriodSeconds:       a.Num(2),
 		},
@@ -335,7 +331,7 @@ func deploymentConstruct(chart cdk8s.Chart, props *Props, verProps VersionProps)
 						},
 						ServiceAccountName: a.Str("default"),
 						Containers: &[]*k8s.Container{
-							postgresContainer(props, verProps),
+							postgresContainer(props),
 							chainlinkContainer(props, verProps),
 						},
 					},
@@ -388,7 +384,7 @@ func statefulConstruct(chart cdk8s.Chart, p *Props, verProps VersionProps) {
 						},
 						ServiceAccountName: a.Str("default"),
 						Containers: &[]*k8s.Container{
-							postgresContainer(p, verProps),
+							postgresContainer(p),
 							chainlinkContainer(p, verProps),
 						},
 					},
@@ -441,6 +437,7 @@ type ManifestOutputData struct {
 	Namespace       string
 	ReadyCheckData  client.ReadyCheckData
 	CommonChartVars internalChartVars
+	Props           *Props
 }
 
 func (m *ManifestOutputData) SetNamespace(ns string) {
@@ -455,6 +452,8 @@ func (m *ManifestOutputData) GetReadyCheckData() client.ReadyCheckData {
 	return m.ReadyCheckData
 }
 
+// ProcessConnections processing connections and extracting environment specific connections into human-readable URLs
+// TODO: Flatten? Do we need only ports? How to make sure ports won't collapse?
 func (m *ManifestOutputData) ProcessConnections(fwd *client.Forwarder) (map[string][]string, error) {
 	urlsByApp := make(map[string][]string)
 	geth, err := fwd.FindPort("geth:", "geth", "ws-rpc").As(client.LocalConnection, client.WS)
@@ -462,6 +461,14 @@ func (m *ManifestOutputData) ProcessConnections(fwd *client.Forwarder) (map[stri
 		return nil, err
 	}
 	urlsByApp[GethURLsKey] = append(urlsByApp[GethURLsKey], geth)
+	if m.Props.BlockscoutEnabled {
+		bsURL, err := fwd.FindPort("blockscout:", "blockscout-node", "explorer").As(client.LocalConnection, client.HTTP)
+		if err != nil {
+			return nil, err
+		}
+		log.Info().Str("URL", bsURL).Msg("Blockscout explorer")
+		urlsByApp[BlockscoutURLsKey] = append(urlsByApp[BlockscoutURLsKey], bsURL)
+	}
 
 	mock, err := fwd.FindPort("mockserver:", "mockserver", "serviceport").As(client.LocalConnection, client.HTTP)
 	if err != nil {
@@ -488,7 +495,7 @@ func (m *ManifestOutputData) ProcessConnections(fwd *client.Forwarder) (map[stri
 		if err != nil {
 			return nil, err
 		}
-		urlsByApp[NodesInternalKey] = append(urlsByApp[NodesInternalKey], n)
+		urlsByApp[NodesInternalURLsKey] = append(urlsByApp[NodesInternalURLsKey], n)
 		log.Info().Int("Node", i).Str("URL", n).Msg("Remote (in cluster) connection")
 	}
 	for i := 0; i < len(pods.Items); i++ {
@@ -497,7 +504,7 @@ func (m *ManifestOutputData) ProcessConnections(fwd *client.Forwarder) (map[stri
 		if err != nil {
 			return nil, err
 		}
-		urlsByApp[DBsInternalKey] = append(urlsByApp[DBsInternalKey], n)
+		urlsByApp[DBsLocalURLsKey] = append(urlsByApp[DBsLocalURLsKey], n)
 		log.Info().Int("Node", i).Str("URL", n).Msg("DB local Connection")
 	}
 	return urlsByApp, nil
@@ -537,8 +544,12 @@ func NewChart(props interface{}) (cdk8s.App, client.ManifestOutput) {
 
 	versionedDeployments(chart, p)
 	chains(chart, p)
+	if p.BlockscoutEnabled {
+		blockscout.NewChart(chart, &blockscout.Props{})
+	}
 	mockserver(chart, p)
 	return app, &ManifestOutputData{
+		Props:     p,
 		Namespace: p.Namespace,
 		ReadyCheckData: client.ReadyCheckData{
 			Timeout:   3 * time.Minute,
