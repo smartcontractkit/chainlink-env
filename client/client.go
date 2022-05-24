@@ -26,8 +26,9 @@ import (
 )
 
 const (
-	TempDebugManifest = "tmp-manifest.yaml"
-	LogPollInterval   = 2 * time.Second
+	TempDebugManifest          = "tmp-manifest.yaml"
+	LogPollInterval            = 2 * time.Second
+	ContainerStatePollInterval = 2 * time.Second
 )
 
 // K8sClient high level k8s client
@@ -106,10 +107,48 @@ type ManifestOutput interface {
 	ProcessConnections(fwd *Forwarder) (map[string][]string, error)
 }
 
+// WaitContainersReady waits until all containers ReadinessChecks are passed
+func (m *K8sClient) WaitContainersReady(c ManifestOutput) error {
+	ctx, cancel := context.WithTimeout(context.Background(), c.GetReadyCheckData().Timeout)
+	defer cancel()
+	for {
+		select {
+		case <-ctx.Done():
+			return errors.New("timeout waiting container readiness probes")
+		default:
+			podList, err := m.ListPods(c.GetNamespace(), c.GetReadyCheckData().ReadinessProbeCheckSelector)
+			if err != nil {
+				return err
+			}
+			if len(podList.Items) == 0 {
+				return fmt.Errorf("no pods in %s with selector %s", c.GetNamespace(), c.GetReadyCheckData().Timeout)
+			}
+			zlog.Info().Interface("Pods", podNames(podList)).Msg("Waiting for pods readiness probes")
+			allReady := true
+			for _, pod := range podList.Items {
+				for _, c := range pod.Status.ContainerStatuses {
+					if !c.Ready {
+						zlog.Debug().
+							Str("Pod", pod.Name).
+							Str("Container", c.Name).
+							Interface("Ready", c.Ready).
+							Msg("Container readiness")
+						allReady = false
+					}
+				}
+			}
+			if allReady {
+				return nil
+			}
+			time.Sleep(ContainerStatePollInterval)
+		}
+	}
+}
+
 // WaitForPodBySelectorRunning Wait up to timeout seconds for all pods in 'namespace' with given 'selector' to enter running state.
 // Returns an error if no pods are found or not all discovered pods enter running state.
 func (m *K8sClient) WaitForPodBySelectorRunning(c ManifestOutput) error {
-	podList, err := m.ListPods(c.GetNamespace(), c.GetReadyCheckData().Selector)
+	podList, err := m.ListPods(c.GetNamespace(), c.GetReadyCheckData().ReadinessProbeCheckSelector)
 	if err != nil {
 		return err
 	}
@@ -195,10 +234,11 @@ func (m *K8sClient) RemoveNamespace(namespace string) error {
 }
 
 type ReadyCheckData struct {
-	Selector  string
-	Container string
-	LogSubStr string
-	Timeout   time.Duration
+	ReadinessProbeCheckSelector string
+	Selector                    string
+	Container                   string
+	LogSubStr                   string
+	Timeout                     time.Duration
 }
 
 // CheckReady application heath check using ManifestOutputData params
@@ -206,7 +246,7 @@ func (m *K8sClient) CheckReady(c ManifestOutput) error {
 	if err := m.WaitForPodBySelectorRunning(c); err != nil {
 		return err
 	}
-	return m.WaitLogMessages(c)
+	return m.WaitContainersReady(c)
 }
 
 func (m *K8sClient) Apply(manifest string) error {

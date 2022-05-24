@@ -552,10 +552,8 @@ func NewChart(props interface{}) (cdk8s.App, client.ManifestOutput) {
 		Props:     p,
 		Namespace: p.Namespace,
 		ReadyCheckData: client.ReadyCheckData{
-			Timeout:   3 * time.Minute,
-			Selector:  "app=chainlink-node",
-			Container: "node",
-			LogSubStr: "Subscribed to heads on chain",
+			ReadinessProbeCheckSelector: "",
+			Timeout:                     5 * time.Minute,
 		},
 	}
 }

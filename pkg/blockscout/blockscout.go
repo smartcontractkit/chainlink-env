@@ -15,6 +15,7 @@ type vars struct {
 	Labels        *map[string]*string
 	BaseName      string
 	ConfigMapName string
+	Port          float64
 	Props         *Props
 }
 
@@ -27,7 +28,7 @@ func service(chart cdk8s.Chart, vars vars) {
 			Ports: &[]*k8s.ServicePort{
 				{
 					Name:       a.Str("explorer"),
-					Port:       a.Num(4000),
+					Port:       a.Num(vars.Port),
 					TargetPort: k8s.IntOrString_FromNumber(a.Num(4000)),
 				},
 			},
@@ -66,27 +67,27 @@ func postgresContainer(p vars) *k8s.Container {
 	}
 }
 
-func deployment(chart cdk8s.Chart, shared vars) {
+func deployment(chart cdk8s.Chart, vars vars) {
 	k8s.NewKubeDeployment(
 		chart,
-		a.Str(fmt.Sprintf("%s-deployment", shared.BaseName)),
+		a.Str(fmt.Sprintf("%s-deployment", vars.BaseName)),
 		&k8s.KubeDeploymentProps{
 			Metadata: &k8s.ObjectMeta{
-				Name: a.Str(shared.BaseName),
+				Name: a.Str(vars.BaseName),
 			},
 			Spec: &k8s.DeploymentSpec{
 				Selector: &k8s.LabelSelector{
-					MatchLabels: shared.Labels,
+					MatchLabels: vars.Labels,
 				},
 				Template: &k8s.PodTemplateSpec{
 					Metadata: &k8s.ObjectMeta{
-						Labels: shared.Labels,
+						Labels: vars.Labels,
 					},
 					Spec: &k8s.PodSpec{
 						ServiceAccountName: a.Str("default"),
 						Containers: &[]*k8s.Container{
-							container(shared),
-							postgresContainer(shared),
+							container(vars),
+							postgresContainer(vars),
 						},
 					},
 				},
@@ -94,9 +95,9 @@ func deployment(chart cdk8s.Chart, shared vars) {
 		})
 }
 
-func container(shared vars) *k8s.Container {
+func container(vars vars) *k8s.Container {
 	return &k8s.Container{
-		Name:            a.Str(fmt.Sprintf("%s-node", shared.BaseName)),
+		Name:            a.Str(fmt.Sprintf("%s-node", vars.BaseName)),
 		Image:           a.Str("f4hrenh9it/blockscout:v1"),
 		ImagePullPolicy: a.Str("Always"),
 		Command:         &[]*string{a.Str(`/bin/bash`)},
@@ -107,9 +108,25 @@ func container(shared vars) *k8s.Container {
 		Ports: &[]*k8s.ContainerPort{
 			{
 				Name:          a.Str("explorer"),
-				ContainerPort: a.Num(4000),
+				ContainerPort: a.Num(vars.Port),
 			},
 		},
+		ReadinessProbe: &k8s.Probe{
+			HttpGet: &k8s.HttpGetAction{
+				Port: k8s.IntOrString_FromNumber(a.Num(vars.Port)),
+				Path: a.Str("/"),
+			},
+			InitialDelaySeconds: a.Num(20),
+			PeriodSeconds:       a.Num(5),
+		},
+		//StartupProbe: &k8s.Probe{
+		//	HttpGet: &k8s.HttpGetAction{
+		//		Port: k8s.IntOrString_FromNumber(a.Num(vars.Port)),
+		//		Path: a.Str("/"),
+		//	},
+		//	InitialDelaySeconds: a.Num(30),
+		//	PeriodSeconds:       a.Num(5),
+		//},
 		Env: &[]*k8s.EnvVar{
 			a.EnvVarStr("MIX_ENV", "prod"),
 			a.EnvVarStr("ECTO_USE_SSL", "'false'"),
@@ -130,6 +147,7 @@ func NewChart(chart cdk8s.Chart, props *Props) cdk8s.Chart {
 		},
 		ConfigMapName: "blockscout-cm",
 		BaseName:      "blockscout",
+		Port:          4000,
 		Props:         props,
 	}
 	service(chart, s)
