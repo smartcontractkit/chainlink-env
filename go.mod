@@ -3,21 +3,19 @@ module github.com/smartcontractkit/chainlink-env
 go 1.18
 
 require (
-	github.com/aws/constructs-go/constructs/v10 v10.1.11
+	github.com/aws/constructs-go/constructs/v10 v10.1.15
 	github.com/aws/jsii-runtime-go v1.59.0
 	github.com/c-bata/go-prompt v0.2.6
-	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.2.86
+	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.3.3
 	github.com/fatih/color v1.13.0
 	github.com/fatih/structs v1.1.0
 	github.com/google/uuid v1.3.0
 	github.com/imdario/mergo v0.3.12
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/pkg/errors v0.9.1
-	github.com/pkg/term v1.2.0-beta.2
 	github.com/rs/zerolog v1.26.1
 	github.com/stretchr/testify v1.7.1
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20220209214540-3681064d5158
 	k8s.io/api v0.24.0
 	k8s.io/apimachinery v0.24.0
 	k8s.io/cli-runtime v0.24.0
@@ -70,6 +68,7 @@ require (
 	github.com/onsi/ginkgo v1.16.1 // indirect
 	github.com/onsi/gomega v1.11.0 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
+	github.com/pkg/term v1.2.0-beta.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/russross/blackfriday v1.5.2 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
@@ -79,6 +78,7 @@ require (
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
+	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
