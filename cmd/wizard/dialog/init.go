@@ -7,7 +7,8 @@ import (
 
 // Context wizard global context settings
 type Context struct {
-	DryRun bool
+	DryRun  bool
+	Connect bool
 }
 
 var Ctx = &Context{}
@@ -44,8 +45,11 @@ func NewInitDialogue() {
 		case OptionDryRun:
 			Ctx.DryRun = true
 			NewEnvDialogue()
+			Ctx.DryRun = false
 		case OptionConnect:
-			NewConnectDialogue()
+			Ctx.Connect = true
+			NewEnvDialogue()
+			Ctx.Connect = false
 		case OptionDump:
 			NewDumpDialogue()
 		case OptionRemove:
