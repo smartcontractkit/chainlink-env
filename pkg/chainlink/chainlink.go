@@ -22,8 +22,10 @@ const (
 	ControlLabelKey        = "generatedBy"
 	ControlLabelValue      = "cdk8s"
 	ControlLabelEnvTypeKey = "envType"
+	TTLLabelKey            = "janitor/ttl"
 )
 
+// Environment types, envs got selected by having a label of that type
 const (
 	EnvTypeEVM1     = "evm-1-minimal"
 	EnvTypeEVM5     = "evm-5-minimal"
@@ -89,6 +91,9 @@ func chains(chart cdk8s.Chart, p *Props) {
 		switch c := chainProps.(type) {
 		case *ethereum.Props:
 			ethereum.NewEthereum(chart, c, p.ResourcesMode)
+		case *ethereum.ReorgProps:
+			ethereum.NewEthereumReorg(chart, c, "geth-reorg", p.Namespace, "1337")
+			ethereum.NewEthereumReorg(chart, c, "geth-reorg-2", p.Namespace, "2337")
 		default:
 			log.Fatal().Msg("no chain props found, provide one of a supported chain props")
 		}
@@ -434,10 +439,9 @@ func configMap(chart cdk8s.Chart, props *Props) {
 
 // ManifestOutputData checks if all selected pods are ready by tailing the logs and checking substrings
 type ManifestOutputData struct {
-	Namespace       string
-	ReadyCheckData  client.ReadyCheckData
-	CommonChartVars internalChartVars
-	Props           *Props
+	Namespace      string
+	ReadyCheckData client.ReadyCheckData
+	Props          *Props
 }
 
 func (m *ManifestOutputData) SetNamespace(ns string) {
@@ -453,16 +457,36 @@ func (m *ManifestOutputData) GetReadyCheckData() client.ReadyCheckData {
 }
 
 // ProcessConnections processing connections and extracting environment specific connections into human-readable URLs
-// TODO: Flatten? Do we need only ports? How to make sure ports won't collapse?
+// TODO: Flatten? Do we need only ports? How to make sure ports won't collapse in arbitrary helm?
 func (m *ManifestOutputData) ProcessConnections(fwd *client.Forwarder) (map[string][]string, error) {
 	urlsByApp := make(map[string][]string)
-	geth, err := fwd.FindPort("geth:", "geth", "ws-rpc").As(client.LocalConnection, client.WS)
-	if err != nil {
-		return nil, err
+	for _, p := range m.Props.ChainProps {
+		switch p.(type) {
+		case *ethereum.ReorgProps:
+			geth1tx, err := fwd.FindPort("geth-reorg-ethereum-geth:0", "geth", "ws-rpc").As(client.LocalConnection, client.WS)
+			if err != nil {
+				return nil, err
+			}
+			urlsByApp[GethURLsKey] = append(urlsByApp[GethURLsKey], geth1tx)
+			log.Info().Str("URL", geth1tx).Msg("Geth network one (TX Node)")
+			geth2tx, err := fwd.FindPort("geth-reorg-2-ethereum-geth:0", "geth", "ws-rpc").As(client.LocalConnection, client.WS)
+			if err != nil {
+				return nil, err
+			}
+			urlsByApp[GethURLsKey] = append(urlsByApp[GethURLsKey], geth2tx)
+			log.Info().Str("URL", geth2tx).Msg("Geth network two (TX Node)")
+		case *ethereum.Props:
+			geth, err := fwd.FindPort("geth:0", "geth", "ws-rpc").As(client.LocalConnection, client.WS)
+			if err != nil {
+				return nil, err
+			}
+			urlsByApp[GethURLsKey] = append(urlsByApp[GethURLsKey], geth)
+			log.Info().Str("URL", geth).Msg("Geth network")
+		}
 	}
-	urlsByApp[GethURLsKey] = append(urlsByApp[GethURLsKey], geth)
+
 	if m.Props.BlockscoutEnabled {
-		bsURL, err := fwd.FindPort("blockscout:", "blockscout-node", "explorer").As(client.LocalConnection, client.HTTP)
+		bsURL, err := fwd.FindPort("blockscout:0", "blockscout-node", "explorer").As(client.LocalConnection, client.HTTP)
 		if err != nil {
 			return nil, err
 		}
@@ -470,7 +494,7 @@ func (m *ManifestOutputData) ProcessConnections(fwd *client.Forwarder) (map[stri
 		urlsByApp[BlockscoutURLsKey] = append(urlsByApp[BlockscoutURLsKey], bsURL)
 	}
 
-	mock, err := fwd.FindPort("mockserver:", "mockserver", "serviceport").As(client.LocalConnection, client.HTTP)
+	mock, err := fwd.FindPort("mockserver:0", "mockserver", "serviceport").As(client.LocalConnection, client.HTTP)
 	if err != nil {
 		return nil, err
 	}
@@ -479,7 +503,6 @@ func (m *ManifestOutputData) ProcessConnections(fwd *client.Forwarder) (map[stri
 	if err != nil {
 		return nil, err
 	}
-	log.Info().Str("URL", geth).Msg("Geth network")
 	for i := 0; i < len(pods.Items); i++ {
 		n, err := fwd.FindPort(fmt.Sprintf("%s:%d", AppName, i), "node", "access").
 			As(client.LocalConnection, client.HTTP)
@@ -532,7 +555,7 @@ func NewChart(props interface{}) (cdk8s.App, client.ManifestOutput) {
 		Labels:    nil,
 		Namespace: a.Str(p.Namespace),
 	})
-	defaultAnnotations["janitor/ttl"] = a.ShortDur(p.TTL)
+	defaultAnnotations[TTLLabelKey] = a.ShortDur(p.TTL)
 	k8s.NewKubeNamespace(chart, a.Str("namespace"), &k8s.KubeNamespaceProps{
 		Metadata: &k8s.ObjectMeta{
 			Name:        a.Str(p.Namespace),

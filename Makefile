@@ -20,6 +20,7 @@ install_deps: golangci
 	curl -LO https://dl.k8s.io/release/v1.24.0/bin/darwin/amd64/kubectl
 	chmod +x ./kubectl
 	mv kubectl ./bin
+	curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 	cdk8s import
 
 .PHONY: test

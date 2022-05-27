@@ -9,11 +9,13 @@ import (
 	zlog "github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/kubectl/pkg/cmd/cp"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -73,6 +75,28 @@ func (m *K8sClient) ListNamespaces(selector string) (*v1.NamespaceList, error) {
 	return m.ClientSet.CoreV1().Namespaces().List(context.Background(), metaV1.ListOptions{LabelSelector: selector})
 }
 
+func (m *K8sClient) UniqueLabels(namespace string, selector string) ([]string, error) {
+	uniqueLabels := make([]string, 0)
+	isUnique := make(map[string]bool)
+	k8sPods := m.ClientSet.CoreV1().Pods(namespace)
+	podList, err := k8sPods.List(context.Background(), metaV1.ListOptions{
+		LabelSelector: selector,
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range podList.Items {
+		appLabel := p.Labels["app"]
+		if _, ok := isUnique[appLabel]; !ok {
+			uniqueLabels = append(uniqueLabels, appLabel)
+		}
+	}
+	zlog.Info().
+		Interface("AppLabels", uniqueLabels).
+		Msg("Apps found")
+	return uniqueLabels, nil
+}
+
 // Poll up to timeout seconds for pod to enter running state.
 // Returns an error if the pod never enters the running state.
 func waitForPodRunning(c kubernetes.Interface, namespace, podName string, timeout time.Duration) error {
@@ -105,6 +129,32 @@ type ManifestOutput interface {
 	GetNamespace() string
 	GetReadyCheckData() ReadyCheckData
 	ProcessConnections(fwd *Forwarder) (map[string][]string, error)
+}
+
+func (m *K8sClient) AddLabel(namespace string, pod v1.Pod, key, value string) error {
+	labelPatch := fmt.Sprintf(`[{"op":"add","path":"/metadata/labels/%s","value":"%s" }]`, key, value)
+	_, err := m.ClientSet.CoreV1().Pods(namespace).Patch(context.Background(), pod.GetName(), types.JSONPatchType, []byte(labelPatch), metaV1.PatchOptions{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// EnumerateInstances enumerate pods with instance label
+func (m *K8sClient) EnumerateInstances(namespace string, selector string) error {
+	k8sPods := m.ClientSet.CoreV1().Pods(namespace)
+	podList, err := k8sPods.List(context.Background(), metaV1.ListOptions{
+		LabelSelector: selector,
+	})
+	if err != nil {
+		return err
+	}
+	for id, pod := range podList.Items {
+		if err := m.AddLabel(namespace, pod, "instance", strconv.Itoa(id)); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // WaitContainersReady waits until all containers ReadinessChecks are passed
