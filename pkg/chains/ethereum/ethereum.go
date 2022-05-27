@@ -24,7 +24,7 @@ func defaultDevChainProps() *Props {
 	}
 }
 
-// chartData some shared labels/selectors and names that must match in resources
+// vars some shared labels/selectors and names that must match in resources
 type chartData struct {
 	Labels        *map[string]*string
 	BaseName      string

@@ -23,7 +23,7 @@ func main() {
 				Labels: []string{fmt.Sprintf("envType=%s", chainlink.EnvTypeEVM5)},
 				// additional chains can be deployed and connected, props can be overridden using default method
 				ChainProps: []interface{}{
-					&ethereum.Props{},
+					&ethereum.ReorgProps{},
 				},
 				// almost all vars can be overridden in order ENV_VARS -> Code -> Code defaults
 				// see config package for more examples

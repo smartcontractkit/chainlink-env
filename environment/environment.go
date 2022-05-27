@@ -1,6 +1,7 @@
 package environment
 
 import (
+	"fmt"
 	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -89,6 +90,19 @@ func (m *Environment) DeployOrConnect(app cdk8s.App, out client.ManifestOutput) 
 	return nil
 }
 
+func (m *Environment) enumerateApps(c client.ManifestOutput) error {
+	apps, err := m.Client.UniqueLabels(c.GetNamespace(), "app")
+	if err != nil {
+		return err
+	}
+	for _, app := range apps {
+		if err := m.Client.EnumerateInstances(c.GetNamespace(), fmt.Sprintf("app=%s", app)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Deploy deploy synthesized manifest and check logs for readiness
 func (m *Environment) Deploy(app cdk8s.App, c client.ManifestOutput) error {
 	manifest := app.SynthYaml().(string)
@@ -100,6 +114,9 @@ func (m *Environment) Deploy(app cdk8s.App, c client.ManifestOutput) error {
 		return nil
 	}
 	if err := m.Client.Create(manifest); err != nil {
+		return err
+	}
+	if err := m.enumerateApps(c); err != nil {
 		return err
 	}
 	return m.Client.CheckReady(c)
