@@ -17,12 +17,18 @@ make install
 ```
 
 ### Usage
-[![asciicast](https://asciinema.org/a/B0HsbU46lmkyFViW2DnbpW33B.svg)](https://asciinema.org/a/B0HsbU46lmkyFViW2DnbpW33B)
+Run 
+```
+export CHAINLINK_IMAGE="public.ecr.aws/chainlink/chainlink"
+export CHAINLINK_TAG="1.4.0-root"
+export CHAINLINK_ENV_USER="Satoshi"
+chainlink-env
+```
 
 # Develop
 #### Running standalone example environment
 ```shell
-go run examples/chainlink/env.go
+go run examples/simple/env.go
 ```
 If you have another env of that type, you can connect by overriding environment name
 ```

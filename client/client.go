@@ -1,7 +1,6 @@
 package client
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"errors"
@@ -12,11 +11,11 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/kubectl/pkg/cmd/cp"
 	"os"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -29,8 +28,8 @@ import (
 
 const (
 	TempDebugManifest          = "tmp-manifest.yaml"
-	LogPollInterval            = 2 * time.Second
 	ContainerStatePollInterval = 2 * time.Second
+	AppLabel                   = "app"
 )
 
 // K8sClient high level k8s client
@@ -71,10 +70,12 @@ func (m *K8sClient) ListPods(namespace, selector string) (*v1.PodList, error) {
 	return m.ClientSet.CoreV1().Pods(namespace).List(context.Background(), metaV1.ListOptions{LabelSelector: selector})
 }
 
+// ListNamespaces lists k8s namespaces
 func (m *K8sClient) ListNamespaces(selector string) (*v1.NamespaceList, error) {
 	return m.ClientSet.CoreV1().Namespaces().List(context.Background(), metaV1.ListOptions{LabelSelector: selector})
 }
 
+// UniqueLabels gets all unique application labels
 func (m *K8sClient) UniqueLabels(namespace string, selector string) ([]string, error) {
 	uniqueLabels := make([]string, 0)
 	isUnique := make(map[string]bool)
@@ -86,13 +87,13 @@ func (m *K8sClient) UniqueLabels(namespace string, selector string) ([]string, e
 		return nil, err
 	}
 	for _, p := range podList.Items {
-		appLabel := p.Labels["app"]
+		appLabel := p.Labels[AppLabel]
 		if _, ok := isUnique[appLabel]; !ok {
 			uniqueLabels = append(uniqueLabels, appLabel)
 		}
 	}
 	zlog.Info().
-		Interface("AppLabels", uniqueLabels).
+		Interface("Apps", uniqueLabels).
 		Msg("Apps found")
 	return uniqueLabels, nil
 }
@@ -123,14 +124,7 @@ func isPodRunning(c kubernetes.Interface, podName, namespace string) wait.Condit
 	}
 }
 
-// ManifestOutput and interface to interact with a deployed environment
-type ManifestOutput interface {
-	SetNamespace(ns string)
-	GetNamespace() string
-	GetReadyCheckData() ReadyCheckData
-	ProcessConnections(fwd *Forwarder) (map[string][]string, error)
-}
-
+// AddLabel adds a label to a pod
 func (m *K8sClient) AddLabel(namespace string, pod v1.Pod, key, value string) error {
 	labelPatch := fmt.Sprintf(`[{"op":"add","path":"/metadata/labels/%s","value":"%s" }]`, key, value)
 	_, err := m.ClientSet.CoreV1().Pods(namespace).Patch(context.Background(), pod.GetName(), types.JSONPatchType, []byte(labelPatch), metaV1.PatchOptions{})
@@ -158,20 +152,20 @@ func (m *K8sClient) EnumerateInstances(namespace string, selector string) error 
 }
 
 // WaitContainersReady waits until all containers ReadinessChecks are passed
-func (m *K8sClient) WaitContainersReady(c ManifestOutput) error {
-	ctx, cancel := context.WithTimeout(context.Background(), c.GetReadyCheckData().Timeout)
+func (m *K8sClient) WaitContainersReady(ns string, rcd *ReadyCheckData) error {
+	ctx, cancel := context.WithTimeout(context.Background(), rcd.Timeout)
 	defer cancel()
 	for {
 		select {
 		case <-ctx.Done():
 			return errors.New("timeout waiting container readiness probes")
 		default:
-			podList, err := m.ListPods(c.GetNamespace(), c.GetReadyCheckData().ReadinessProbeCheckSelector)
+			podList, err := m.ListPods(ns, rcd.ReadinessProbeCheckSelector)
 			if err != nil {
 				return err
 			}
 			if len(podList.Items) == 0 {
-				return fmt.Errorf("no pods in %s with selector %s", c.GetNamespace(), c.GetReadyCheckData().Timeout)
+				return fmt.Errorf("no pods in %s with selector %s", ns, rcd.Timeout)
 			}
 			zlog.Info().Interface("Pods", podNames(podList)).Msg("Waiting for pods readiness probes")
 			allReady := true
@@ -197,73 +191,22 @@ func (m *K8sClient) WaitContainersReady(c ManifestOutput) error {
 
 // WaitForPodBySelectorRunning Wait up to timeout seconds for all pods in 'namespace' with given 'selector' to enter running state.
 // Returns an error if no pods are found or not all discovered pods enter running state.
-func (m *K8sClient) WaitForPodBySelectorRunning(c ManifestOutput) error {
-	podList, err := m.ListPods(c.GetNamespace(), c.GetReadyCheckData().ReadinessProbeCheckSelector)
+func (m *K8sClient) WaitForPodBySelectorRunning(ns string, rcd *ReadyCheckData) error {
+	podList, err := m.ListPods(ns, rcd.ReadinessProbeCheckSelector)
 	if err != nil {
 		return err
 	}
 	if len(podList.Items) == 0 {
-		return fmt.Errorf("no pods in %s with selector %s", c.GetNamespace(), c.GetReadyCheckData().Timeout)
+		return fmt.Errorf("no pods in %s with selector %s", ns, rcd.Timeout)
 	}
 
 	zlog.Info().Interface("Pods", podNames(podList)).Msg("Waiting for pods in state Running")
 	for _, pod := range podList.Items {
-		if err := waitForPodRunning(m.ClientSet, c.GetNamespace(), pod.Name, c.GetReadyCheckData().Timeout); err != nil {
+		if err := waitForPodRunning(m.ClientSet, ns, pod.Name, rcd.Timeout); err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-// WaitLogMessages waits for log messages substrings
-func (m *K8sClient) WaitLogMessages(c ManifestOutput) error {
-	pods, err := m.ListPods(c.GetNamespace(), c.GetReadyCheckData().Selector)
-	if err != nil {
-		return err
-	}
-
-	zlog.Info().Interface("Pods", podNames(pods)).Str("Substring", c.GetReadyCheckData().LogSubStr).Msg("Searching for logs")
-	logLinesFound := 0
-	tail := int64(1000)
-	ctx, cancel := context.WithTimeout(context.Background(), c.GetReadyCheckData().Timeout)
-	defer cancel()
-	// we can't stream and iterate, because container may crash, so send new request every time
-	for {
-		select {
-		case <-ctx.Done():
-			return errors.New("timeout waiting for logs")
-		default:
-			time.Sleep(LogPollInterval)
-			for _, pod := range pods.Items {
-				stream, err := m.ClientSet.CoreV1().
-					Pods(c.GetNamespace()).
-					GetLogs(pod.Name, &v1.PodLogOptions{
-						Follow:    false,
-						Container: c.GetReadyCheckData().Container,
-						TailLines: &tail,
-					}).Stream(ctx)
-				if err != nil {
-					return err
-				}
-				reader := bufio.NewScanner(stream)
-				for reader.Scan() {
-					select {
-					case <-ctx.Done():
-						return nil
-					default:
-						if strings.Contains(reader.Text(), c.GetReadyCheckData().LogSubStr) {
-							logLinesFound++
-						}
-					}
-				}
-				if logLinesFound == len(pods.Items) {
-					zlog.Info().Msg("All log substrings have been found")
-					cancel()
-					return nil
-				}
-			}
-		}
-	}
 }
 
 // NamespaceExists check if namespace exists
@@ -283,6 +226,7 @@ func (m *K8sClient) RemoveNamespace(namespace string) error {
 	return nil
 }
 
+// ReadyCheckData data to check if selected pods are running and all containers are ready ( readiness check ) are ready
 type ReadyCheckData struct {
 	ReadinessProbeCheckSelector string
 	Selector                    string
@@ -292,13 +236,14 @@ type ReadyCheckData struct {
 }
 
 // CheckReady application heath check using ManifestOutputData params
-func (m *K8sClient) CheckReady(c ManifestOutput) error {
-	if err := m.WaitForPodBySelectorRunning(c); err != nil {
+func (m *K8sClient) CheckReady(namespace string, c *ReadyCheckData) error {
+	if err := m.WaitForPodBySelectorRunning(namespace, c); err != nil {
 		return err
 	}
-	return m.WaitContainersReady(c)
+	return m.WaitContainersReady(namespace, c)
 }
 
+// Apply applying a manifest to a currently connected k8s context
 func (m *K8sClient) Apply(manifest string) error {
 	zlog.Info().Msg("Applying manifest")
 	if err := os.WriteFile(TempDebugManifest, []byte(manifest), os.ModePerm); err != nil {
@@ -308,6 +253,7 @@ func (m *K8sClient) Apply(manifest string) error {
 	return ExecCmd(cmd)
 }
 
+// Create creating a manifest to a currently connected k8s context
 func (m *K8sClient) Create(manifest string) error {
 	zlog.Info().Msg("Creating manifest")
 	if err := os.WriteFile(TempDebugManifest, []byte(manifest), os.ModePerm); err != nil {
@@ -317,6 +263,7 @@ func (m *K8sClient) Create(manifest string) error {
 	return ExecCmd(cmd)
 }
 
+// DryRun generates manifest and writes it in a file
 func (m *K8sClient) DryRun(manifest string) error {
 	zlog.Info().Msg("Creating manifest")
 	if err := os.WriteFile(TempDebugManifest, []byte(manifest), os.ModePerm); err != nil {
@@ -359,6 +306,39 @@ func (m *K8sClient) CopyToPod(namespace, src, destination, containername string)
 		return nil, nil, nil, fmt.Errorf("Could not run copy operation: %v", err)
 	}
 	return in, out, errOut, nil
+}
+
+// ExecuteInPod is similar to kubectl exec
+func (m *K8sClient) ExecuteInPod(namespace, podName, containerName string, command []string) ([]byte, []byte, error) {
+	req := m.ClientSet.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Name(podName).
+		Namespace(namespace).
+		SubResource("exec")
+	req.VersionedParams(&v1.PodExecOptions{
+		Container: containerName,
+		Command:   command,
+		Stdin:     false,
+		Stdout:    true,
+		Stderr:    true,
+		TTY:       false,
+	}, scheme.ParameterCodec)
+
+	exec, err := remotecommand.NewSPDYExecutor(m.RESTConfig, "POST", req.URL())
+	if err != nil {
+		return []byte{}, []byte{}, err
+	}
+
+	var stdout, stderr bytes.Buffer
+	err = exec.Stream(remotecommand.StreamOptions{
+		Stdin:  nil,
+		Stdout: &stdout,
+		Stderr: &stderr,
+	})
+	if err != nil {
+		return []byte{}, []byte{}, err
+	}
+	return stdout.Bytes(), stderr.Bytes(), nil
 }
 
 func podNames(podItems *v1.PodList) []string {

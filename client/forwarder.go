@@ -79,6 +79,25 @@ func (m *Forwarder) forwardPodPorts(pod v1.Pod, namespaceName string) error {
 	return nil
 }
 
+func (m *Forwarder) collectPodPorts(pod v1.Pod) error {
+	namedPorts := make(map[string]interface{})
+	for _, c := range pod.Spec.Containers {
+		for _, cp := range c.Ports {
+			if namedPorts[c.Name] == nil {
+				namedPorts[c.Name] = make(map[string]interface{})
+			}
+			namedPorts[c.Name].(map[string]interface{})[cp.Name] = ConnectionInfo{
+				Host:  pod.Status.PodIP,
+				Ports: portforward.ForwardedPort{Remote: uint16(cp.ContainerPort)},
+			}
+		}
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.Info[fmt.Sprintf("%s:%s", pod.Labels["app"], pod.Labels["instance"])] = namedPorts
+	return nil
+}
+
 func (m *Forwarder) podPortsByName(pod v1.Pod, fp []portforward.ForwardedPort) map[string]interface{} {
 	ports := make(map[string]interface{})
 	for _, forwardedPort := range fp {
@@ -88,7 +107,10 @@ func (m *Forwarder) podPortsByName(pod v1.Pod, fp []portforward.ForwardedPort) m
 					if ports[c.Name] == nil {
 						ports[c.Name] = make(map[string]interface{})
 					}
-					ports[c.Name].(map[string]interface{})[cp.Name] = ConnectionInfo{Host: pod.Status.PodIP, Ports: forwardedPort}
+					ports[c.Name].(map[string]interface{})[cp.Name] = ConnectionInfo{
+						Host:  pod.Status.PodIP,
+						Ports: forwardedPort,
+					}
 				}
 			}
 		}
@@ -106,7 +128,7 @@ func (m *Forwarder) portRulesForPod(pod v1.Pod) []string {
 	return rules
 }
 
-func (m *Forwarder) Connect(namespaceName string, selector string) error {
+func (m *Forwarder) Connect(namespaceName string, selector string, insideK8s bool) error {
 	pods, err := m.Client.ListPods(namespaceName, selector)
 	if err != nil {
 		return err
@@ -114,9 +136,15 @@ func (m *Forwarder) Connect(namespaceName string, selector string) error {
 	eg := errgroup.Group{}
 	for _, p := range pods.Items {
 		p := p
-		eg.Go(func() error {
-			return m.forwardPodPorts(p, namespaceName)
-		})
+		if insideK8s {
+			eg.Go(func() error {
+				return m.collectPodPorts(p)
+			})
+		} else {
+			eg.Go(func() error {
+				return m.forwardPodPorts(p, namespaceName)
+			})
+		}
 	}
 	return eg.Wait()
 }

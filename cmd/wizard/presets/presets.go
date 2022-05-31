@@ -1,101 +1,138 @@
 package presets
 
 import (
-	"fmt"
 	"github.com/smartcontractkit/chainlink-env/environment"
-	"github.com/smartcontractkit/chainlink-env/pkg"
-	"github.com/smartcontractkit/chainlink-env/pkg/chainlink"
-	"github.com/smartcontractkit/chainlink-env/pkg/chains/ethereum"
+	"github.com/smartcontractkit/chainlink-env/pkg/cdk8s/blockscout"
+	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
+	"github.com/smartcontractkit/chainlink-env/pkg/helm/geth"
+	"github.com/smartcontractkit/chainlink-env/pkg/helm/mockserver"
+	mockservercfg "github.com/smartcontractkit/chainlink-env/pkg/helm/mockserver-cfg"
+	"github.com/smartcontractkit/chainlink-env/pkg/helm/reorg"
 )
 
-// EnvEVMOneNode local development Chainlink deployment
-func EnvEVMOneNode(config *environment.Config) error {
+// EVMOneNode local development Chainlink deployment
+func EVMOneNode(config *environment.Config) error {
 	return environment.New(config).
-		DeployOrConnect(
-			chainlink.NewChart(
-				&chainlink.Props{
-					Namespace: "chainlink-env",
-					Labels:    []string{fmt.Sprintf("envType=%s", chainlink.EnvTypeEVM1)},
-					ChainProps: []interface{}{
-						&ethereum.Props{},
-					},
-					ResourcesMode: pkg.MinimalLocalResourcesMode,
-					AppVersions: []chainlink.VersionProps{
-						{
-							Image:     "public.ecr.aws/chainlink/chainlink",
-							Tag:       "1.4.1-root",
-							Instances: 1,
-						},
-					},
-				}))
+		AddHelm(mockservercfg.New(nil)).
+		AddHelm(mockserver.New(nil)).
+		AddHelm(geth.New(nil)).
+		AddHelm(chainlink.New(nil)).
+		Run()
 }
 
-// EnvEVMMinimalLocalBS local development Chainlink deployment,
+// EVMMinimalLocalBS local development Chainlink deployment,
 // 1 bootstrap + 4 oracles (minimal requirements for OCR) + Blockscout
-func EnvEVMMinimalLocalBS(config *environment.Config) error {
+func EVMMinimalLocalBS(config *environment.Config) error {
 	return environment.New(config).
-		DeployOrConnect(
-			chainlink.NewChart(
-				&chainlink.Props{
-					Namespace:         "chainlink-env",
-					BlockscoutEnabled: true,
-					Labels:            []string{fmt.Sprintf("envType=%s", chainlink.EnvTypeEVM5BS)},
-					ChainProps: []interface{}{
-						&ethereum.Props{},
-					},
-					ResourcesMode: pkg.MinimalLocalResourcesMode,
-					AppVersions: []chainlink.VersionProps{
-						{
-							Image:     "public.ecr.aws/chainlink/chainlink",
-							Tag:       "1.4.1-root",
-							Instances: 5,
-						},
-					},
-				}))
+		AddHelm(mockservercfg.New(nil)).
+		AddHelm(mockserver.New(nil)).
+		AddChart(blockscout.New(&blockscout.Props{})).
+		AddHelm(geth.New(nil)).
+		AddHelm(chainlink.New(map[string]interface{}{
+			"replicas": 5,
+		})).
+		Run()
 }
 
-// EnvEVMMinimalLocal local development Chainlink deployment,
+// EVMMinimalLocal local development Chainlink deployment,
 // 1 bootstrap + 4 oracles (minimal requirements for OCR)
-func EnvEVMMinimalLocal(config *environment.Config) error {
+func EVMMinimalLocal(config *environment.Config) error {
 	return environment.New(config).
-		DeployOrConnect(
-			chainlink.NewChart(
-				&chainlink.Props{
-					Namespace: "chainlink-env",
-					Labels:    []string{fmt.Sprintf("envType=%s", chainlink.EnvTypeEVM5)},
-					ChainProps: []interface{}{
-						&ethereum.Props{},
-					},
-					ResourcesMode: pkg.MinimalLocalResourcesMode,
-					AppVersions: []chainlink.VersionProps{
-						{
-							Image:     "public.ecr.aws/chainlink/chainlink",
-							Tag:       "1.4.1-root",
-							Instances: 5,
-						},
-					},
-				}))
+		AddHelm(mockservercfg.New(nil)).
+		AddHelm(mockserver.New(nil)).
+		AddHelm(geth.New(nil)).
+		AddHelm(chainlink.New(map[string]interface{}{
+			"replicas": 5,
+		})).
+		Run()
 }
 
-// EnvEVMSoak deployment for a long running soak tests
-func EnvEVMSoak(config *environment.Config) error {
+// EVMExternal local development Chainlink deployment for an external (testnet) network
+func EVMExternal(config *environment.Config) error {
 	return environment.New(config).
-		DeployOrConnect(
-			chainlink.NewChart(
-				&chainlink.Props{
-					Namespace: "chainlink-env",
-					Labels:    []string{fmt.Sprintf("envType=%s", chainlink.EnvTypeEVM5Soak)},
-					ChainProps: []interface{}{
-						&ethereum.Props{},
+		AddHelm(mockservercfg.New(nil)).
+		AddHelm(mockserver.New(nil)).
+		AddHelm(chainlink.New(nil)).
+		Run()
+}
+
+// EVMReorg deployment for two Ethereum networks re-org test
+func EVMReorg(config *environment.Config) error {
+	return environment.New(config).
+		AddHelm(mockservercfg.New(nil)).
+		AddHelm(mockserver.New(nil)).
+		AddHelm(reorg.New(
+			"geth-reorg",
+			map[string]interface{}{
+				"geth": map[string]interface{}{
+					"genesis": map[string]interface{}{
+						"networkId": "1337",
 					},
-					Persistence:   chainlink.PersistenceProps{Capacity: "20Gi"},
-					ResourcesMode: pkg.SoakResourcesMode,
-					AppVersions: []chainlink.VersionProps{
-						{
-							Image:     "public.ecr.aws/chainlink/chainlink",
-							Tag:       "1.4.1-root",
-							Instances: 5,
-						},
+				},
+			})).
+		AddHelm(reorg.New(
+			"geth-reorg-2",
+			map[string]interface{}{
+				"geth": map[string]interface{}{
+					"genesis": map[string]interface{}{
+						"networkId": "2337",
 					},
-				}))
+				},
+			})).
+		AddHelm(chainlink.New(map[string]interface{}{
+			"replicas": 5,
+			"env": map[string]interface{}{
+				"eth_url": "ws://geth-reorg-ethereum-geth:8546",
+			},
+		})).
+		Run()
+}
+
+// EVMSoak deployment for a long running soak tests
+func EVMSoak(config *environment.Config) error {
+	return environment.New(config).
+		AddHelm(mockservercfg.New(nil)).
+		AddHelm(mockserver.New(nil)).
+		AddHelm(geth.New(map[string]interface{}{
+			"resources": map[string]interface{}{
+				"requests": map[string]interface{}{
+					"cpu":    "1000m",
+					"memory": "2048Mi",
+				},
+				"limits": map[string]interface{}{
+					"cpu":    "1000m",
+					"memory": "2048Mi",
+				},
+			},
+		})).
+		AddHelm(chainlink.New(map[string]interface{}{
+			"replicas": 5,
+			"db": map[string]interface{}{
+				"stateful": true,
+				"capacity": "30Gi",
+				"resources": map[string]interface{}{
+					"requests": map[string]interface{}{
+						"cpu":    "250m",
+						"memory": "256Mi",
+					},
+					"limits": map[string]interface{}{
+						"cpu":    "250m",
+						"memory": "256Mi",
+					},
+				},
+			},
+			"chainlink": map[string]interface{}{
+				"resources": map[string]interface{}{
+					"requests": map[string]interface{}{
+						"cpu":    "1000m",
+						"memory": "2048Mi",
+					},
+					"limits": map[string]interface{}{
+						"cpu":    "1000m",
+						"memory": "2048Mi",
+					},
+				},
+			},
+		})).
+		Run()
 }

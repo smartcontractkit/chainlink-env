@@ -14,6 +14,7 @@ type Context struct {
 var Ctx = &Context{}
 
 const (
+	OptionHelp    = "help"
 	OptionNew     = "new"
 	OptionDryRun  = "dry-run"
 	OptionConnect = "connect"
@@ -25,6 +26,7 @@ const (
 
 func rootSuggester(d prompt.Document) []prompt.Suggest {
 	return defaultSuggester(d, []prompt.Suggest{
+		{Text: OptionHelp, Description: "Usage instructions"},
 		{Text: OptionNew, Description: "Create new environment"},
 		{Text: OptionDryRun, Description: "Generate environment manifest and save in tmp-manifest.yaml"},
 		{Text: OptionConnect, Description: "Connect to already created environment"},
@@ -40,6 +42,8 @@ func NewInitDialogue() {
 		color.Green("Chainlink environments wizard")
 		choice = Input(rootSuggester)
 		switch choice {
+		case OptionHelp:
+			NewHelpDialogue()
 		case OptionNew:
 			NewEnvDialogue()
 		case OptionDryRun:

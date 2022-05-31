@@ -21,11 +21,16 @@ install_deps: golangci
 	chmod +x ./kubectl
 	mv kubectl ./bin
 	curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    helm repo add chainlink-qa https://raw.githubusercontent.com/smartcontractkit/qa-charts/gh-pages/
 	cdk8s import
 
 .PHONY: test
 test:
-	go test ./...
+	go test ./config -count 1 -v
+
+.PHONY: test_e2e
+test_e2e:
+	go test ./e2e -count 1 -v
 
 .PHONY: examples
 examples:

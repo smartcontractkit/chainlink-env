@@ -3,30 +3,69 @@ package environment
 import (
 	"fmt"
 	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
+	"github.com/smartcontractkit/chainlink-env/config"
+	"github.com/smartcontractkit/chainlink-env/imports/k8s"
+	"github.com/smartcontractkit/chainlink-env/pkg"
+	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func init() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).Level(zerolog.TraceLevel)
 }
 
+var (
+	defaultAnnotations = map[string]*string{"prometheus.io/scrape": a.Str("true")}
+)
+
+// ConnectedChart interface to interact both with cdk8s apps and helm charts
+type ConnectedChart interface {
+	GetName() string
+	GetPath() string
+	GetValues() *map[string]interface{}
+	ExportData(e *Environment) error
+}
+
+// Config environment configuration
 type Config struct {
+	TTL               time.Duration
+	NamespacePrefix   string
+	Namespace         string
+	Labels            []string
+	NSLabels          *map[string]*string
+	ReadyCheckData    *client.ReadyCheckData
 	DryRun            bool
+	InsideK8s         bool
 	KeepConnection    bool
 	RemoveOnInterrupt bool
 }
 
+func defaultEnvConfig() *Config {
+	return &Config{
+		TTL:             20 * time.Minute,
+		NamespacePrefix: "chainlink-test-env",
+		ReadyCheckData: &client.ReadyCheckData{
+			ReadinessProbeCheckSelector: "",
+			Timeout:                     5 * time.Minute,
+		},
+	}
+}
+
 type Environment struct {
+	App       cdk8s.App
+	root      cdk8s.Chart
+	Charts    []ConnectedChart
 	Cfg       *Config
 	Client    *client.K8sClient
-	Artifacts *Artifacts
 	Fwd       *client.Forwarder
-	Out       client.ManifestOutput
+	Artifacts *Artifacts
 	URLs      map[string][]string
 }
 
@@ -35,45 +74,108 @@ func New(cfg *Config) *Environment {
 	if cfg == nil {
 		cfg = &Config{}
 	}
+	targetCfg := defaultEnvConfig()
+	config.MustEnvCodeOverrideStruct("ENV_CONFIG", targetCfg, cfg)
 	c := client.NewK8sClient()
 	e := &Environment{
+		URLs:   make(map[string][]string),
+		Charts: make([]ConnectedChart, 0),
 		Client: c,
-		Cfg:    cfg,
-		Fwd:    client.NewForwarder(c, cfg.KeepConnection),
+		Cfg:    targetCfg,
+		Fwd:    client.NewForwarder(c, targetCfg.KeepConnection),
 	}
+	e.initApp(fmt.Sprintf("%s-%s", e.Cfg.NamespacePrefix, uuid.NewString()[0:5]))
+	k8s.NewKubeNamespace(e.root, a.Str("namespace"), &k8s.KubeNamespaceProps{
+		Metadata: &k8s.ObjectMeta{
+			Name:        a.Str(e.Cfg.Namespace),
+			Labels:      e.Cfg.NSLabels,
+			Annotations: &defaultAnnotations,
+		},
+	})
 	return e
 }
 
-// DeployOrConnect deploys or connects to already created environment
-func (m *Environment) DeployOrConnect(app cdk8s.App, out client.ManifestOutput) error {
+func (m *Environment) initApp(namespace string) {
+	var err error
+	m.App = cdk8s.NewApp(&cdk8s.AppProps{
+		YamlOutputType: cdk8s.YamlOutputType_FILE_PER_APP,
+	})
+	m.Cfg.Namespace = namespace
+	m.Cfg.Labels = append(m.Cfg.Labels, "generatedBy=cdk8s")
+	m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("owner=%s", os.Getenv(config.EnvVarUser)))
+	m.Cfg.NSLabels, err = a.ConvertLabels(m.Cfg.Labels)
+	if err != nil {
+		log.Fatal().Err(err).Send()
+	}
+	defaultAnnotations[pkg.TTLLabelKey] = a.ShortDur(m.Cfg.TTL)
+	m.root = cdk8s.NewChart(m.App, a.Str("root-chart"), &cdk8s.ChartProps{
+		Labels:    m.Cfg.NSLabels,
+		Namespace: a.Str(m.Cfg.Namespace),
+	})
+}
+
+func (m *Environment) AddChart(f func(root cdk8s.Chart) ConnectedChart) *Environment {
+	m.Charts = append(m.Charts, f(m.root))
+	return m
+}
+
+func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
+	cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
+		Chart: a.Str(chart.GetPath()),
+		HelmFlags: &[]*string{
+			a.Str("--namespace"),
+			a.Str(m.Cfg.Namespace),
+		},
+		ReleaseName: a.Str(chart.GetName()),
+		Values:      chart.GetValues(),
+	})
+	m.Charts = append(m.Charts, chart)
+	return m
+}
+
+func (m *Environment) PrintURLs() error {
+	for _, c := range m.Charts {
+		err := c.ExportData(m)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m *Environment) Clear() {
+	m.initApp(m.Cfg.Namespace)
+}
+
+// Run deploys or connects to already created environment
+func (m *Environment) Run() error {
 	ns := os.Getenv("ENV_NAMESPACE")
 	if !m.Client.NamespaceExists(ns) {
-		if err := m.Deploy(app, out); err != nil {
+		manifest := m.App.SynthYaml().(string)
+		if err := m.Deploy(manifest); err != nil {
 			return m.Shutdown()
 		}
 	} else {
 		log.Info().Str("Namespace", ns).Msg("Namespace found")
-		out.SetNamespace(ns)
+		m.Cfg.Namespace = ns
+	}
+	if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s); err != nil {
+		return err
+	}
+	log.Debug().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
+	if err := m.PrintURLs(); err != nil {
+		return err
 	}
 	if m.Cfg.DryRun {
 		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
 		return nil
 	}
-	if err := m.Fwd.Connect(out.GetNamespace(), ""); err != nil {
-		return err
-	}
-	log.Debug().Interface("Mapping", m.Fwd.Info).Msg("Ports mapping")
-	var err error
-	m.URLs, err = out.ProcessConnections(m.Fwd)
-	if err != nil {
-		return err
-	}
-	m.Out = out
-	a, err := NewArtifacts(m.Client, m.Out.GetNamespace())
+	arts, err := NewArtifacts(m.Client, m.Cfg.Namespace)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create artifacts client")
 	}
-	m.Artifacts = a
+	m.Artifacts = arts
+	m.Clear()
 	if m.Cfg.KeepConnection {
 		log.Info().Msg("Keeping forwarder connections, press Ctrl+C to interrupt")
 		if m.Cfg.RemoveOnInterrupt {
@@ -84,19 +186,19 @@ func (m *Environment) DeployOrConnect(app cdk8s.App, out client.ManifestOutput) 
 		<-ch
 		log.Warn().Msg("Interrupted")
 		if m.Cfg.RemoveOnInterrupt {
-			return m.Client.RemoveNamespace(out.GetNamespace())
+			return m.Client.RemoveNamespace(m.Cfg.Namespace)
 		}
 	}
 	return nil
 }
 
-func (m *Environment) enumerateApps(c client.ManifestOutput) error {
-	apps, err := m.Client.UniqueLabels(c.GetNamespace(), "app")
+func (m *Environment) enumerateApps() error {
+	apps, err := m.Client.UniqueLabels(m.Cfg.Namespace, "app")
 	if err != nil {
 		return err
 	}
 	for _, app := range apps {
-		if err := m.Client.EnumerateInstances(c.GetNamespace(), fmt.Sprintf("app=%s", app)); err != nil {
+		if err := m.Client.EnumerateInstances(m.Cfg.Namespace, fmt.Sprintf("app=%s", app)); err != nil {
 			return err
 		}
 	}
@@ -104,9 +206,8 @@ func (m *Environment) enumerateApps(c client.ManifestOutput) error {
 }
 
 // Deploy deploy synthesized manifest and check logs for readiness
-func (m *Environment) Deploy(app cdk8s.App, c client.ManifestOutput) error {
-	manifest := app.SynthYaml().(string)
-	log.Info().Str("Namespace", c.GetNamespace()).Msg("Deploying namespace")
+func (m *Environment) Deploy(manifest string) error {
+	log.Info().Str("Namespace", m.Cfg.Namespace).Msg("Deploying namespace")
 	if m.Cfg.DryRun {
 		if err := m.Client.DryRun(manifest); err != nil {
 			return err
@@ -116,13 +217,13 @@ func (m *Environment) Deploy(app cdk8s.App, c client.ManifestOutput) error {
 	if err := m.Client.Create(manifest); err != nil {
 		return err
 	}
-	if err := m.enumerateApps(c); err != nil {
+	if err := m.enumerateApps(); err != nil {
 		return err
 	}
-	return m.Client.CheckReady(c)
+	return m.Client.CheckReady(m.Cfg.Namespace, m.Cfg.ReadyCheckData)
 }
 
-// Shutdown shutdown environment, remove namespace
+// Shutdown environment, remove namespace
 func (m *Environment) Shutdown() error {
-	return m.Client.RemoveNamespace(m.Out.GetNamespace())
+	return m.Client.RemoveNamespace(m.Cfg.Namespace)
 }
