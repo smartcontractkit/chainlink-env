@@ -91,7 +91,7 @@ func NewEnvDialogue() {
 			log.Fatal().Err(err).Send()
 		}
 	default:
-		color.Red("No environment preset found")
+		color.Red("No environment preset found, env must have envType=... label of a known environment")
 		return
 	}
 	color.Yellow("Environment is up and connected")

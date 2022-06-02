@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	zlog "github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/types"
@@ -28,7 +28,7 @@ import (
 
 const (
 	TempDebugManifest          = "tmp-manifest.yaml"
-	ContainerStatePollInterval = 2 * time.Second
+	ContainerStatePollInterval = 3 * time.Second
 	AppLabel                   = "app"
 )
 
@@ -57,7 +57,7 @@ func GetLocalK8sDeps() (*kubernetes.Clientset, *rest.Config, error) {
 func NewK8sClient() *K8sClient {
 	cs, cfg, err := GetLocalK8sDeps()
 	if err != nil {
-		zlog.Fatal().Err(err).Send()
+		log.Fatal().Err(err).Send()
 	}
 	return &K8sClient{
 		ClientSet:  cs,
@@ -92,7 +92,7 @@ func (m *K8sClient) UniqueLabels(namespace string, selector string) ([]string, e
 			uniqueLabels = append(uniqueLabels, appLabel)
 		}
 	}
-	zlog.Info().
+	log.Info().
 		Interface("Apps", uniqueLabels).
 		Msg("Apps found")
 	return uniqueLabels, nil
@@ -167,12 +167,12 @@ func (m *K8sClient) WaitContainersReady(ns string, rcd *ReadyCheckData) error {
 			if len(podList.Items) == 0 {
 				return fmt.Errorf("no pods in %s with selector %s", ns, rcd.Timeout)
 			}
-			zlog.Info().Interface("Pods", podNames(podList)).Msg("Waiting for pods readiness probes")
+			log.Info().Interface("Pods", podNames(podList)).Msg("Waiting for pods readiness probes")
 			allReady := true
 			for _, pod := range podList.Items {
 				for _, c := range pod.Status.ContainerStatuses {
 					if !c.Ready {
-						zlog.Debug().
+						log.Debug().
 							Str("Pod", pod.Name).
 							Str("Container", c.Name).
 							Interface("Ready", c.Ready).
@@ -200,7 +200,7 @@ func (m *K8sClient) WaitForPodBySelectorRunning(ns string, rcd *ReadyCheckData) 
 		return fmt.Errorf("no pods in %s with selector %s", ns, rcd.Timeout)
 	}
 
-	zlog.Info().Interface("Pods", podNames(podList)).Msg("Waiting for pods in state Running")
+	log.Info().Interface("Pods", podNames(podList)).Msg("Waiting for pods in state Running")
 	for _, pod := range podList.Items {
 		if err := waitForPodRunning(m.ClientSet, ns, pod.Name, rcd.Timeout); err != nil {
 			return err
@@ -219,7 +219,7 @@ func (m *K8sClient) NamespaceExists(namespace string) bool {
 
 // RemoveNamespace removes namespace
 func (m *K8sClient) RemoveNamespace(namespace string) error {
-	zlog.Info().Str("Namespace", namespace).Msg("Removing namespace")
+	log.Info().Str("Namespace", namespace).Msg("Removing namespace")
 	if err := m.ClientSet.CoreV1().Namespaces().Delete(context.Background(), namespace, metaV1.DeleteOptions{}); err != nil {
 		return err
 	}
@@ -245,7 +245,7 @@ func (m *K8sClient) CheckReady(namespace string, c *ReadyCheckData) error {
 
 // Apply applying a manifest to a currently connected k8s context
 func (m *K8sClient) Apply(manifest string) error {
-	zlog.Info().Msg("Applying manifest")
+	log.Info().Msg("Applying manifest")
 	if err := os.WriteFile(TempDebugManifest, []byte(manifest), os.ModePerm); err != nil {
 		return err
 	}
@@ -253,9 +253,14 @@ func (m *K8sClient) Apply(manifest string) error {
 	return ExecCmd(cmd)
 }
 
+// DeleteResource deletes resource
+func (m *K8sClient) DeleteResource(namespace string, resource string, instance string) error {
+	return ExecCmd(fmt.Sprintf("kubectl delete %s %s --namespace %s", resource, instance, namespace))
+}
+
 // Create creating a manifest to a currently connected k8s context
 func (m *K8sClient) Create(manifest string) error {
-	zlog.Info().Msg("Creating manifest")
+	log.Info().Msg("Creating manifest")
 	if err := os.WriteFile(TempDebugManifest, []byte(manifest), os.ModePerm); err != nil {
 		return err
 	}
@@ -265,7 +270,7 @@ func (m *K8sClient) Create(manifest string) error {
 
 // DryRun generates manifest and writes it in a file
 func (m *K8sClient) DryRun(manifest string) error {
-	zlog.Info().Msg("Creating manifest")
+	log.Info().Msg("Creating manifest")
 	if err := os.WriteFile(TempDebugManifest, []byte(manifest), os.ModePerm); err != nil {
 		return err
 	}
@@ -294,7 +299,7 @@ func (m *K8sClient) CopyToPod(namespace, src, destination, containername string)
 		return nil, nil, nil, fmt.Errorf("destination string improperly formatted, see reference 'NAMESPACE/POD_NAME:folder/FILE_NAME'")
 	}
 
-	zlog.Debug().
+	log.Debug().
 		Str("Namespace", namespace).
 		Str("Source", src).
 		Str("Destination", destination).
