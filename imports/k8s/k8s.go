@@ -1482,7 +1482,7 @@ type ExecAction struct {
 // ExternalDocumentation allows referencing an external resource for extended documentation.
 type ExternalDocumentation struct {
 	Description *string `field:"optional" json:"description" yaml:"description"`
-	Url *string `field:"optional" json:"url" yaml:"url"`
+	Url         *string `field:"optional" json:"url" yaml:"url"`
 }
 
 // ExternalMetricSource indicates how to scale on a metric not associated with any Kubernetes object (for example length of queue in cloud messaging service, or QPS from loadbalancer running outside of cluster).
@@ -2002,7 +2002,7 @@ type IngressRule struct {
 	// Both these may change in the future. Incoming requests are matched against the host before the IngressRuleValue. If the host is unspecified, the Ingress routes all traffic based on the specified IngressRuleValue.
 	//
 	// Host can be "precise" which is a domain name without the terminating dot of a network host (e.g. "foo.bar.com") or "wildcard", which is a domain name prefixed with a single wildcard label (e.g. "*.foo.com"). The wildcard character '*' must appear by itself as the first DNS label and matches only a single label. You cannot have a wildcard label by itself (e.g. Host == "*"). Requests will be matched against the Host field in the following way: 1. If Host is precise, the request matches this rule if the http host header is equal to Host. 2. If Host is a wildcard, then the request matches this rule if the http host header is to equal to the suffix (removing the first label) of the wildcard rule.
-	Host *string `field:"optional" json:"host" yaml:"host"`
+	Host *string               `field:"optional" json:"host" yaml:"host"`
 	Http *HttpIngressRuleValue `field:"optional" json:"http" yaml:"http"`
 }
 
@@ -2068,7 +2068,6 @@ func (j *jsiiProxy_IntOrString) Value() interface{} {
 	)
 	return returns
 }
-
 
 func IntOrString_FromNumber(value *float64) IntOrString {
 	_init_.Initialize()
@@ -2276,49 +2275,49 @@ type JobTemplateSpecV1Beta1 struct {
 
 // JSONSchemaProps is a JSON-Schema following Specification Draft 4 (http://json-schema.org/).
 type JsonSchemaProps struct {
-	AdditionalItems interface{} `field:"optional" json:"additionalItems" yaml:"additionalItems"`
-	AdditionalProperties interface{} `field:"optional" json:"additionalProperties" yaml:"additionalProperties"`
-	AllOf *[]*JsonSchemaProps `field:"optional" json:"allOf" yaml:"allOf"`
-	AnyOf *[]*JsonSchemaProps `field:"optional" json:"anyOf" yaml:"anyOf"`
+	AdditionalItems      interface{}         `field:"optional" json:"additionalItems" yaml:"additionalItems"`
+	AdditionalProperties interface{}         `field:"optional" json:"additionalProperties" yaml:"additionalProperties"`
+	AllOf                *[]*JsonSchemaProps `field:"optional" json:"allOf" yaml:"allOf"`
+	AnyOf                *[]*JsonSchemaProps `field:"optional" json:"anyOf" yaml:"anyOf"`
 	// default is a default value for undefined object fields.
 	//
 	// Defaulting is a beta feature under the CustomResourceDefaulting feature gate. Defaulting requires spec.preserveUnknownFields to be false.
-	Default interface{} `field:"optional" json:"default" yaml:"default"`
-	Definitions *map[string]*JsonSchemaProps `field:"optional" json:"definitions" yaml:"definitions"`
-	Dependencies *map[string]interface{} `field:"optional" json:"dependencies" yaml:"dependencies"`
-	Description *string `field:"optional" json:"description" yaml:"description"`
-	Enum *[]interface{} `field:"optional" json:"enum" yaml:"enum"`
-	Example interface{} `field:"optional" json:"example" yaml:"example"`
-	ExclusiveMaximum *bool `field:"optional" json:"exclusiveMaximum" yaml:"exclusiveMaximum"`
-	ExclusiveMinimum *bool `field:"optional" json:"exclusiveMinimum" yaml:"exclusiveMinimum"`
-	ExternalDocs *ExternalDocumentation `field:"optional" json:"externalDocs" yaml:"externalDocs"`
+	Default          interface{}                  `field:"optional" json:"default" yaml:"default"`
+	Definitions      *map[string]*JsonSchemaProps `field:"optional" json:"definitions" yaml:"definitions"`
+	Dependencies     *map[string]interface{}      `field:"optional" json:"dependencies" yaml:"dependencies"`
+	Description      *string                      `field:"optional" json:"description" yaml:"description"`
+	Enum             *[]interface{}               `field:"optional" json:"enum" yaml:"enum"`
+	Example          interface{}                  `field:"optional" json:"example" yaml:"example"`
+	ExclusiveMaximum *bool                        `field:"optional" json:"exclusiveMaximum" yaml:"exclusiveMaximum"`
+	ExclusiveMinimum *bool                        `field:"optional" json:"exclusiveMinimum" yaml:"exclusiveMinimum"`
+	ExternalDocs     *ExternalDocumentation       `field:"optional" json:"externalDocs" yaml:"externalDocs"`
 	// format is an OpenAPI v3 format string. Unknown formats are ignored. The following formats are validated:.
 	//
 	// - bsonobjectid: a bson object ID, i.e. a 24 characters hex string - uri: an URI as parsed by Golang net/url.ParseRequestURI - email: an email address as parsed by Golang net/mail.ParseAddress - hostname: a valid representation for an Internet host name, as defined by RFC 1034, section 3.1 [RFC1034]. - ipv4: an IPv4 IP as parsed by Golang net.ParseIP - ipv6: an IPv6 IP as parsed by Golang net.ParseIP - cidr: a CIDR as parsed by Golang net.ParseCIDR - mac: a MAC address as parsed by Golang net.ParseMAC - uuid: an UUID that allows uppercase defined by the regex (?i)^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$ - uuid3: an UUID3 that allows uppercase defined by the regex (?i)^[0-9a-f]{8}-?[0-9a-f]{4}-?3[0-9a-f]{3}-?[0-9a-f]{4}-?[0-9a-f]{12}$ - uuid4: an UUID4 that allows uppercase defined by the regex (?i)^[0-9a-f]{8}-?[0-9a-f]{4}-?4[0-9a-f]{3}-?[89ab][0-9a-f]{3}-?[0-9a-f]{12}$ - uuid5: an UUID5 that allows uppercase defined by the regex (?i)^[0-9a-f]{8}-?[0-9a-f]{4}-?5[0-9a-f]{3}-?[89ab][0-9a-f]{3}-?[0-9a-f]{12}$ - isbn: an ISBN10 or ISBN13 number string like "0321751043" or "978-0321751041" - isbn10: an ISBN10 number string like "0321751043" - isbn13: an ISBN13 number string like "978-0321751041" - creditcard: a credit card number defined by the regex ^(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|6(?:011|5[0-9][0-9])[0-9]{12}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|(?:2131|1800|35\d{3})\d{11})$ with any non digit characters mixed in - ssn: a U.S. social security number following the regex ^\d{3}[- ]?\d{2}[- ]?\d{4}$ - hexcolor: an hexadecimal color code like "#FFFFFF: following the regex ^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$ - rgbcolor: an RGB color code like rgb like "rgb(255,255,2559" - byte: base64 encoded binary data - password: any kind of string - date: a date string like "2006-01-02" as defined by full-date in RFC3339 - duration: a duration string like "22 ns" as parsed by Golang time.ParseDuration or compatible with Scala duration format - datetime: a date time string like "2014-12-15T19:30:20.000Z" as defined by date-time in RFC3339.
-	Format *string `field:"optional" json:"format" yaml:"format"`
-	Id *string `field:"optional" json:"id" yaml:"id"`
-	Items interface{} `field:"optional" json:"items" yaml:"items"`
-	Maximum *float64 `field:"optional" json:"maximum" yaml:"maximum"`
-	MaxItems *float64 `field:"optional" json:"maxItems" yaml:"maxItems"`
-	MaxLength *float64 `field:"optional" json:"maxLength" yaml:"maxLength"`
-	MaxProperties *float64 `field:"optional" json:"maxProperties" yaml:"maxProperties"`
-	Minimum *float64 `field:"optional" json:"minimum" yaml:"minimum"`
-	MinItems *float64 `field:"optional" json:"minItems" yaml:"minItems"`
-	MinLength *float64 `field:"optional" json:"minLength" yaml:"minLength"`
-	MinProperties *float64 `field:"optional" json:"minProperties" yaml:"minProperties"`
-	MultipleOf *float64 `field:"optional" json:"multipleOf" yaml:"multipleOf"`
-	Not **JsonSchemaProps `field:"optional" json:"not" yaml:"not"`
-	Nullable *bool `field:"optional" json:"nullable" yaml:"nullable"`
-	OneOf *[]*JsonSchemaProps `field:"optional" json:"oneOf" yaml:"oneOf"`
-	Pattern *string `field:"optional" json:"pattern" yaml:"pattern"`
+	Format            *string                      `field:"optional" json:"format" yaml:"format"`
+	Id                *string                      `field:"optional" json:"id" yaml:"id"`
+	Items             interface{}                  `field:"optional" json:"items" yaml:"items"`
+	Maximum           *float64                     `field:"optional" json:"maximum" yaml:"maximum"`
+	MaxItems          *float64                     `field:"optional" json:"maxItems" yaml:"maxItems"`
+	MaxLength         *float64                     `field:"optional" json:"maxLength" yaml:"maxLength"`
+	MaxProperties     *float64                     `field:"optional" json:"maxProperties" yaml:"maxProperties"`
+	Minimum           *float64                     `field:"optional" json:"minimum" yaml:"minimum"`
+	MinItems          *float64                     `field:"optional" json:"minItems" yaml:"minItems"`
+	MinLength         *float64                     `field:"optional" json:"minLength" yaml:"minLength"`
+	MinProperties     *float64                     `field:"optional" json:"minProperties" yaml:"minProperties"`
+	MultipleOf        *float64                     `field:"optional" json:"multipleOf" yaml:"multipleOf"`
+	Not               **JsonSchemaProps            `field:"optional" json:"not" yaml:"not"`
+	Nullable          *bool                        `field:"optional" json:"nullable" yaml:"nullable"`
+	OneOf             *[]*JsonSchemaProps          `field:"optional" json:"oneOf" yaml:"oneOf"`
+	Pattern           *string                      `field:"optional" json:"pattern" yaml:"pattern"`
 	PatternProperties *map[string]*JsonSchemaProps `field:"optional" json:"patternProperties" yaml:"patternProperties"`
-	Properties *map[string]*JsonSchemaProps `field:"optional" json:"properties" yaml:"properties"`
-	Ref *string `field:"optional" json:"ref" yaml:"ref"`
-	Required *[]*string `field:"optional" json:"required" yaml:"required"`
-	Schema *string `field:"optional" json:"schema" yaml:"schema"`
-	Title *string `field:"optional" json:"title" yaml:"title"`
-	Type *string `field:"optional" json:"type" yaml:"type"`
-	UniqueItems *bool `field:"optional" json:"uniqueItems" yaml:"uniqueItems"`
+	Properties        *map[string]*JsonSchemaProps `field:"optional" json:"properties" yaml:"properties"`
+	Ref               *string                      `field:"optional" json:"ref" yaml:"ref"`
+	Required          *[]*string                   `field:"optional" json:"required" yaml:"required"`
+	Schema            *string                      `field:"optional" json:"schema" yaml:"schema"`
+	Title             *string                      `field:"optional" json:"title" yaml:"title"`
+	Type              *string                      `field:"optional" json:"type" yaml:"type"`
+	UniqueItems       *bool                        `field:"optional" json:"uniqueItems" yaml:"uniqueItems"`
 	// x-kubernetes-embedded-resource defines that the value is an embedded Kubernetes runtime.Object, with TypeMeta and ObjectMeta. The type must be object. It is allowed to further restrict the embedded object. kind, apiVersion and metadata are validated automatically. x-kubernetes-preserve-unknown-fields is allowed to be true, but does not have to be if the object is fully specified (up to kind, apiVersion, metadata).
 	XKubernetesEmbeddedResource *bool `field:"optional" json:"xKubernetesEmbeddedResource" yaml:"xKubernetesEmbeddedResource"`
 	// x-kubernetes-int-or-string specifies that this value is either an integer or a string.
@@ -2407,7 +2406,7 @@ type KubeApiService interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -2502,7 +2501,6 @@ func (j *jsiiProxy_KubeApiService) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.kube-aggregator.pkg.apis.apiregistration.v1.APIService" API object.
 func NewKubeApiService(scope constructs.Construct, id *string, props *KubeApiServiceProps) KubeApiService {
@@ -2680,7 +2678,7 @@ type KubeApiServiceList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -2775,7 +2773,6 @@ func (j *jsiiProxy_KubeApiServiceList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.kube-aggregator.pkg.apis.apiregistration.v1.APIServiceList" API object.
 func NewKubeApiServiceList(scope constructs.Construct, id *string, props *KubeApiServiceListProps) KubeApiServiceList {
@@ -2975,7 +2972,7 @@ type KubeBinding interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -3070,7 +3067,6 @@ func (j *jsiiProxy_KubeBinding) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.Binding" API object.
 func NewKubeBinding(scope constructs.Construct, id *string, props *KubeBindingProps) KubeBinding {
@@ -3266,7 +3262,7 @@ type KubeCertificateSigningRequest interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -3361,7 +3357,6 @@ func (j *jsiiProxy_KubeCertificateSigningRequest) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.certificates.v1.CertificateSigningRequest" API object.
 func NewKubeCertificateSigningRequest(scope constructs.Construct, id *string, props *KubeCertificateSigningRequestProps) KubeCertificateSigningRequest {
@@ -3539,7 +3534,7 @@ type KubeCertificateSigningRequestList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -3634,7 +3629,6 @@ func (j *jsiiProxy_KubeCertificateSigningRequestList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.certificates.v1.CertificateSigningRequestList" API object.
 func NewKubeCertificateSigningRequestList(scope constructs.Construct, id *string, props *KubeCertificateSigningRequestListProps) KubeCertificateSigningRequestList {
@@ -3798,8 +3792,8 @@ func (k *jsiiProxy_KubeCertificateSigningRequestList) ToString() *string {
 // CertificateSigningRequestList is a collection of CertificateSigningRequest objects.
 type KubeCertificateSigningRequestListProps struct {
 	// items is a collection of CertificateSigningRequest objects.
-	Items *[]*KubeCertificateSigningRequestProps `field:"required" json:"items" yaml:"items"`
-	Metadata *ListMeta `field:"optional" json:"metadata" yaml:"metadata"`
+	Items    *[]*KubeCertificateSigningRequestProps `field:"required" json:"items" yaml:"items"`
+	Metadata *ListMeta                              `field:"optional" json:"metadata" yaml:"metadata"`
 }
 
 // CertificateSigningRequest objects provide a mechanism to obtain x509 certificates by submitting a certificate signing request, and having it asynchronously approved and issued.
@@ -3813,8 +3807,8 @@ type KubeCertificateSigningRequestProps struct {
 	// spec contains the certificate request, and is immutable after creation.
 	//
 	// Only the request, signerName, expirationSeconds, and usages fields can be set on creation. Other fields are derived by Kubernetes and cannot be modified by users.
-	Spec *CertificateSigningRequestSpec `field:"required" json:"spec" yaml:"spec"`
-	Metadata *ObjectMeta `field:"optional" json:"metadata" yaml:"metadata"`
+	Spec     *CertificateSigningRequestSpec `field:"required" json:"spec" yaml:"spec"`
+	Metadata *ObjectMeta                    `field:"optional" json:"metadata" yaml:"metadata"`
 }
 
 // ClusterRole is a cluster level, logical grouping of PolicyRules that can be referenced as a unit by a RoleBinding or ClusterRoleBinding.
@@ -3834,7 +3828,7 @@ type KubeClusterRole interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -3929,7 +3923,6 @@ func (j *jsiiProxy_KubeClusterRole) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.rbac.v1.ClusterRole" API object.
 func NewKubeClusterRole(scope constructs.Construct, id *string, props *KubeClusterRoleProps) KubeClusterRole {
@@ -4109,7 +4102,7 @@ type KubeClusterRoleBinding interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -4204,7 +4197,6 @@ func (j *jsiiProxy_KubeClusterRoleBinding) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.rbac.v1.ClusterRoleBinding" API object.
 func NewKubeClusterRoleBinding(scope constructs.Construct, id *string, props *KubeClusterRoleBindingProps) KubeClusterRoleBinding {
@@ -4382,7 +4374,7 @@ type KubeClusterRoleBindingList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -4477,7 +4469,6 @@ func (j *jsiiProxy_KubeClusterRoleBindingList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.rbac.v1.ClusterRoleBindingList" API object.
 func NewKubeClusterRoleBindingList(scope constructs.Construct, id *string, props *KubeClusterRoleBindingListProps) KubeClusterRoleBindingList {
@@ -4665,7 +4656,7 @@ type KubeClusterRoleBindingListV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -4760,7 +4751,6 @@ func (j *jsiiProxy_KubeClusterRoleBindingListV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.rbac.v1alpha1.ClusterRoleBindingList" API object.
 func NewKubeClusterRoleBindingListV1Alpha1(scope constructs.Construct, id *string, props *KubeClusterRoleBindingListV1Alpha1Props) KubeClusterRoleBindingListV1Alpha1 {
@@ -4964,7 +4954,7 @@ type KubeClusterRoleBindingV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -5059,7 +5049,6 @@ func (j *jsiiProxy_KubeClusterRoleBindingV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.rbac.v1alpha1.ClusterRoleBinding" API object.
 func NewKubeClusterRoleBindingV1Alpha1(scope constructs.Construct, id *string, props *KubeClusterRoleBindingV1Alpha1Props) KubeClusterRoleBindingV1Alpha1 {
@@ -5251,7 +5240,7 @@ type KubeClusterRoleList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -5346,7 +5335,6 @@ func (j *jsiiProxy_KubeClusterRoleList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.rbac.v1.ClusterRoleList" API object.
 func NewKubeClusterRoleList(scope constructs.Construct, id *string, props *KubeClusterRoleListProps) KubeClusterRoleList {
@@ -5534,7 +5522,7 @@ type KubeClusterRoleListV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -5629,7 +5617,6 @@ func (j *jsiiProxy_KubeClusterRoleListV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.rbac.v1alpha1.ClusterRoleList" API object.
 func NewKubeClusterRoleListV1Alpha1(scope constructs.Construct, id *string, props *KubeClusterRoleListV1Alpha1Props) KubeClusterRoleListV1Alpha1 {
@@ -5831,7 +5818,7 @@ type KubeClusterRoleV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -5926,7 +5913,6 @@ func (j *jsiiProxy_KubeClusterRoleV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.rbac.v1alpha1.ClusterRole" API object.
 func NewKubeClusterRoleV1Alpha1(scope constructs.Construct, id *string, props *KubeClusterRoleV1Alpha1Props) KubeClusterRoleV1Alpha1 {
@@ -6120,7 +6106,7 @@ type KubeComponentStatus interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -6215,7 +6201,6 @@ func (j *jsiiProxy_KubeComponentStatus) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.ComponentStatus" API object.
 func NewKubeComponentStatus(scope constructs.Construct, id *string, props *KubeComponentStatusProps) KubeComponentStatus {
@@ -6395,7 +6380,7 @@ type KubeComponentStatusList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -6490,7 +6475,6 @@ func (j *jsiiProxy_KubeComponentStatusList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.ComponentStatusList" API object.
 func NewKubeComponentStatusList(scope constructs.Construct, id *string, props *KubeComponentStatusListProps) KubeComponentStatusList {
@@ -6692,7 +6676,7 @@ type KubeConfigMap interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -6787,7 +6771,6 @@ func (j *jsiiProxy_KubeConfigMap) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.ConfigMap" API object.
 func NewKubeConfigMap(scope constructs.Construct, id *string, props *KubeConfigMapProps) KubeConfigMap {
@@ -6965,7 +6948,7 @@ type KubeConfigMapList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -7060,7 +7043,6 @@ func (j *jsiiProxy_KubeConfigMapList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.ConfigMapList" API object.
 func NewKubeConfigMapList(scope constructs.Construct, id *string, props *KubeConfigMapListProps) KubeConfigMapList {
@@ -7268,7 +7250,7 @@ type KubeControllerRevision interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -7363,7 +7345,6 @@ func (j *jsiiProxy_KubeControllerRevision) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.apps.v1.ControllerRevision" API object.
 func NewKubeControllerRevision(scope constructs.Construct, id *string, props *KubeControllerRevisionProps) KubeControllerRevision {
@@ -7541,7 +7522,7 @@ type KubeControllerRevisionList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -7636,7 +7617,6 @@ func (j *jsiiProxy_KubeControllerRevisionList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.apps.v1.ControllerRevisionList" API object.
 func NewKubeControllerRevisionList(scope constructs.Construct, id *string, props *KubeControllerRevisionListProps) KubeControllerRevisionList {
@@ -7836,7 +7816,7 @@ type KubeCronJob interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -7931,7 +7911,6 @@ func (j *jsiiProxy_KubeCronJob) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.batch.v1.CronJob" API object.
 func NewKubeCronJob(scope constructs.Construct, id *string, props *KubeCronJobProps) KubeCronJob {
@@ -8109,7 +8088,7 @@ type KubeCronJobList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -8204,7 +8183,6 @@ func (j *jsiiProxy_KubeCronJobList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.batch.v1.CronJobList" API object.
 func NewKubeCronJobList(scope constructs.Construct, id *string, props *KubeCronJobListProps) KubeCronJobList {
@@ -8392,7 +8370,7 @@ type KubeCronJobListV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -8487,7 +8465,6 @@ func (j *jsiiProxy_KubeCronJobListV1Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.batch.v1beta1.CronJobList" API object.
 func NewKubeCronJobListV1Beta1(scope constructs.Construct, id *string, props *KubeCronJobListV1Beta1Props) KubeCronJobListV1Beta1 {
@@ -8687,7 +8664,7 @@ type KubeCronJobV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -8782,7 +8759,6 @@ func (j *jsiiProxy_KubeCronJobV1Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.batch.v1beta1.CronJob" API object.
 func NewKubeCronJobV1Beta1(scope constructs.Construct, id *string, props *KubeCronJobV1Beta1Props) KubeCronJobV1Beta1 {
@@ -8974,7 +8950,7 @@ type KubeCsiDriver interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -9069,7 +9045,6 @@ func (j *jsiiProxy_KubeCsiDriver) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.storage.v1.CSIDriver" API object.
 func NewKubeCsiDriver(scope constructs.Construct, id *string, props *KubeCsiDriverProps) KubeCsiDriver {
@@ -9247,7 +9222,7 @@ type KubeCsiDriverList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -9342,7 +9317,6 @@ func (j *jsiiProxy_KubeCsiDriverList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.storage.v1.CSIDriverList" API object.
 func NewKubeCsiDriverList(scope constructs.Construct, id *string, props *KubeCsiDriverListProps) KubeCsiDriverList {
@@ -9542,7 +9516,7 @@ type KubeCsiNode interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -9637,7 +9611,6 @@ func (j *jsiiProxy_KubeCsiNode) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.storage.v1.CSINode" API object.
 func NewKubeCsiNode(scope constructs.Construct, id *string, props *KubeCsiNodeProps) KubeCsiNode {
@@ -9815,7 +9788,7 @@ type KubeCsiNodeList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -9910,7 +9883,6 @@ func (j *jsiiProxy_KubeCsiNodeList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.storage.v1.CSINodeList" API object.
 func NewKubeCsiNodeList(scope constructs.Construct, id *string, props *KubeCsiNodeListProps) KubeCsiNodeList {
@@ -10106,7 +10078,7 @@ type KubeCsiStorageCapacityListV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -10201,7 +10173,6 @@ func (j *jsiiProxy_KubeCsiStorageCapacityListV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.storage.v1alpha1.CSIStorageCapacityList" API object.
 func NewKubeCsiStorageCapacityListV1Alpha1(scope constructs.Construct, id *string, props *KubeCsiStorageCapacityListV1Alpha1Props) KubeCsiStorageCapacityListV1Alpha1 {
@@ -10387,7 +10358,7 @@ type KubeCsiStorageCapacityListV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -10482,7 +10453,6 @@ func (j *jsiiProxy_KubeCsiStorageCapacityListV1Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.storage.v1beta1.CSIStorageCapacityList" API object.
 func NewKubeCsiStorageCapacityListV1Beta1(scope constructs.Construct, id *string, props *KubeCsiStorageCapacityListV1Beta1Props) KubeCsiStorageCapacityListV1Beta1 {
@@ -10678,7 +10648,7 @@ type KubeCsiStorageCapacityV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -10773,7 +10743,6 @@ func (j *jsiiProxy_KubeCsiStorageCapacityV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.storage.v1alpha1.CSIStorageCapacity" API object.
 func NewKubeCsiStorageCapacityV1Alpha1(scope constructs.Construct, id *string, props *KubeCsiStorageCapacityV1Alpha1Props) KubeCsiStorageCapacityV1Alpha1 {
@@ -10999,7 +10968,7 @@ type KubeCsiStorageCapacityV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -11094,7 +11063,6 @@ func (j *jsiiProxy_KubeCsiStorageCapacityV1Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.storage.v1beta1.CSIStorageCapacity" API object.
 func NewKubeCsiStorageCapacityV1Beta1(scope constructs.Construct, id *string, props *KubeCsiStorageCapacityV1Beta1Props) KubeCsiStorageCapacityV1Beta1 {
@@ -11312,7 +11280,7 @@ type KubeCustomResourceDefinition interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -11407,7 +11375,6 @@ func (j *jsiiProxy_KubeCustomResourceDefinition) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.apiextensions-apiserver.pkg.apis.apiextensions.v1.CustomResourceDefinition" API object.
 func NewKubeCustomResourceDefinition(scope constructs.Construct, id *string, props *KubeCustomResourceDefinitionProps) KubeCustomResourceDefinition {
@@ -11585,7 +11552,7 @@ type KubeCustomResourceDefinitionList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -11680,7 +11647,6 @@ func (j *jsiiProxy_KubeCustomResourceDefinitionList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.apiextensions-apiserver.pkg.apis.apiextensions.v1.CustomResourceDefinitionList" API object.
 func NewKubeCustomResourceDefinitionList(scope constructs.Construct, id *string, props *KubeCustomResourceDefinitionListProps) KubeCustomResourceDefinitionList {
@@ -11876,7 +11842,7 @@ type KubeDaemonSet interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -11971,7 +11937,6 @@ func (j *jsiiProxy_KubeDaemonSet) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.apps.v1.DaemonSet" API object.
 func NewKubeDaemonSet(scope constructs.Construct, id *string, props *KubeDaemonSetProps) KubeDaemonSet {
@@ -12149,7 +12114,7 @@ type KubeDaemonSetList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -12244,7 +12209,6 @@ func (j *jsiiProxy_KubeDaemonSetList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.apps.v1.DaemonSetList" API object.
 func NewKubeDaemonSetList(scope constructs.Construct, id *string, props *KubeDaemonSetListProps) KubeDaemonSetList {
@@ -12444,7 +12408,7 @@ type KubeDeployment interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -12539,7 +12503,6 @@ func (j *jsiiProxy_KubeDeployment) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.apps.v1.Deployment" API object.
 func NewKubeDeployment(scope constructs.Construct, id *string, props *KubeDeploymentProps) KubeDeployment {
@@ -12717,7 +12680,7 @@ type KubeDeploymentList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -12812,7 +12775,6 @@ func (j *jsiiProxy_KubeDeploymentList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.apps.v1.DeploymentList" API object.
 func NewKubeDeploymentList(scope constructs.Construct, id *string, props *KubeDeploymentListProps) KubeDeploymentList {
@@ -13010,7 +12972,7 @@ type KubeEndpointSlice interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -13105,7 +13067,6 @@ func (j *jsiiProxy_KubeEndpointSlice) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.discovery.v1.EndpointSlice" API object.
 func NewKubeEndpointSlice(scope constructs.Construct, id *string, props *KubeEndpointSliceProps) KubeEndpointSlice {
@@ -13283,7 +13244,7 @@ type KubeEndpointSliceList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -13378,7 +13339,6 @@ func (j *jsiiProxy_KubeEndpointSliceList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.discovery.v1.EndpointSliceList" API object.
 func NewKubeEndpointSliceList(scope constructs.Construct, id *string, props *KubeEndpointSliceListProps) KubeEndpointSliceList {
@@ -13564,7 +13524,7 @@ type KubeEndpointSliceListV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -13659,7 +13619,6 @@ func (j *jsiiProxy_KubeEndpointSliceListV1Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.discovery.v1beta1.EndpointSliceList" API object.
 func NewKubeEndpointSliceListV1Beta1(scope constructs.Construct, id *string, props *KubeEndpointSliceListV1Beta1Props) KubeEndpointSliceListV1Beta1 {
@@ -13867,7 +13826,7 @@ type KubeEndpointSliceV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -13962,7 +13921,6 @@ func (j *jsiiProxy_KubeEndpointSliceV1Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.discovery.v1beta1.EndpointSlice" API object.
 func NewKubeEndpointSliceV1Beta1(scope constructs.Construct, id *string, props *KubeEndpointSliceV1Beta1Props) KubeEndpointSliceV1Beta1 {
@@ -14173,7 +14131,7 @@ type KubeEndpoints interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -14268,7 +14226,6 @@ func (j *jsiiProxy_KubeEndpoints) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.Endpoints" API object.
 func NewKubeEndpoints(scope constructs.Construct, id *string, props *KubeEndpointsProps) KubeEndpoints {
@@ -14446,7 +14403,7 @@ type KubeEndpointsList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -14541,7 +14498,6 @@ func (j *jsiiProxy_KubeEndpointsList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.EndpointsList" API object.
 func NewKubeEndpointsList(scope constructs.Construct, id *string, props *KubeEndpointsListProps) KubeEndpointsList {
@@ -14756,7 +14712,7 @@ type KubeEvent interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -14851,7 +14807,6 @@ func (j *jsiiProxy_KubeEvent) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.events.v1.Event" API object.
 func NewKubeEvent(scope constructs.Construct, id *string, props *KubeEventProps) KubeEvent {
@@ -15029,7 +14984,7 @@ type KubeEventList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -15124,7 +15079,6 @@ func (j *jsiiProxy_KubeEventList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.events.v1.EventList" API object.
 func NewKubeEventList(scope constructs.Construct, id *string, props *KubeEventListProps) KubeEventList {
@@ -15312,7 +15266,7 @@ type KubeEventListV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -15407,7 +15361,6 @@ func (j *jsiiProxy_KubeEventListV1Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.events.v1beta1.EventList" API object.
 func NewKubeEventListV1Beta1(scope constructs.Construct, id *string, props *KubeEventListV1Beta1Props) KubeEventListV1Beta1 {
@@ -15649,7 +15602,7 @@ type KubeEventV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -15744,7 +15697,6 @@ func (j *jsiiProxy_KubeEventV1Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.events.v1beta1.Event" API object.
 func NewKubeEventV1Beta1(scope constructs.Construct, id *string, props *KubeEventV1Beta1Props) KubeEventV1Beta1 {
@@ -15976,7 +15928,7 @@ type KubeEviction interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -16071,7 +16023,6 @@ func (j *jsiiProxy_KubeEviction) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.policy.v1.Eviction" API object.
 func NewKubeEviction(scope constructs.Construct, id *string, props *KubeEvictionProps) KubeEviction {
@@ -16259,7 +16210,7 @@ type KubeFlowSchemaListV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -16354,7 +16305,6 @@ func (j *jsiiProxy_KubeFlowSchemaListV1Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.flowcontrol.v1beta1.FlowSchemaList" API object.
 func NewKubeFlowSchemaListV1Beta1(scope constructs.Construct, id *string, props *KubeFlowSchemaListV1Beta1Props) KubeFlowSchemaListV1Beta1 {
@@ -16544,7 +16494,7 @@ type KubeFlowSchemaV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -16639,7 +16589,6 @@ func (j *jsiiProxy_KubeFlowSchemaV1Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.flowcontrol.v1beta1.FlowSchema" API object.
 func NewKubeFlowSchemaV1Beta1(scope constructs.Construct, id *string, props *KubeFlowSchemaV1Beta1Props) KubeFlowSchemaV1Beta1 {
@@ -16831,7 +16780,7 @@ type KubeHorizontalPodAutoscaler interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -16926,7 +16875,6 @@ func (j *jsiiProxy_KubeHorizontalPodAutoscaler) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.autoscaling.v1.HorizontalPodAutoscaler" API object.
 func NewKubeHorizontalPodAutoscaler(scope constructs.Construct, id *string, props *KubeHorizontalPodAutoscalerProps) KubeHorizontalPodAutoscaler {
@@ -17104,7 +17052,7 @@ type KubeHorizontalPodAutoscalerList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -17199,7 +17147,6 @@ func (j *jsiiProxy_KubeHorizontalPodAutoscalerList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.autoscaling.v1.HorizontalPodAutoscalerList" API object.
 func NewKubeHorizontalPodAutoscalerList(scope constructs.Construct, id *string, props *KubeHorizontalPodAutoscalerListProps) KubeHorizontalPodAutoscalerList {
@@ -17385,7 +17332,7 @@ type KubeHorizontalPodAutoscalerListV2Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -17480,7 +17427,6 @@ func (j *jsiiProxy_KubeHorizontalPodAutoscalerListV2Beta1) Node() constructs.Nod
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.autoscaling.v2beta1.HorizontalPodAutoscalerList" API object.
 func NewKubeHorizontalPodAutoscalerListV2Beta1(scope constructs.Construct, id *string, props *KubeHorizontalPodAutoscalerListV2Beta1Props) KubeHorizontalPodAutoscalerListV2Beta1 {
@@ -17666,7 +17612,7 @@ type KubeHorizontalPodAutoscalerListV2Beta2 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -17761,7 +17707,6 @@ func (j *jsiiProxy_KubeHorizontalPodAutoscalerListV2Beta2) Node() constructs.Nod
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.autoscaling.v2beta2.HorizontalPodAutoscalerList" API object.
 func NewKubeHorizontalPodAutoscalerListV2Beta2(scope constructs.Construct, id *string, props *KubeHorizontalPodAutoscalerListV2Beta2Props) KubeHorizontalPodAutoscalerListV2Beta2 {
@@ -17959,7 +17904,7 @@ type KubeHorizontalPodAutoscalerV2Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -18054,7 +17999,6 @@ func (j *jsiiProxy_KubeHorizontalPodAutoscalerV2Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.autoscaling.v2beta1.HorizontalPodAutoscaler" API object.
 func NewKubeHorizontalPodAutoscalerV2Beta1(scope constructs.Construct, id *string, props *KubeHorizontalPodAutoscalerV2Beta1Props) KubeHorizontalPodAutoscalerV2Beta1 {
@@ -18244,7 +18188,7 @@ type KubeHorizontalPodAutoscalerV2Beta2 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -18339,7 +18283,6 @@ func (j *jsiiProxy_KubeHorizontalPodAutoscalerV2Beta2) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.autoscaling.v2beta2.HorizontalPodAutoscaler" API object.
 func NewKubeHorizontalPodAutoscalerV2Beta2(scope constructs.Construct, id *string, props *KubeHorizontalPodAutoscalerV2Beta2Props) KubeHorizontalPodAutoscalerV2Beta2 {
@@ -18531,7 +18474,7 @@ type KubeIngress interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -18626,7 +18569,6 @@ func (j *jsiiProxy_KubeIngress) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.networking.v1.Ingress" API object.
 func NewKubeIngress(scope constructs.Construct, id *string, props *KubeIngressProps) KubeIngress {
@@ -18806,7 +18748,7 @@ type KubeIngressClass interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -18901,7 +18843,6 @@ func (j *jsiiProxy_KubeIngressClass) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.networking.v1.IngressClass" API object.
 func NewKubeIngressClass(scope constructs.Construct, id *string, props *KubeIngressClassProps) KubeIngressClass {
@@ -19079,7 +19020,7 @@ type KubeIngressClassList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -19174,7 +19115,6 @@ func (j *jsiiProxy_KubeIngressClassList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.networking.v1.IngressClassList" API object.
 func NewKubeIngressClassList(scope constructs.Construct, id *string, props *KubeIngressClassListProps) KubeIngressClassList {
@@ -19374,7 +19314,7 @@ type KubeIngressList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -19469,7 +19409,6 @@ func (j *jsiiProxy_KubeIngressList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.networking.v1.IngressList" API object.
 func NewKubeIngressList(scope constructs.Construct, id *string, props *KubeIngressListProps) KubeIngressList {
@@ -19671,7 +19610,7 @@ type KubeJob interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -19766,7 +19705,6 @@ func (j *jsiiProxy_KubeJob) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.batch.v1.Job" API object.
 func NewKubeJob(scope constructs.Construct, id *string, props *KubeJobProps) KubeJob {
@@ -19944,7 +19882,7 @@ type KubeJobList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -20039,7 +19977,6 @@ func (j *jsiiProxy_KubeJobList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.batch.v1.JobList" API object.
 func NewKubeJobList(scope constructs.Construct, id *string, props *KubeJobListProps) KubeJobList {
@@ -20239,7 +20176,7 @@ type KubeLease interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -20334,7 +20271,6 @@ func (j *jsiiProxy_KubeLease) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.coordination.v1.Lease" API object.
 func NewKubeLease(scope constructs.Construct, id *string, props *KubeLeaseProps) KubeLease {
@@ -20512,7 +20448,7 @@ type KubeLeaseList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -20607,7 +20543,6 @@ func (j *jsiiProxy_KubeLeaseList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.coordination.v1.LeaseList" API object.
 func NewKubeLeaseList(scope constructs.Construct, id *string, props *KubeLeaseListProps) KubeLeaseList {
@@ -20805,7 +20740,7 @@ type KubeLimitRange interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -20900,7 +20835,6 @@ func (j *jsiiProxy_KubeLimitRange) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.LimitRange" API object.
 func NewKubeLimitRange(scope constructs.Construct, id *string, props *KubeLimitRangeProps) KubeLimitRange {
@@ -21078,7 +21012,7 @@ type KubeLimitRangeList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -21173,7 +21107,6 @@ func (j *jsiiProxy_KubeLimitRangeList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.LimitRangeList" API object.
 func NewKubeLimitRangeList(scope constructs.Construct, id *string, props *KubeLimitRangeListProps) KubeLimitRangeList {
@@ -21377,7 +21310,7 @@ type KubeLocalSubjectAccessReview interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -21472,7 +21405,6 @@ func (j *jsiiProxy_KubeLocalSubjectAccessReview) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.authorization.v1.LocalSubjectAccessReview" API object.
 func NewKubeLocalSubjectAccessReview(scope constructs.Construct, id *string, props *KubeLocalSubjectAccessReviewProps) KubeLocalSubjectAccessReview {
@@ -21664,7 +21596,7 @@ type KubeMutatingWebhookConfiguration interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -21759,7 +21691,6 @@ func (j *jsiiProxy_KubeMutatingWebhookConfiguration) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.admissionregistration.v1.MutatingWebhookConfiguration" API object.
 func NewKubeMutatingWebhookConfiguration(scope constructs.Construct, id *string, props *KubeMutatingWebhookConfigurationProps) KubeMutatingWebhookConfiguration {
@@ -21937,7 +21868,7 @@ type KubeMutatingWebhookConfigurationList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -22032,7 +21963,6 @@ func (j *jsiiProxy_KubeMutatingWebhookConfigurationList) Node() constructs.Node 
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.admissionregistration.v1.MutatingWebhookConfigurationList" API object.
 func NewKubeMutatingWebhookConfigurationList(scope constructs.Construct, id *string, props *KubeMutatingWebhookConfigurationListProps) KubeMutatingWebhookConfigurationList {
@@ -22232,7 +22162,7 @@ type KubeNamespace interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -22327,7 +22257,6 @@ func (j *jsiiProxy_KubeNamespace) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.Namespace" API object.
 func NewKubeNamespace(scope constructs.Construct, id *string, props *KubeNamespaceProps) KubeNamespace {
@@ -22505,7 +22434,7 @@ type KubeNamespaceList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -22600,7 +22529,6 @@ func (j *jsiiProxy_KubeNamespaceList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.NamespaceList" API object.
 func NewKubeNamespaceList(scope constructs.Construct, id *string, props *KubeNamespaceListProps) KubeNamespaceList {
@@ -22804,7 +22732,7 @@ type KubeNetworkPolicy interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -22899,7 +22827,6 @@ func (j *jsiiProxy_KubeNetworkPolicy) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.networking.v1.NetworkPolicy" API object.
 func NewKubeNetworkPolicy(scope constructs.Construct, id *string, props *KubeNetworkPolicyProps) KubeNetworkPolicy {
@@ -23077,7 +23004,7 @@ type KubeNetworkPolicyList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -23172,7 +23099,6 @@ func (j *jsiiProxy_KubeNetworkPolicyList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.networking.v1.NetworkPolicyList" API object.
 func NewKubeNetworkPolicyList(scope constructs.Construct, id *string, props *KubeNetworkPolicyListProps) KubeNetworkPolicyList {
@@ -23372,7 +23298,7 @@ type KubeNode interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -23467,7 +23393,6 @@ func (j *jsiiProxy_KubeNode) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.Node" API object.
 func NewKubeNode(scope constructs.Construct, id *string, props *KubeNodeProps) KubeNode {
@@ -23645,7 +23570,7 @@ type KubeNodeList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -23740,7 +23665,6 @@ func (j *jsiiProxy_KubeNodeList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.NodeList" API object.
 func NewKubeNodeList(scope constructs.Construct, id *string, props *KubeNodeListProps) KubeNodeList {
@@ -23944,7 +23868,7 @@ type KubePersistentVolume interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -24039,7 +23963,6 @@ func (j *jsiiProxy_KubePersistentVolume) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.PersistentVolume" API object.
 func NewKubePersistentVolume(scope constructs.Construct, id *string, props *KubePersistentVolumeProps) KubePersistentVolume {
@@ -24217,7 +24140,7 @@ type KubePersistentVolumeClaim interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -24312,7 +24235,6 @@ func (j *jsiiProxy_KubePersistentVolumeClaim) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.PersistentVolumeClaim" API object.
 func NewKubePersistentVolumeClaim(scope constructs.Construct, id *string, props *KubePersistentVolumeClaimProps) KubePersistentVolumeClaim {
@@ -24490,7 +24412,7 @@ type KubePersistentVolumeClaimList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -24585,7 +24507,6 @@ func (j *jsiiProxy_KubePersistentVolumeClaimList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.PersistentVolumeClaimList" API object.
 func NewKubePersistentVolumeClaimList(scope constructs.Construct, id *string, props *KubePersistentVolumeClaimListProps) KubePersistentVolumeClaimList {
@@ -24787,7 +24708,7 @@ type KubePersistentVolumeList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -24882,7 +24803,6 @@ func (j *jsiiProxy_KubePersistentVolumeList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.PersistentVolumeList" API object.
 func NewKubePersistentVolumeList(scope constructs.Construct, id *string, props *KubePersistentVolumeListProps) KubePersistentVolumeList {
@@ -25088,7 +25008,7 @@ type KubePod interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -25183,7 +25103,6 @@ func (j *jsiiProxy_KubePod) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.Pod" API object.
 func NewKubePod(scope constructs.Construct, id *string, props *KubePodProps) KubePod {
@@ -25361,7 +25280,7 @@ type KubePodDisruptionBudget interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -25456,7 +25375,6 @@ func (j *jsiiProxy_KubePodDisruptionBudget) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.policy.v1.PodDisruptionBudget" API object.
 func NewKubePodDisruptionBudget(scope constructs.Construct, id *string, props *KubePodDisruptionBudgetProps) KubePodDisruptionBudget {
@@ -25634,7 +25552,7 @@ type KubePodDisruptionBudgetList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -25729,7 +25647,6 @@ func (j *jsiiProxy_KubePodDisruptionBudgetList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.policy.v1.PodDisruptionBudgetList" API object.
 func NewKubePodDisruptionBudgetList(scope constructs.Construct, id *string, props *KubePodDisruptionBudgetListProps) KubePodDisruptionBudgetList {
@@ -25917,7 +25834,7 @@ type KubePodDisruptionBudgetListV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -26012,7 +25929,6 @@ func (j *jsiiProxy_KubePodDisruptionBudgetListV1Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.policy.v1beta1.PodDisruptionBudgetList" API object.
 func NewKubePodDisruptionBudgetListV1Beta1(scope constructs.Construct, id *string, props *KubePodDisruptionBudgetListV1Beta1Props) KubePodDisruptionBudgetListV1Beta1 {
@@ -26210,7 +26126,7 @@ type KubePodDisruptionBudgetV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -26305,7 +26221,6 @@ func (j *jsiiProxy_KubePodDisruptionBudgetV1Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.policy.v1beta1.PodDisruptionBudget" API object.
 func NewKubePodDisruptionBudgetV1Beta1(scope constructs.Construct, id *string, props *KubePodDisruptionBudgetV1Beta1Props) KubePodDisruptionBudgetV1Beta1 {
@@ -26493,7 +26408,7 @@ type KubePodList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -26588,7 +26503,6 @@ func (j *jsiiProxy_KubePodList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.PodList" API object.
 func NewKubePodList(scope constructs.Construct, id *string, props *KubePodListProps) KubePodList {
@@ -26792,7 +26706,7 @@ type KubePodSecurityPolicyListV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -26887,7 +26801,6 @@ func (j *jsiiProxy_KubePodSecurityPolicyListV1Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.policy.v1beta1.PodSecurityPolicyList" API object.
 func NewKubePodSecurityPolicyListV1Beta1(scope constructs.Construct, id *string, props *KubePodSecurityPolicyListV1Beta1Props) KubePodSecurityPolicyListV1Beta1 {
@@ -27077,7 +26990,7 @@ type KubePodSecurityPolicyV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -27172,7 +27085,6 @@ func (j *jsiiProxy_KubePodSecurityPolicyV1Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.policy.v1beta1.PodSecurityPolicy" API object.
 func NewKubePodSecurityPolicyV1Beta1(scope constructs.Construct, id *string, props *KubePodSecurityPolicyV1Beta1Props) KubePodSecurityPolicyV1Beta1 {
@@ -27362,7 +27274,7 @@ type KubePodTemplate interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -27457,7 +27369,6 @@ func (j *jsiiProxy_KubePodTemplate) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.PodTemplate" API object.
 func NewKubePodTemplate(scope constructs.Construct, id *string, props *KubePodTemplateProps) KubePodTemplate {
@@ -27635,7 +27546,7 @@ type KubePodTemplateList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -27730,7 +27641,6 @@ func (j *jsiiProxy_KubePodTemplateList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.PodTemplateList" API object.
 func NewKubePodTemplateList(scope constructs.Construct, id *string, props *KubePodTemplateListProps) KubePodTemplateList {
@@ -27932,7 +27842,7 @@ type KubePriorityClass interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -28027,7 +27937,6 @@ func (j *jsiiProxy_KubePriorityClass) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.scheduling.v1.PriorityClass" API object.
 func NewKubePriorityClass(scope constructs.Construct, id *string, props *KubePriorityClassProps) KubePriorityClass {
@@ -28205,7 +28114,7 @@ type KubePriorityClassList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -28300,7 +28209,6 @@ func (j *jsiiProxy_KubePriorityClassList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.scheduling.v1.PriorityClassList" API object.
 func NewKubePriorityClassList(scope constructs.Construct, id *string, props *KubePriorityClassListProps) KubePriorityClassList {
@@ -28486,7 +28394,7 @@ type KubePriorityClassListV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -28581,7 +28489,6 @@ func (j *jsiiProxy_KubePriorityClassListV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.scheduling.v1alpha1.PriorityClassList" API object.
 func NewKubePriorityClassListV1Alpha1(scope constructs.Construct, id *string, props *KubePriorityClassListV1Alpha1Props) KubePriorityClassListV1Alpha1 {
@@ -28791,7 +28698,7 @@ type KubePriorityClassV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -28886,7 +28793,6 @@ func (j *jsiiProxy_KubePriorityClassV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.scheduling.v1alpha1.PriorityClass" API object.
 func NewKubePriorityClassV1Alpha1(scope constructs.Construct, id *string, props *KubePriorityClassV1Alpha1Props) KubePriorityClassV1Alpha1 {
@@ -29086,7 +28992,7 @@ type KubePriorityLevelConfigurationListV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -29181,7 +29087,6 @@ func (j *jsiiProxy_KubePriorityLevelConfigurationListV1Beta1) Node() constructs.
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.flowcontrol.v1beta1.PriorityLevelConfigurationList" API object.
 func NewKubePriorityLevelConfigurationListV1Beta1(scope constructs.Construct, id *string, props *KubePriorityLevelConfigurationListV1Beta1Props) KubePriorityLevelConfigurationListV1Beta1 {
@@ -29369,7 +29274,7 @@ type KubePriorityLevelConfigurationV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -29464,7 +29369,6 @@ func (j *jsiiProxy_KubePriorityLevelConfigurationV1Beta1) Node() constructs.Node
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.flowcontrol.v1beta1.PriorityLevelConfiguration" API object.
 func NewKubePriorityLevelConfigurationV1Beta1(scope constructs.Construct, id *string, props *KubePriorityLevelConfigurationV1Beta1Props) KubePriorityLevelConfigurationV1Beta1 {
@@ -29654,7 +29558,7 @@ type KubeReplicaSet interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -29749,7 +29653,6 @@ func (j *jsiiProxy_KubeReplicaSet) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.apps.v1.ReplicaSet" API object.
 func NewKubeReplicaSet(scope constructs.Construct, id *string, props *KubeReplicaSetProps) KubeReplicaSet {
@@ -29927,7 +29830,7 @@ type KubeReplicaSetList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -30022,7 +29925,6 @@ func (j *jsiiProxy_KubeReplicaSetList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.apps.v1.ReplicaSetList" API object.
 func NewKubeReplicaSetList(scope constructs.Construct, id *string, props *KubeReplicaSetListProps) KubeReplicaSetList {
@@ -30224,7 +30126,7 @@ type KubeReplicationController interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -30319,7 +30221,6 @@ func (j *jsiiProxy_KubeReplicationController) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.ReplicationController" API object.
 func NewKubeReplicationController(scope constructs.Construct, id *string, props *KubeReplicationControllerProps) KubeReplicationController {
@@ -30497,7 +30398,7 @@ type KubeReplicationControllerList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -30592,7 +30493,6 @@ func (j *jsiiProxy_KubeReplicationControllerList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.ReplicationControllerList" API object.
 func NewKubeReplicationControllerList(scope constructs.Construct, id *string, props *KubeReplicationControllerListProps) KubeReplicationControllerList {
@@ -30794,7 +30694,7 @@ type KubeResourceQuota interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -30889,7 +30789,6 @@ func (j *jsiiProxy_KubeResourceQuota) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.ResourceQuota" API object.
 func NewKubeResourceQuota(scope constructs.Construct, id *string, props *KubeResourceQuotaProps) KubeResourceQuota {
@@ -31067,7 +30966,7 @@ type KubeResourceQuotaList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -31162,7 +31061,6 @@ func (j *jsiiProxy_KubeResourceQuotaList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.ResourceQuotaList" API object.
 func NewKubeResourceQuotaList(scope constructs.Construct, id *string, props *KubeResourceQuotaListProps) KubeResourceQuotaList {
@@ -31364,7 +31262,7 @@ type KubeRole interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -31459,7 +31357,6 @@ func (j *jsiiProxy_KubeRole) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.rbac.v1.Role" API object.
 func NewKubeRole(scope constructs.Construct, id *string, props *KubeRoleProps) KubeRole {
@@ -31639,7 +31536,7 @@ type KubeRoleBinding interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -31734,7 +31631,6 @@ func (j *jsiiProxy_KubeRoleBinding) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.rbac.v1.RoleBinding" API object.
 func NewKubeRoleBinding(scope constructs.Construct, id *string, props *KubeRoleBindingProps) KubeRoleBinding {
@@ -31912,7 +31808,7 @@ type KubeRoleBindingList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -32007,7 +31903,6 @@ func (j *jsiiProxy_KubeRoleBindingList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.rbac.v1.RoleBindingList" API object.
 func NewKubeRoleBindingList(scope constructs.Construct, id *string, props *KubeRoleBindingListProps) KubeRoleBindingList {
@@ -32193,7 +32088,7 @@ type KubeRoleBindingListV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -32288,7 +32183,6 @@ func (j *jsiiProxy_KubeRoleBindingListV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.rbac.v1alpha1.RoleBindingList" API object.
 func NewKubeRoleBindingListV1Alpha1(scope constructs.Construct, id *string, props *KubeRoleBindingListV1Alpha1Props) KubeRoleBindingListV1Alpha1 {
@@ -32490,7 +32384,7 @@ type KubeRoleBindingV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -32585,7 +32479,6 @@ func (j *jsiiProxy_KubeRoleBindingV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.rbac.v1alpha1.RoleBinding" API object.
 func NewKubeRoleBindingV1Alpha1(scope constructs.Construct, id *string, props *KubeRoleBindingV1Alpha1Props) KubeRoleBindingV1Alpha1 {
@@ -32777,7 +32670,7 @@ type KubeRoleList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -32872,7 +32765,6 @@ func (j *jsiiProxy_KubeRoleList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.rbac.v1.RoleList" API object.
 func NewKubeRoleList(scope constructs.Construct, id *string, props *KubeRoleListProps) KubeRoleList {
@@ -33060,7 +32952,7 @@ type KubeRoleListV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -33155,7 +33047,6 @@ func (j *jsiiProxy_KubeRoleListV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.rbac.v1alpha1.RoleList" API object.
 func NewKubeRoleListV1Alpha1(scope constructs.Construct, id *string, props *KubeRoleListV1Alpha1Props) KubeRoleListV1Alpha1 {
@@ -33353,7 +33244,7 @@ type KubeRoleV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -33448,7 +33339,6 @@ func (j *jsiiProxy_KubeRoleV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.rbac.v1alpha1.Role" API object.
 func NewKubeRoleV1Alpha1(scope constructs.Construct, id *string, props *KubeRoleV1Alpha1Props) KubeRoleV1Alpha1 {
@@ -33638,7 +33528,7 @@ type KubeRuntimeClass interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -33733,7 +33623,6 @@ func (j *jsiiProxy_KubeRuntimeClass) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.node.v1.RuntimeClass" API object.
 func NewKubeRuntimeClass(scope constructs.Construct, id *string, props *KubeRuntimeClassProps) KubeRuntimeClass {
@@ -33911,7 +33800,7 @@ type KubeRuntimeClassList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -34006,7 +33895,6 @@ func (j *jsiiProxy_KubeRuntimeClassList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.node.v1.RuntimeClassList" API object.
 func NewKubeRuntimeClassList(scope constructs.Construct, id *string, props *KubeRuntimeClassListProps) KubeRuntimeClassList {
@@ -34194,7 +34082,7 @@ type KubeRuntimeClassListV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -34289,7 +34177,6 @@ func (j *jsiiProxy_KubeRuntimeClassListV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.node.v1alpha1.RuntimeClassList" API object.
 func NewKubeRuntimeClassListV1Alpha1(scope constructs.Construct, id *string, props *KubeRuntimeClassListV1Alpha1Props) KubeRuntimeClassListV1Alpha1 {
@@ -34477,7 +34364,7 @@ type KubeRuntimeClassListV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -34572,7 +34459,6 @@ func (j *jsiiProxy_KubeRuntimeClassListV1Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.node.v1beta1.RuntimeClassList" API object.
 func NewKubeRuntimeClassListV1Beta1(scope constructs.Construct, id *string, props *KubeRuntimeClassListV1Beta1Props) KubeRuntimeClassListV1Beta1 {
@@ -34784,7 +34670,7 @@ type KubeRuntimeClassV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -34879,7 +34765,6 @@ func (j *jsiiProxy_KubeRuntimeClassV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.node.v1alpha1.RuntimeClass" API object.
 func NewKubeRuntimeClassV1Alpha1(scope constructs.Construct, id *string, props *KubeRuntimeClassV1Alpha1Props) KubeRuntimeClassV1Alpha1 {
@@ -35069,7 +34954,7 @@ type KubeRuntimeClassV1Beta1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -35164,7 +35049,6 @@ func (j *jsiiProxy_KubeRuntimeClassV1Beta1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.node.v1beta1.RuntimeClass" API object.
 func NewKubeRuntimeClassV1Beta1(scope constructs.Construct, id *string, props *KubeRuntimeClassV1Beta1Props) KubeRuntimeClassV1Beta1 {
@@ -35362,7 +35246,7 @@ type KubeScale interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -35457,7 +35341,6 @@ func (j *jsiiProxy_KubeScale) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.autoscaling.v1.Scale" API object.
 func NewKubeScale(scope constructs.Construct, id *string, props *KubeScaleProps) KubeScale {
@@ -35649,7 +35532,7 @@ type KubeSecret interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -35744,7 +35627,6 @@ func (j *jsiiProxy_KubeSecret) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.Secret" API object.
 func NewKubeSecret(scope constructs.Construct, id *string, props *KubeSecretProps) KubeSecret {
@@ -35922,7 +35804,7 @@ type KubeSecretList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -36017,7 +35899,6 @@ func (j *jsiiProxy_KubeSecretList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.SecretList" API object.
 func NewKubeSecretList(scope constructs.Construct, id *string, props *KubeSecretListProps) KubeSecretList {
@@ -36233,7 +36114,7 @@ type KubeSelfSubjectAccessReview interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -36328,7 +36209,6 @@ func (j *jsiiProxy_KubeSelfSubjectAccessReview) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.authorization.v1.SelfSubjectAccessReview" API object.
 func NewKubeSelfSubjectAccessReview(scope constructs.Construct, id *string, props *KubeSelfSubjectAccessReviewProps) KubeSelfSubjectAccessReview {
@@ -36522,7 +36402,7 @@ type KubeSelfSubjectRulesReview interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -36617,7 +36497,6 @@ func (j *jsiiProxy_KubeSelfSubjectRulesReview) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.authorization.v1.SelfSubjectRulesReview" API object.
 func NewKubeSelfSubjectRulesReview(scope constructs.Construct, id *string, props *KubeSelfSubjectRulesReviewProps) KubeSelfSubjectRulesReview {
@@ -36807,7 +36686,7 @@ type KubeService interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -36902,7 +36781,6 @@ func (j *jsiiProxy_KubeService) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.Service" API object.
 func NewKubeService(scope constructs.Construct, id *string, props *KubeServiceProps) KubeService {
@@ -37080,7 +36958,7 @@ type KubeServiceAccount interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -37175,7 +37053,6 @@ func (j *jsiiProxy_KubeServiceAccount) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.ServiceAccount" API object.
 func NewKubeServiceAccount(scope constructs.Construct, id *string, props *KubeServiceAccountProps) KubeServiceAccount {
@@ -37353,7 +37230,7 @@ type KubeServiceAccountList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -37448,7 +37325,6 @@ func (j *jsiiProxy_KubeServiceAccountList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.ServiceAccountList" API object.
 func NewKubeServiceAccountList(scope constructs.Construct, id *string, props *KubeServiceAccountListProps) KubeServiceAccountList {
@@ -37658,7 +37534,7 @@ type KubeServiceList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -37753,7 +37629,6 @@ func (j *jsiiProxy_KubeServiceList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.core.v1.ServiceList" API object.
 func NewKubeServiceList(scope constructs.Construct, id *string, props *KubeServiceListProps) KubeServiceList {
@@ -37958,7 +37833,7 @@ type KubeStatefulSet interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -38053,7 +37928,6 @@ func (j *jsiiProxy_KubeStatefulSet) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.apps.v1.StatefulSet" API object.
 func NewKubeStatefulSet(scope constructs.Construct, id *string, props *KubeStatefulSetProps) KubeStatefulSet {
@@ -38231,7 +38105,7 @@ type KubeStatefulSetList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -38326,7 +38200,6 @@ func (j *jsiiProxy_KubeStatefulSetList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.apps.v1.StatefulSetList" API object.
 func NewKubeStatefulSetList(scope constructs.Construct, id *string, props *KubeStatefulSetListProps) KubeStatefulSetList {
@@ -38529,7 +38402,7 @@ type KubeStatus interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -38624,7 +38497,6 @@ func (j *jsiiProxy_KubeStatus) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.apimachinery.pkg.apis.meta.v1.Status" API object.
 func NewKubeStatus(scope constructs.Construct, id *string, props *KubeStatusProps) KubeStatus {
@@ -38824,7 +38696,7 @@ type KubeStorageClass interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -38919,7 +38791,6 @@ func (j *jsiiProxy_KubeStorageClass) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.storage.v1.StorageClass" API object.
 func NewKubeStorageClass(scope constructs.Construct, id *string, props *KubeStorageClassProps) KubeStorageClass {
@@ -39097,7 +38968,7 @@ type KubeStorageClassList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -39192,7 +39063,6 @@ func (j *jsiiProxy_KubeStorageClassList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.storage.v1.StorageClassList" API object.
 func NewKubeStorageClassList(scope constructs.Construct, id *string, props *KubeStorageClassListProps) KubeStorageClassList {
@@ -39408,7 +39278,7 @@ type KubeStorageVersionListV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -39503,7 +39373,6 @@ func (j *jsiiProxy_KubeStorageVersionListV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.apiserverinternal.v1alpha1.StorageVersionList" API object.
 func NewKubeStorageVersionListV1Alpha1(scope constructs.Construct, id *string, props *KubeStorageVersionListV1Alpha1Props) KubeStorageVersionListV1Alpha1 {
@@ -39691,7 +39560,7 @@ type KubeStorageVersionV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -39786,7 +39655,6 @@ func (j *jsiiProxy_KubeStorageVersionV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.apiserverinternal.v1alpha1.StorageVersion" API object.
 func NewKubeStorageVersionV1Alpha1(scope constructs.Construct, id *string, props *KubeStorageVersionV1Alpha1Props) KubeStorageVersionV1Alpha1 {
@@ -39974,7 +39842,7 @@ type KubeSubjectAccessReview interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -40069,7 +39937,6 @@ func (j *jsiiProxy_KubeSubjectAccessReview) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.authorization.v1.SubjectAccessReview" API object.
 func NewKubeSubjectAccessReview(scope constructs.Construct, id *string, props *KubeSubjectAccessReviewProps) KubeSubjectAccessReview {
@@ -40257,7 +40124,7 @@ type KubeTokenRequest interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -40352,7 +40219,6 @@ func (j *jsiiProxy_KubeTokenRequest) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.authentication.v1.TokenRequest" API object.
 func NewKubeTokenRequest(scope constructs.Construct, id *string, props *KubeTokenRequestProps) KubeTokenRequest {
@@ -40542,7 +40408,7 @@ type KubeTokenReview interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -40637,7 +40503,6 @@ func (j *jsiiProxy_KubeTokenReview) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.authentication.v1.TokenReview" API object.
 func NewKubeTokenReview(scope constructs.Construct, id *string, props *KubeTokenReviewProps) KubeTokenReview {
@@ -40827,7 +40692,7 @@ type KubeValidatingWebhookConfiguration interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -40922,7 +40787,6 @@ func (j *jsiiProxy_KubeValidatingWebhookConfiguration) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.admissionregistration.v1.ValidatingWebhookConfiguration" API object.
 func NewKubeValidatingWebhookConfiguration(scope constructs.Construct, id *string, props *KubeValidatingWebhookConfigurationProps) KubeValidatingWebhookConfiguration {
@@ -41100,7 +40964,7 @@ type KubeValidatingWebhookConfigurationList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -41195,7 +41059,6 @@ func (j *jsiiProxy_KubeValidatingWebhookConfigurationList) Node() constructs.Nod
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.admissionregistration.v1.ValidatingWebhookConfigurationList" API object.
 func NewKubeValidatingWebhookConfigurationList(scope constructs.Construct, id *string, props *KubeValidatingWebhookConfigurationListProps) KubeValidatingWebhookConfigurationList {
@@ -41395,7 +41258,7 @@ type KubeVolumeAttachment interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -41490,7 +41353,6 @@ func (j *jsiiProxy_KubeVolumeAttachment) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.storage.v1.VolumeAttachment" API object.
 func NewKubeVolumeAttachment(scope constructs.Construct, id *string, props *KubeVolumeAttachmentProps) KubeVolumeAttachment {
@@ -41668,7 +41530,7 @@ type KubeVolumeAttachmentList interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -41763,7 +41625,6 @@ func (j *jsiiProxy_KubeVolumeAttachmentList) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.storage.v1.VolumeAttachmentList" API object.
 func NewKubeVolumeAttachmentList(scope constructs.Construct, id *string, props *KubeVolumeAttachmentListProps) KubeVolumeAttachmentList {
@@ -41949,7 +41810,7 @@ type KubeVolumeAttachmentListV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -42044,7 +41905,6 @@ func (j *jsiiProxy_KubeVolumeAttachmentListV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.storage.v1alpha1.VolumeAttachmentList" API object.
 func NewKubeVolumeAttachmentListV1Alpha1(scope constructs.Construct, id *string, props *KubeVolumeAttachmentListV1Alpha1Props) KubeVolumeAttachmentListV1Alpha1 {
@@ -42246,7 +42106,7 @@ type KubeVolumeAttachmentV1Alpha1 interface {
 	//
 	// If a name is specified in `metadata.name` this will be the name returned.
 	// Otherwise, a name will be generated by calling
-	// `Chart.of(this).generatedObjectName(this)`, which by default uses the
+	// `AddHelm.of(this).generatedObjectName(this)`, which by default uses the
 	// construct path to generate a DNS-compatible name for the resource.
 	Name() *string
 	// The tree node.
@@ -42341,7 +42201,6 @@ func (j *jsiiProxy_KubeVolumeAttachmentV1Alpha1) Node() constructs.Node {
 	)
 	return returns
 }
-
 
 // Defines a "io.k8s.api.storage.v1alpha1.VolumeAttachment" API object.
 func NewKubeVolumeAttachmentV1Alpha1(scope constructs.Construct, id *string, props *KubeVolumeAttachmentV1Alpha1Props) KubeVolumeAttachmentV1Alpha1 {
@@ -43511,7 +43370,7 @@ type PodDnsConfig struct {
 // PodDNSConfigOption defines DNS resolver options of a pod.
 type PodDnsConfigOption struct {
 	// Required.
-	Name *string `field:"optional" json:"name" yaml:"name"`
+	Name  *string `field:"optional" json:"name" yaml:"name"`
 	Value *string `field:"optional" json:"value" yaml:"value"`
 }
 
@@ -43997,7 +43856,6 @@ func (j *jsiiProxy_Quantity) Value() interface{} {
 	)
 	return returns
 }
-
 
 func Quantity_FromNumber(value *float64) Quantity {
 	_init_.Initialize()
@@ -45646,4 +45504,3 @@ type WindowsSecurityContextOptions struct {
 	// Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
 	RunAsUserName *string `field:"optional" json:"runAsUserName" yaml:"runAsUserName"`
 }
-

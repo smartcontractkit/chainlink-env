@@ -43,6 +43,18 @@ func TestOverrideCodeEnv(t *testing.T) {
 		MustEnvCodeOverrideStruct("PREFIX", defaultCodeProps, codeProps)
 		require.Equal(t, overridenName, defaultCodeProps.Name)
 	})
+	t.Run("works with maps too, env vars can be overriden from file", func(t *testing.T) {
+		codeProps := map[string]interface{}{
+			"name": "code_name",
+		}
+		defaultCodeProps := map[string]interface{}{
+			"name": "default_name",
+		}
+		// nolint
+		os.Setenv("HELM_FILE_VALUES", "overrides.yaml")
+		MustEnvCodeOverrideMap("HELM_FILE_VALUES", &defaultCodeProps, codeProps)
+		require.Equal(t, "file_override", defaultCodeProps["name"])
+	})
 	t.Run("env prefix check", func(t *testing.T) {
 		codeProps := &Props{
 			Name: "CodeName",

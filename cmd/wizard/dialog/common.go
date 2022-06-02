@@ -7,7 +7,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
-	"github.com/smartcontractkit/chainlink-env/pkg/chainlink"
+	"github.com/smartcontractkit/chainlink-env/pkg"
 )
 
 const (
@@ -39,7 +39,7 @@ func defaultCompleter(s []prompt.Suggest) prompt.Completer {
 func getNamespacesData() (prompt.Completer, map[string]string) {
 	color.Yellow("Searching for environments..")
 	c := client.NewK8sClient()
-	nss, err := c.ListNamespaces(fmt.Sprintf("%s=%s", chainlink.ControlLabelKey, chainlink.ControlLabelValue))
+	nss, err := c.ListNamespaces(fmt.Sprintf("%s=%s", pkg.ControlLabelKey, pkg.ControlLabelValue))
 	if err != nil {
 		log.Fatal().Err(err).Send()
 	}
@@ -51,7 +51,7 @@ func getNamespacesData() (prompt.Completer, map[string]string) {
 	envNameToType := make(map[string]string)
 	for _, ns := range nss.Items {
 		labels, _ := json.Marshal(ns.Labels)
-		envNameToType[ns.Name] = ns.Labels[chainlink.ControlLabelEnvTypeKey]
+		envNameToType[ns.Name] = ns.Labels[pkg.ControlLabelEnvTypeKey]
 		sug = append(sug, prompt.Suggest{
 			Text:        ns.Name,
 			Description: string(labels),

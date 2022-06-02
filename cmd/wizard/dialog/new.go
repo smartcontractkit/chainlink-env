@@ -1,21 +1,24 @@
 package dialog
 
 import (
+	"fmt"
 	prompt "github.com/c-bata/go-prompt"
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/cmd/wizard/presets"
 	"github.com/smartcontractkit/chainlink-env/environment"
-	"github.com/smartcontractkit/chainlink-env/pkg/chainlink"
+	"github.com/smartcontractkit/chainlink-env/pkg"
 	"os"
 )
 
 func envTypeSuggester(d prompt.Document) []prompt.Suggest {
 	return defaultSuggester(d, []prompt.Suggest{
-		{Text: chainlink.EnvTypeEVM1, Description: "Create 1 CL Node minimal local env (EVM)"},
-		{Text: chainlink.EnvTypeEVM5, Description: "Create 5 CL Nodes OCR environment (EVM)"},
-		{Text: chainlink.EnvTypeEVM5BS, Description: "Create 5 CL Nodes OCR environment (EVM) with a Blockscout"},
-		{Text: chainlink.EnvTypeEVM5Soak, Description: "Create 5 CL Nodes OCR environment for a long running soak test (EVM)"},
+		{Text: pkg.EnvTypeEVM1, Description: "Create 1 CL Node minimal local env (EVM)"},
+		{Text: pkg.EnvTypeEVM5, Description: "Create 5 CL Nodes environment (EVM)"},
+		{Text: pkg.EnvTypeEVM5External, Description: "Create 5 CL Nodes environment (EVM) with an external network"},
+		{Text: pkg.EnvTypeETH5Reorg, Description: "Create 5 CL Nodes environment for Ethereum reorg"},
+		{Text: pkg.EnvTypeEVM5BS, Description: "Create 5 CL Nodes environment (EVM) with a Blockscout"},
+		{Text: pkg.EnvTypeEVM5Soak, Description: "Create 5 CL Nodes environment for a long running soak test (EVM)"},
 	})
 }
 
@@ -45,27 +48,45 @@ func NewEnvDialogue() {
 	// nolint
 	defer os.Unsetenv("ENV_NAMESPACE")
 	switch choice {
-	case chainlink.EnvTypeEVM1:
-		if err := presets.EnvEVMOneNode(&environment.Config{
+	case pkg.EnvTypeEVM1:
+		if err := presets.EVMOneNode(&environment.Config{
 			DryRun: Ctx.DryRun,
+			Labels: []string{fmt.Sprintf("envType=%s", choice)},
 		}); err != nil {
 			log.Fatal().Err(err).Send()
 		}
-	case chainlink.EnvTypeEVM5:
-		if err := presets.EnvEVMMinimalLocal(&environment.Config{
+	case pkg.EnvTypeEVM5:
+		if err := presets.EVMMinimalLocal(&environment.Config{
 			DryRun: Ctx.DryRun,
+			Labels: []string{fmt.Sprintf("envType=%s", choice)},
 		}); err != nil {
 			log.Fatal().Err(err).Send()
 		}
-	case chainlink.EnvTypeEVM5BS:
-		if err := presets.EnvEVMMinimalLocalBS(&environment.Config{
+	case pkg.EnvTypeEVM5External:
+		if err := presets.EVMExternal(&environment.Config{
 			DryRun: Ctx.DryRun,
+			Labels: []string{fmt.Sprintf("envType=%s", choice)},
 		}); err != nil {
 			log.Fatal().Err(err).Send()
 		}
-	case chainlink.EnvTypeEVM5Soak:
-		if err := presets.EnvEVMSoak(&environment.Config{
+	case pkg.EnvTypeETH5Reorg:
+		if err := presets.EVMReorg(&environment.Config{
 			DryRun: Ctx.DryRun,
+			Labels: []string{fmt.Sprintf("envType=%s", choice)},
+		}); err != nil {
+			log.Fatal().Err(err).Send()
+		}
+	case pkg.EnvTypeEVM5BS:
+		if err := presets.EVMMinimalLocalBS(&environment.Config{
+			DryRun: Ctx.DryRun,
+			Labels: []string{fmt.Sprintf("envType=%s", choice)},
+		}); err != nil {
+			log.Fatal().Err(err).Send()
+		}
+	case pkg.EnvTypeEVM5Soak:
+		if err := presets.EVMSoak(&environment.Config{
+			DryRun: Ctx.DryRun,
+			Labels: []string{fmt.Sprintf("envType=%s", choice)},
 		}); err != nil {
 			log.Fatal().Err(err).Send()
 		}

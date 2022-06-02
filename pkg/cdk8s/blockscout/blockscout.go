@@ -3,10 +3,63 @@ package blockscout
 import (
 	"fmt"
 	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
+	"github.com/rs/zerolog/log"
+	"github.com/smartcontractkit/chainlink-env/client"
+	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
 	"github.com/smartcontractkit/chainlink-env/pkg"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
 )
+
+const (
+	URLsKey = "blockscout"
+)
+
+type Chart struct {
+}
+
+func (m Chart) GetName() string {
+	return "blockscout"
+}
+
+func (m Chart) GetPath() string {
+	return ""
+}
+
+func (m Chart) GetValues() *map[string]interface{} {
+	return nil
+}
+
+func (m Chart) ExportData(e *environment.Environment) error {
+	bsURL, err := e.Fwd.FindPort("blockscout:0", "blockscout-node", "explorer").As(client.LocalConnection, client.HTTP)
+	if err != nil {
+		return err
+	}
+	log.Info().Str("URL", bsURL).Msg("Blockscout explorer")
+	e.URLs[URLsKey] = append(e.URLs[URLsKey], bsURL)
+	return nil
+}
+
+func New(props *Props) func(root cdk8s.Chart) environment.ConnectedChart {
+	return func(root cdk8s.Chart) environment.ConnectedChart {
+		s := vars{
+			Labels: &map[string]*string{
+				"app": a.Str("blockscout"),
+			},
+			ConfigMapName: "blockscout-cm",
+			BaseName:      "blockscout",
+			Port:          4000,
+			Props:         props,
+		}
+		service(root, s)
+		deployment(root, s)
+		return Chart{}
+	}
+}
+
+func (m Chart) Default() environment.ConnectedChart {
+	return nil
+}
 
 type Props struct{}
 
@@ -119,14 +172,6 @@ func container(vars vars) *k8s.Container {
 			InitialDelaySeconds: a.Num(20),
 			PeriodSeconds:       a.Num(5),
 		},
-		//StartupProbe: &k8s.Probe{
-		//	HttpGet: &k8s.HttpGetAction{
-		//		Port: k8s.IntOrString_FromNumber(a.Num(vars.Port)),
-		//		Path: a.Str("/"),
-		//	},
-		//	InitialDelaySeconds: a.Num(30),
-		//	PeriodSeconds:       a.Num(5),
-		//},
 		Env: &[]*k8s.EnvVar{
 			a.EnvVarStr("MIX_ENV", "prod"),
 			a.EnvVarStr("ECTO_USE_SSL", "'false'"),
@@ -138,19 +183,4 @@ func container(vars vars) *k8s.Container {
 		},
 		Resources: a.ContainerResources("300m", "2048Mi", "300m", "2048Mi"),
 	}
-}
-
-func NewChart(chart cdk8s.Chart, props *Props) cdk8s.Chart {
-	s := vars{
-		Labels: &map[string]*string{
-			"app": a.Str("blockscout"),
-		},
-		ConfigMapName: "blockscout-cm",
-		BaseName:      "blockscout",
-		Port:          4000,
-		Props:         props,
-	}
-	service(chart, s)
-	deployment(chart, s)
-	return chart
 }
