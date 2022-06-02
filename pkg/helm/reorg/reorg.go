@@ -9,7 +9,9 @@ import (
 )
 
 const (
-	URLsKey = "geth"
+	URLsKey            = "geth"
+	TXNodesAppLabel    = "geth-reorg-ethereum-geth"
+	MinerNodesAppLabel = "geth-reorg-ethereum-miner-node"
 )
 
 type Chart struct {

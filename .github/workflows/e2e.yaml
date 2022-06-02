@@ -1,6 +1,8 @@
 name: Deployments tests (E2E)
 on:
   push:
+    tags:
+      - v*
 jobs:
   build:
     runs-on: ubuntu-latest

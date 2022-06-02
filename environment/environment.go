@@ -66,6 +66,7 @@ type Environment struct {
 	Client    *client.K8sClient
 	Fwd       *client.Forwarder
 	Artifacts *Artifacts
+	Chaos     *client.Chaos
 	URLs      map[string][]string
 }
 
@@ -92,6 +93,7 @@ func New(cfg *Config) *Environment {
 			Annotations: &defaultAnnotations,
 		},
 	})
+	e.Chaos = client.NewChaos(c, e.Cfg.Namespace)
 	return e
 }
 

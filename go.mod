@@ -9,6 +9,7 @@ require (
 	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.3.3
 	github.com/fatih/color v1.13.0
 	github.com/fatih/structs v1.1.0
+	github.com/ghodss/yaml v1.0.0
 	github.com/google/uuid v1.3.0
 	github.com/imdario/mergo v0.3.12
 	github.com/kelseyhightower/envconfig v1.4.0
