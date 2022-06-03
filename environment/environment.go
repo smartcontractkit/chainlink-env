@@ -161,16 +161,16 @@ func (m *Environment) Run() error {
 		log.Info().Str("Namespace", ns).Msg("Namespace found")
 		m.Cfg.Namespace = ns
 	}
+	if m.Cfg.DryRun {
+		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
+		return nil
+	}
 	if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s); err != nil {
 		return err
 	}
 	log.Debug().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
 	if err := m.PrintURLs(); err != nil {
 		return err
-	}
-	if m.Cfg.DryRun {
-		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
-		return nil
 	}
 	arts, err := NewArtifacts(m.Client, m.Cfg.Namespace)
 	if err != nil {
