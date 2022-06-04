@@ -63,10 +63,11 @@ func NewEnvDialogue() {
 			log.Fatal().Err(err).Send()
 		}
 	case pkg.EnvTypeEVM5External:
+		answers := NewExternalOptsDialogue()
 		if err := presets.EVMExternal(&environment.Config{
 			DryRun: Ctx.DryRun,
 			Labels: []string{fmt.Sprintf("envType=%s", choice)},
-		}); err != nil {
+		}, answers); err != nil {
 			log.Fatal().Err(err).Send()
 		}
 	case pkg.EnvTypeETH5Reorg:

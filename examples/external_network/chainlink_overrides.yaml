@@ -1,5 +1,0 @@
-# example used with examples/simple/env.go
-env:
-  eth_http_url: "your HTTP URL here"
-  eth_url: "your WS URL here"
-  eth_chain_id: "your chain ID here"

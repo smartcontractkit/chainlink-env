@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	URLsKey = "geth"
+	URLsKey         = "geth"
+	InternalURLsKey = "geth_internal"
 )
 
 const (
@@ -16,13 +17,10 @@ const (
 	ExternalEthereum = "external"
 )
 
-const (
-	KovanHTTPSURL = "https://mainnet.infura.io/v3/6abd493202b84d3dafa74e592f9ecdd5"
-	KovanWSURL    = "wss://mainnet.infura.io/ws/v3/6abd493202b84d3dafa74e592f9ecdd5"
-)
-
 type Props struct {
 	NetworkType string `envconfig:"network_type"`
+	HttpURL     string `envconfig:"http_url"`
+	WsURL       string `envconfig:"ws_url"`
 	Values      map[string]interface{}
 }
 
@@ -68,15 +66,20 @@ func (m Chart) GetValues() *map[string]interface{} {
 func (m Chart) ExportData(e *environment.Environment) error {
 	switch m.Props.NetworkType {
 	case Geth:
-		geth1tx, err := e.Fwd.FindPort("geth:0", "geth-network", "ws-rpc").As(client.LocalConnection, client.WS)
+		gethLocal, err := e.Fwd.FindPort("geth:0", "geth-network", "ws-rpc").As(client.LocalConnection, client.WS)
 		if err != nil {
 			return err
 		}
-		e.URLs[URLsKey] = append(e.URLs[URLsKey], geth1tx)
-		log.Info().Str("URL", geth1tx).Msg("Geth network")
+		gethInternal, err := e.Fwd.FindPort("geth:0", "geth-network", "ws-rpc").As(client.RemoteConnection, client.WS)
+		if err != nil {
+			return err
+		}
+		e.URLs[URLsKey] = append(e.URLs[URLsKey], gethLocal)
+		e.URLs[InternalURLsKey] = append(e.URLs[InternalURLsKey], gethInternal)
+		log.Info().Str("URL", gethLocal).Msg("Geth network")
 	case ExternalEthereum:
-		e.URLs[URLsKey] = append(e.URLs[URLsKey], KovanHTTPSURL)
-		log.Info().Str("URL", KovanHTTPSURL).Msg("Ethereum network")
+		e.URLs[URLsKey] = append(e.URLs[URLsKey], m.Props.WsURL)
+		log.Info().Str("URL", m.Props.WsURL).Msg("Ethereum network")
 	}
 	return nil
 }
@@ -94,12 +97,12 @@ func defaultProps() *Props {
 			},
 			"resources": map[string]interface{}{
 				"requests": map[string]interface{}{
-					"cpu":    "200m",
-					"memory": "528Mi",
+					"cpu":    "1000m",
+					"memory": "768Mi",
 				},
 				"limits": map[string]interface{}{
-					"cpu":    "200m",
-					"memory": "528Mi",
+					"cpu":    "1000m",
+					"memory": "768Mi",
 				},
 			},
 		},
