@@ -2,36 +2,23 @@ package main
 
 import (
 	"fmt"
+	"github.com/smartcontractkit/chainlink-env/cmd/wizard/presets"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg"
-	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
-	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
-	"github.com/smartcontractkit/chainlink-env/pkg/helm/mockserver"
-	mockservercfg "github.com/smartcontractkit/chainlink-env/pkg/helm/mockserver-cfg"
 )
 
 func main() {
-	// example of Chainlink cluster connected to external EVM node
-	// you can also override all required vars from ENV like:
-	// ETHEREUM_NETWORK_TYPE="external" CL_VALUES="chainlink_overrides.yaml" go run examples/simple/env.go
-	err := environment.New(&environment.Config{
+	// use in code or override like
+	// EXTERNAL_NETWORK_HTTP_URL="..." EXTERNAL_NETWORK_WS_URL="..." EXTERNAL_NETWORK_CHAIN_ID="..." go run examples/external_network/env.go
+	err := presets.EVMExternal(&environment.Config{
 		Labels:            []string{fmt.Sprintf("envType=%s", pkg.EnvTypeEVM5External)},
 		KeepConnection:    true,
 		RemoveOnInterrupt: true,
-	}).
-		AddHelm(mockservercfg.New(nil)).
-		AddHelm(mockserver.New(nil)).
-		AddHelm(ethereum.New(&ethereum.Props{
-			NetworkType: ethereum.ExternalEthereum,
-		})).
-		AddHelm(chainlink.New(map[string]interface{}{
-			"env": map[string]interface{}{
-				"eth_http_url": ethereum.KovanHTTPSURL,
-				"eth_url":      ethereum.KovanWSURL,
-				"eth_chain_id": "1",
-			},
-		})).
-		Run()
+	}, &presets.ExternalNetworkOpts{
+		HttpURL: "http or https url",
+		WsURL:   "ws or wss url",
+		ChainID: "1",
+	})
 	if err != nil {
 		panic(err)
 	}

@@ -1,6 +1,7 @@
 package presets
 
 import (
+	cfg "github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg/cdk8s/blockscout"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
@@ -48,11 +49,23 @@ func EVMMinimalLocal(config *environment.Config) error {
 }
 
 // EVMExternal local development Chainlink deployment for an external (testnet) network
-func EVMExternal(config *environment.Config) error {
+func EVMExternal(config *environment.Config, opts *ExternalNetworkOpts) error {
+	cfg.MustEnvOverrideStruct("EXTERNAL_NETWORK", opts)
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
-		AddHelm(chainlink.New(nil)).
+		AddHelm(ethereum.New(&ethereum.Props{
+			NetworkType: ethereum.ExternalEthereum,
+			HttpURL:     opts.HttpURL,
+			WsURL:       opts.WsURL,
+		})).
+		AddHelm(chainlink.New(map[string]interface{}{
+			"env": map[string]interface{}{
+				"eth_http_url": opts.HttpURL,
+				"eth_url":      opts.WsURL,
+				"eth_chain_id": opts.ChainID,
+			},
+		})).
 		Run()
 }
 
