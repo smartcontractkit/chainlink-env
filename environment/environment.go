@@ -4,11 +4,11 @@ import (
 	"fmt"
 	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/google/uuid"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
+	"github.com/smartcontractkit/chainlink-env/logging"
 	"github.com/smartcontractkit/chainlink-env/pkg"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
 	"os"
@@ -17,18 +17,16 @@ import (
 	"time"
 )
 
-func init() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).Level(zerolog.TraceLevel)
-}
-
 var (
 	defaultAnnotations = map[string]*string{"prometheus.io/scrape": a.Str("true")}
 )
 
 // ConnectedChart interface to interact both with cdk8s apps and helm charts
 type ConnectedChart interface {
+	IsDeployed() bool
 	GetName() string
 	GetPath() string
+	GetProps() interface{}
 	GetValues() *map[string]interface{}
 	ExportData(e *Environment) error
 }
@@ -53,7 +51,7 @@ func defaultEnvConfig() *Config {
 		NamespacePrefix: "chainlink-test-env",
 		ReadyCheckData: &client.ReadyCheckData{
 			ReadinessProbeCheckSelector: "",
-			Timeout:                     5 * time.Minute,
+			Timeout:                     4 * time.Minute,
 		},
 	}
 }
@@ -72,6 +70,7 @@ type Environment struct {
 
 // New creates new environment
 func New(cfg *Config) *Environment {
+	logging.Init()
 	if cfg == nil {
 		cfg = &Config{}
 	}
@@ -122,15 +121,17 @@ func (m *Environment) AddChart(f func(root cdk8s.Chart) ConnectedChart) *Environ
 }
 
 func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
-	cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
-		Chart: a.Str(chart.GetPath()),
-		HelmFlags: &[]*string{
-			a.Str("--namespace"),
-			a.Str(m.Cfg.Namespace),
-		},
-		ReleaseName: a.Str(chart.GetName()),
-		Values:      chart.GetValues(),
-	})
+	if chart.IsDeployed() {
+		cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
+			Chart: a.Str(chart.GetPath()),
+			HelmFlags: &[]*string{
+				a.Str("--namespace"),
+				a.Str(m.Cfg.Namespace),
+			},
+			ReleaseName: a.Str(chart.GetName()),
+			Values:      chart.GetValues(),
+		})
+	}
 	m.Charts = append(m.Charts, chart)
 	return m
 }
@@ -155,6 +156,7 @@ func (m *Environment) Run() error {
 	if !m.Client.NamespaceExists(ns) {
 		manifest := m.App.SynthYaml().(string)
 		if err := m.Deploy(manifest); err != nil {
+			log.Warn().Err(err).Msg("error deploying environment")
 			return m.Shutdown()
 		}
 	} else {

@@ -15,10 +15,17 @@ const (
 	DBsLocalURLsKey      = "chainlink_db"
 )
 
+type Props struct{}
+
 type Chart struct {
 	Name   string
 	Path   string
+	Props  *Props
 	Values *map[string]interface{}
+}
+
+func (m Chart) IsDeployed() bool {
+	return true
 }
 
 func (m Chart) GetName() string {
@@ -27,6 +34,10 @@ func (m Chart) GetName() string {
 
 func (m Chart) GetPath() string {
 	return m.Path
+}
+
+func (m Chart) GetProps() interface{} {
+	return m.Props
 }
 
 func (m Chart) GetValues() *map[string]interface{} {
@@ -73,12 +84,11 @@ func defaultProps() map[string]interface{} {
 		"replicas": "1",
 		"env": map[string]interface{}{
 			"database_url": "postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable",
-			"eth_url":      "ws://geth:8546",
 		},
 		"chainlink": map[string]interface{}{
 			"image": map[string]interface{}{
 				"image":   "public.ecr.aws/chainlink/chainlink",
-				"version": "1.2.1",
+				"version": "1.4.1-root",
 			},
 			"web_port": "6688",
 			"p2p_port": "8090",

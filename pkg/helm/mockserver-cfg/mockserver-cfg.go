@@ -4,14 +4,26 @@ import (
 	"github.com/smartcontractkit/chainlink-env/environment"
 )
 
+type Props struct {
+}
+
 type Chart struct {
 	Name   string
 	Path   string
+	Props  *Props
 	Values *map[string]interface{}
+}
+
+func (m Chart) IsDeployed() bool {
+	return true
 }
 
 func (m Chart) GetName() string {
 	return m.Name
+}
+
+func (m Chart) GetProps() interface{} {
+	return m.Props
 }
 
 func (m Chart) GetPath() string {
