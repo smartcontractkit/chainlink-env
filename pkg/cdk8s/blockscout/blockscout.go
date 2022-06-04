@@ -5,6 +5,7 @@ import (
 	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
+	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
 	"github.com/smartcontractkit/chainlink-env/pkg"
@@ -16,10 +17,19 @@ const (
 )
 
 type Chart struct {
+	Props *Props
+}
+
+func (m *Chart) IsDeployed() bool {
+	return true
 }
 
 func (m Chart) GetName() string {
 	return "blockscout"
+}
+
+func (m Chart) GetProps() interface{} {
+	return m.Props
 }
 
 func (m Chart) GetPath() string {
@@ -42,6 +52,8 @@ func (m Chart) ExportData(e *environment.Environment) error {
 
 func New(props *Props) func(root cdk8s.Chart) environment.ConnectedChart {
 	return func(root cdk8s.Chart) environment.ConnectedChart {
+		dp := defaultProps()
+		config.MustEnvCodeOverrideStruct("BLOCKSCOUT", dp, props)
 		s := vars{
 			Labels: &map[string]*string{
 				"app": a.Str("blockscout"),
@@ -49,19 +61,27 @@ func New(props *Props) func(root cdk8s.Chart) environment.ConnectedChart {
 			ConfigMapName: "blockscout-cm",
 			BaseName:      "blockscout",
 			Port:          4000,
-			Props:         props,
+			Props:         dp,
 		}
 		service(root, s)
 		deployment(root, s)
-		return Chart{}
+		return &Chart{
+			Props: dp,
+		}
 	}
 }
 
-func (m Chart) Default() environment.ConnectedChart {
-	return nil
+type Props struct {
+	HttpURL string `envconfig:"http_url"`
+	WsURL   string `envconfig:"ws_url"`
 }
 
-type Props struct{}
+func defaultProps() *Props {
+	return &Props{
+		HttpURL: "http://geth:8544",
+		WsURL:   "ws://geth:8546",
+	}
+}
 
 // vars some shared labels/selectors and names that must match in resources
 type vars struct {
@@ -177,8 +197,8 @@ func container(vars vars) *k8s.Container {
 			a.EnvVarStr("ECTO_USE_SSL", "'false'"),
 			a.EnvVarStr("COIN", "DAI"),
 			a.EnvVarStr("ETHEREUM_JSONRPC_VARIANT", "geth"),
-			a.EnvVarStr("ETHEREUM_JSONRPC_HTTP_URL", "http://geth:8544"),
-			a.EnvVarStr("ETHEREUM_JSONRPC_WS_URL", "ws://geth:8546"),
+			a.EnvVarStr("ETHEREUM_JSONRPC_HTTP_URL", vars.Props.HttpURL),
+			a.EnvVarStr("ETHEREUM_JSONRPC_WS_URL", vars.Props.WsURL),
 			a.EnvVarStr("DATABASE_URL", "postgresql://postgres:@localhost:5432/blockscout?ssl=false"),
 		},
 		Resources: a.ContainerResources("300m", "2048Mi", "300m", "2048Mi"),

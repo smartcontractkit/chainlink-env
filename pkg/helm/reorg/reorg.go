@@ -14,14 +14,26 @@ const (
 	MinerNodesAppLabel = "geth-reorg-ethereum-miner-node"
 )
 
+type Props struct {
+}
+
 type Chart struct {
 	Name   string
 	Path   string
+	Props  *Props
 	Values *map[string]interface{}
+}
+
+func (m Chart) IsDeployed() bool {
+	return true
 }
 
 func (m Chart) GetName() string {
 	return m.Name
+}
+
+func (m Chart) GetProps() interface{} {
+	return m.Props
 }
 
 func (m Chart) GetPath() string {
@@ -86,7 +98,7 @@ func defaultProps() map[string]interface{} {
 
 func New(name string, props map[string]interface{}) environment.ConnectedChart {
 	dp := defaultProps()
-	config.MustEnvCodeOverrideMap("REORG_VALUES", &dp, props)
+	config.MustEnvCodeOverrideMap("ETHEREUM_VALUES", &dp, props)
 	return Chart{
 		Name:   name,
 		Path:   "chainlink-qa/ethereum",

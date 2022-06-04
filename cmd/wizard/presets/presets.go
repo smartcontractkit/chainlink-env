@@ -4,7 +4,7 @@ import (
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg/cdk8s/blockscout"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
-	"github.com/smartcontractkit/chainlink-env/pkg/helm/geth"
+	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/mockserver"
 	mockservercfg "github.com/smartcontractkit/chainlink-env/pkg/helm/mockserver-cfg"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/reorg"
@@ -15,7 +15,7 @@ func EVMOneNode(config *environment.Config) error {
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
-		AddHelm(geth.New(nil)).
+		AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(nil)).
 		Run()
 }
@@ -27,7 +27,7 @@ func EVMMinimalLocalBS(config *environment.Config) error {
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddChart(blockscout.New(&blockscout.Props{})).
-		AddHelm(geth.New(nil)).
+		AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(map[string]interface{}{
 			"replicas": 5,
 		})).
@@ -40,7 +40,7 @@ func EVMMinimalLocal(config *environment.Config) error {
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
-		AddHelm(geth.New(nil)).
+		AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(map[string]interface{}{
 			"replicas": 5,
 		})).
@@ -93,15 +93,18 @@ func EVMSoak(config *environment.Config) error {
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
-		AddHelm(geth.New(map[string]interface{}{
-			"resources": map[string]interface{}{
-				"requests": map[string]interface{}{
-					"cpu":    "1000m",
-					"memory": "2048Mi",
-				},
-				"limits": map[string]interface{}{
-					"cpu":    "1000m",
-					"memory": "2048Mi",
+		AddHelm(ethereum.New(&ethereum.Props{
+			NetworkType: ethereum.Geth,
+			Values: map[string]interface{}{
+				"resources": map[string]interface{}{
+					"requests": map[string]interface{}{
+						"cpu":    "1000m",
+						"memory": "2048Mi",
+					},
+					"limits": map[string]interface{}{
+						"cpu":    "1000m",
+						"memory": "2048Mi",
+					},
 				},
 			},
 		})).

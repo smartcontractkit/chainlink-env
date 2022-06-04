@@ -22,6 +22,10 @@ const (
 	EnvVarUser            = "CHAINLINK_ENV_USER"
 	EnvVarUserDescription = "Owner of an environment"
 	EnvVarUserExample     = "Satoshi"
+
+	EnvVarLogLevel            = "ENV_LOG_LEVEL"
+	EnvVarLogLevelDescription = "Environment logging level"
+	EnvVarLogLevelExample     = "info | debug | trace"
 )
 
 // MustEnvOverrideStruct used when you need to override a struct with `envconfig` fields from environment variables
@@ -59,7 +63,7 @@ func MustEnvOverrideVersion(target interface{}) {
 
 // MustEnvCodeOverrideMap used when overriding helm charts both from env and code
 func MustEnvCodeOverrideMap(envVarName string, target, src interface{}) {
-	var finalVars map[string]interface{}
+	var fileVars map[string]interface{}
 	if err := mergo.Merge(target, src, mergo.WithOverride); err != nil {
 		log.Fatal().Err(err).Send()
 	}
@@ -74,10 +78,10 @@ func MustEnvCodeOverrideMap(envVarName string, target, src interface{}) {
 		if err != nil {
 			log.Fatal().Err(err).Send()
 		}
-		if err := yaml.Unmarshal(d, &finalVars); err != nil {
+		if err := yaml.Unmarshal(d, &fileVars); err != nil {
 			log.Fatal().Err(err).Send()
 		}
-		if err := mergo.Merge(target, finalVars, mergo.WithOverride); err != nil {
+		if err := mergo.Merge(target, fileVars, mergo.WithOverride); err != nil {
 			log.Fatal().Err(err).Send()
 		}
 	}

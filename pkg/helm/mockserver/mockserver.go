@@ -11,10 +11,18 @@ const (
 	URLsKey = "mockserver"
 )
 
+type Props struct {
+}
+
 type Chart struct {
 	Name   string
 	Path   string
+	Props  *Props
 	Values *map[string]interface{}
+}
+
+func (m Chart) IsDeployed() bool {
+	return true
 }
 
 func (m Chart) GetName() string {
@@ -23,6 +31,10 @@ func (m Chart) GetName() string {
 
 func (m Chart) GetPath() string {
 	return m.Path
+}
+
+func (m Chart) GetProps() interface{} {
+	return m.Props
 }
 
 func (m Chart) GetValues() *map[string]interface{} {
