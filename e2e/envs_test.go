@@ -66,6 +66,10 @@ func TestSimpleEnv(t *testing.T) {
 		defer cleanEnvs(t)
 		err := presets.EVMExternal(&environment.Config{
 			Labels: []string{fmt.Sprintf("envType=%s", TestEnvType)},
+		}, &presets.ExternalNetworkOpts{
+			HttpURL: "https://mainnet.infura.io/v3/6abd493202b84d3dafa74e592f9ecdd5",
+			WsURL:   "wss://mainnet.infura.io/ws/v3/6abd493202b84d3dafa74e592f9ecdd5",
+			ChainID: "1",
 		})
 		require.NoError(t, err)
 	})
