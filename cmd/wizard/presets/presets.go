@@ -48,25 +48,29 @@ func EVMMinimalLocal(config *environment.Config) error {
 		Run()
 }
 
-// EVMExternal local development Chainlink deployment for an external (testnet) network
-func EVMExternal(config *environment.Config, opts *ExternalNetworkOpts) error {
-	cfg.MustEnvOverrideStruct("EXTERNAL_NETWORK", opts)
-	return environment.New(config).
-		AddHelm(mockservercfg.New(nil)).
-		AddHelm(mockserver.New(nil)).
-		AddHelm(ethereum.New(&ethereum.Props{
-			NetworkType: ethereum.ExternalEthereum,
-			HttpURL:     opts.HttpURL,
-			WsURL:       opts.WsURL,
-		})).
-		AddHelm(chainlink.New(map[string]interface{}{
-			"env": map[string]interface{}{
-				"eth_http_url": opts.HttpURL,
-				"eth_url":      opts.WsURL,
-				"eth_chain_id": opts.ChainID,
-			},
-		})).
-		Run()
+// MultiNetwork local development Chainlink deployment for multiple networks
+func MultiNetwork(config *environment.Config, opts *MultiNetworkOpts) error {
+	cfg.MustEnvOverrideStruct("", opts)
+	e := environment.New(config)
+	e.AddHelm(mockservercfg.New(nil)).AddHelm(mockserver.New(nil))
+	for _, net := range opts.Networks {
+		e.AddHelm(ethereum.New(&ethereum.Props{
+			NetworkName: net.Name,
+			NetworkType: net.Type,
+			HttpURLs:    net.HttpURLs,
+			WsURLs:      net.WsURLs,
+		}))
+	}
+	// TODO: make proper configuration for all networks after config refactoring,
+	// TODO: configuration for 1+ networks will change soon to TOML
+	clVars := map[string]interface{}{
+		"env": map[string]interface{}{
+			"eth_http_url": opts.Networks[0].HttpURLs[0],
+			"eth_url":      opts.Networks[0].WsURLs[0],
+			"eth_chain_id": opts.Networks[0].ChainID,
+		},
+	}
+	return e.AddHelm(chainlink.New(clVars)).Run()
 }
 
 // EVMReorg deployment for two Ethereum networks re-org test

@@ -20,7 +20,7 @@ type Chart struct {
 	Props *Props
 }
 
-func (m *Chart) IsDeployed() bool {
+func (m *Chart) IsDeploymentNeeded() bool {
 	return true
 }
 

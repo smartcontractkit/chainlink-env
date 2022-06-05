@@ -1,0 +1,14 @@
+- name: network1
+  type: external
+  http_urls:
+    - "https://"
+  ws_urls:
+    - "wss://"
+  chain_id: 1
+- name: network_2
+  type: external
+  http_urls:
+    - "https://"
+  ws_urls:
+    - "wss://"
+  chain_id: 1

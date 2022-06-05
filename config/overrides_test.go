@@ -7,7 +7,7 @@ import (
 )
 
 type Props struct {
-	Name string `envconfig:"MY_NAME"`
+	Name string `envconfig:"MY_NAME" yaml:"name"`
 }
 
 func TestOverrideCodeEnv(t *testing.T) {

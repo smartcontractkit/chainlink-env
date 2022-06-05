@@ -64,13 +64,9 @@ func TestSimpleEnv(t *testing.T) {
 	})
 	t.Run("test 5 nodes env with an external network", func(t *testing.T) {
 		defer cleanEnvs(t)
-		err := presets.EVMExternal(&environment.Config{
+		err := presets.MultiNetwork(&environment.Config{
 			Labels: []string{fmt.Sprintf("envType=%s", TestEnvType)},
-		}, &presets.ExternalNetworkOpts{
-			HttpURL: "https://mainnet.infura.io/v3/6abd493202b84d3dafa74e592f9ecdd5",
-			WsURL:   "wss://mainnet.infura.io/ws/v3/6abd493202b84d3dafa74e592f9ecdd5",
-			ChainID: "1",
-		})
+		}, &presets.MultiNetworkOpts{})
 		require.NoError(t, err)
 	})
 	// TODO: assert export data

@@ -23,7 +23,7 @@ var (
 
 // ConnectedChart interface to interact both with cdk8s apps and helm charts
 type ConnectedChart interface {
-	IsDeployed() bool
+	IsDeploymentNeeded() bool
 	GetName() string
 	GetPath() string
 	GetProps() interface{}
@@ -121,7 +121,13 @@ func (m *Environment) AddChart(f func(root cdk8s.Chart) ConnectedChart) *Environ
 }
 
 func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
-	if chart.IsDeployed() {
+	if chart.IsDeploymentNeeded() {
+		log.Trace().
+			Str("Chart", chart.GetName()).
+			Str("Path", chart.GetPath()).
+			Interface("Props", chart.GetProps()).
+			Interface("Values", chart.GetValues()).
+			Msg("Chart deployment values")
 		cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
 			Chart: a.Str(chart.GetPath()),
 			HelmFlags: &[]*string{

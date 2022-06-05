@@ -15,7 +15,7 @@ func envTypeSuggester(d prompt.Document) []prompt.Suggest {
 	return defaultSuggester(d, []prompt.Suggest{
 		{Text: pkg.EnvTypeEVM1, Description: "Create 1 CL Node minimal local env (EVM)"},
 		{Text: pkg.EnvTypeEVM5, Description: "Create 5 CL Nodes environment (EVM)"},
-		{Text: pkg.EnvTypeEVM5External, Description: "Create 5 CL Nodes environment (EVM) with an external network"},
+		{Text: pkg.EnvTypeMultinetwork, Description: "Create 5 CL Nodes environment (EVM) with an external network"},
 		{Text: pkg.EnvTypeETH5Reorg, Description: "Create 5 CL Nodes environment for Ethereum reorg"},
 		{Text: pkg.EnvTypeEVM5BS, Description: "Create 5 CL Nodes environment (EVM) with a Blockscout"},
 		{Text: pkg.EnvTypeEVM5Soak, Description: "Create 5 CL Nodes environment for a long running soak test (EVM)"},
@@ -62,12 +62,12 @@ func NewEnvDialogue() {
 		}); err != nil {
 			log.Fatal().Err(err).Send()
 		}
-	case pkg.EnvTypeEVM5External:
-		answers := NewExternalOptsDialogue()
-		if err := presets.EVMExternal(&environment.Config{
+	case pkg.EnvTypeMultinetwork:
+		opts := NewMultiNetworkOptsDialogue()
+		if err := presets.MultiNetwork(&environment.Config{
 			DryRun: Ctx.DryRun,
 			Labels: []string{fmt.Sprintf("envType=%s", choice)},
-		}, answers); err != nil {
+		}, opts); err != nil {
 			log.Fatal().Err(err).Send()
 		}
 	case pkg.EnvTypeETH5Reorg:

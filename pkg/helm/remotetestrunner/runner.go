@@ -15,7 +15,7 @@ type Chart struct {
 	Values *map[string]interface{}
 }
 
-func (m Chart) IsDeployed() bool {
+func (m Chart) IsDeploymentNeeded() bool {
 	return true
 }
 
