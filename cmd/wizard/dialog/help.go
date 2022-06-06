@@ -14,4 +14,5 @@ func NewHelpDialogue() {
 	color.Yellow(fmt.Sprintf("%s=\"%s\"\t\t%s", config.EnvVarCLImage, config.EnvVarCLImageExample, config.EnvVarCLImageDescription))
 	color.Yellow(fmt.Sprintf("%s=\"%s\"\t\t%s", config.EnvVarCLTag, config.EnvVarCLTagExample, config.EnvVarCLTagDescription))
 	color.Yellow(fmt.Sprintf("%s=\"%s\"\t\t%s", config.EnvVarLogLevel, config.EnvVarLogLevelExample, config.EnvVarLogLevelDescription))
+	color.Yellow(fmt.Sprintf("%s=\"%s\"\t\t%s", config.EnvVarNetworksConfigFile, config.EnvVarNetworksConfigFileExample, config.EnvVarNetworksConfigFileDescription))
 }

@@ -1,6 +1,7 @@
 package ethereum
 
 import (
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
@@ -8,19 +9,15 @@ import (
 )
 
 const (
-	URLsKey         = "geth"
-	InternalURLsKey = "geth_internal"
-)
-
-const (
-	Geth             = "geth"
-	ExternalEthereum = "external"
+	Geth     = "geth"
+	External = "external"
 )
 
 type Props struct {
-	NetworkType string `envconfig:"network_type"`
-	HttpURL     string `envconfig:"http_url"`
-	WsURL       string `envconfig:"ws_url"`
+	NetworkName string   `envconfig:"network_name"`
+	NetworkType string   `envconfig:"network_type"`
+	HttpURLs    []string `envconfig:"http_url"`
+	WsURLs      []string `envconfig:"ws_url"`
 	Values      map[string]interface{}
 }
 
@@ -35,11 +32,11 @@ type Chart struct {
 	Props     *Props
 }
 
-func (m Chart) IsDeployed() bool {
+func (m Chart) IsDeploymentNeeded() bool {
 	switch m.Props.NetworkType {
 	case Geth:
 		return true
-	case ExternalEthereum:
+	case External:
 		return false
 	default:
 		log.Fatal().Msg("unknown network type")
@@ -74,18 +71,20 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		if err != nil {
 			return err
 		}
-		e.URLs[URLsKey] = append(e.URLs[URLsKey], gethLocal)
-		e.URLs[InternalURLsKey] = append(e.URLs[InternalURLsKey], gethInternal)
-		log.Info().Str("URL", gethLocal).Msg("Geth network")
-	case ExternalEthereum:
-		e.URLs[URLsKey] = append(e.URLs[URLsKey], m.Props.WsURL)
-		log.Info().Str("URL", m.Props.WsURL).Msg("Ethereum network")
+		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], gethLocal)
+		internalName := fmt.Sprintf("%s_internal", m.Props.NetworkName)
+		e.URLs[internalName] = append(e.URLs[internalName], gethInternal)
+		log.Info().Str("Name", "Geth").Str("URLs", gethLocal).Msg("Geth network")
+	case External:
+		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkType], m.Props.WsURLs...)
+		log.Info().Str("Name", m.Props.NetworkName).Strs("URLs", m.Props.WsURLs).Msg("Ethereum network")
 	}
 	return nil
 }
 
 func defaultProps() *Props {
 	return &Props{
+		NetworkName: "geth",
 		NetworkType: Geth,
 		Values: map[string]interface{}{
 			"replicas": "1",
@@ -126,7 +125,7 @@ func New(props *Props) environment.ConnectedChart {
 			},
 			Props: targetProps,
 		}
-	case ExternalEthereum:
+	case External:
 		return Chart{
 			Props: targetProps,
 		}

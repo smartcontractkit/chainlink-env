@@ -32,4 +32,6 @@ jobs:
           helm repo add chainlink-qa https://${{ secrets.GHA_TOKEN }}@raw.githubusercontent.com/smartcontractkit/charts/gh-pages/
           helm repo update
       - name: Test deployments
+        env:
+          NETWORKS_CONFIG_FILE: ${{ secrets.NETWORKS_CONFIG_FILE }}
         run: make test_e2e

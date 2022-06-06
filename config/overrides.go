@@ -1,11 +1,12 @@
 package config
 
 import (
+	"encoding/base64"
 	"github.com/imdario/mergo"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"k8s.io/apimachinery/pkg/util/yaml"
 	"os"
 	"path/filepath"
 )
@@ -26,6 +27,10 @@ const (
 	EnvVarLogLevel            = "ENV_LOG_LEVEL"
 	EnvVarLogLevelDescription = "Environment logging level"
 	EnvVarLogLevelExample     = "info | debug | trace"
+
+	EnvVarNetworksConfigFile            = "NETWORKS_CONFIG_FILE"
+	EnvVarNetworksConfigFileDescription = "Blockchain networks connection info"
+	EnvVarNetworksConfigFileExample     = "networks.yaml"
 )
 
 // MustEnvOverrideStruct used when you need to override a struct with `envconfig` fields from environment variables
@@ -70,19 +75,33 @@ func MustEnvCodeOverrideMap(envVarName string, target, src interface{}) {
 	os.Getenv(envVarName)
 	fp := os.Getenv(envVarName)
 	if os.Getenv(envVarName) != "" {
-		path, err := filepath.Abs(fp)
-		if err != nil {
-			log.Fatal().Err(err).Send()
-		}
-		d, err := ioutil.ReadFile(path)
-		if err != nil {
-			log.Fatal().Err(err).Send()
-		}
-		if err := yaml.Unmarshal(d, &fileVars); err != nil {
+		if err := UnmarshalYAMLFile(fp, &fileVars); err != nil {
 			log.Fatal().Err(err).Send()
 		}
 		if err := mergo.Merge(target, fileVars, mergo.WithOverride); err != nil {
 			log.Fatal().Err(err).Send()
 		}
 	}
+}
+
+func UnmarshalYAMLBase64(data string, to interface{}) error {
+	log.Info().Msg("Decoding base64 config")
+	res, err := base64.StdEncoding.DecodeString(data)
+	if err != nil {
+		return err
+	}
+	return yaml.Unmarshal(res, to)
+}
+
+func UnmarshalYAMLFile(path string, to interface{}) error {
+	ap, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+	log.Info().Str("Path", ap).Msg("Decoding config")
+	f, err := ioutil.ReadFile(ap)
+	if err != nil {
+		return err
+	}
+	return yaml.Unmarshal(f, to)
 }

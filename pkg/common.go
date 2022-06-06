@@ -15,7 +15,7 @@ const (
 	EnvTypeEVM1             = "evm-1-minimal"
 	EnvTypeEVM5             = "evm-5-minimal"
 	EnvTypeEVM5RemoteRunner = "evm-5-remote-runner"
-	EnvTypeEVM5External     = "evm-5-minimal-external"
+	EnvTypeMultinetwork     = "evm-5-multinetwork"
 	EnvTypeETH5Reorg        = "evm-5-reorg"
 	EnvTypeEVM5BS           = "evm-5-minimal-blockscout"
 	EnvTypeEVM5Soak         = "evm-5-soak"
