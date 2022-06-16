@@ -46,7 +46,7 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		return err
 	}
 	log.Info().Str("URL", bsURL).Msg("Blockscout explorer")
-	e.URLs[URLsKey] = append(e.URLs[URLsKey], bsURL)
+	e.URLs[URLsKey] = []string{bsURL}
 	return nil
 }
 

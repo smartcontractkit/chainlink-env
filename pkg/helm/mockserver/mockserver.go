@@ -42,6 +42,7 @@ func (m Chart) GetValues() *map[string]interface{} {
 }
 
 func (m Chart) ExportData(e *environment.Environment) error {
+	urls := make([]string, 0)
 	mock, err := e.Fwd.FindPort("mockserver:0", "mockserver", "serviceport").As(client.LocalConnection, client.HTTP)
 	if err != nil {
 		return err
@@ -50,8 +51,8 @@ func (m Chart) ExportData(e *environment.Environment) error {
 	if err != nil {
 		return err
 	}
-	e.URLs[URLsKey] = append(e.URLs[URLsKey], mock)
-	e.URLs[URLsKey] = append(e.URLs[URLsKey], mockInternal)
+	urls = append(urls, mock, mockInternal)
+	e.URLs[URLsKey] = urls
 	log.Info().Str("URL", mock).Msg("Mockserver local connection")
 	log.Info().Str("URL", mockInternal).Msg("Mockserver remote connection")
 	return nil
