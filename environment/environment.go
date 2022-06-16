@@ -149,6 +149,7 @@ func (m *Environment) PrintURLs() error {
 			return err
 		}
 	}
+	log.Debug().Interface("URLs", m.URLs).Msg("Connection URLs")
 	return nil
 }
 

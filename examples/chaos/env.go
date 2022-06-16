@@ -16,15 +16,17 @@ func main() {
 	err := e.
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
-		AddHelm(reorg.New(
-			"geth-reorg",
-			map[string]interface{}{
+		AddHelm(reorg.New(&reorg.Props{
+			NetworkName: "geth",
+			NetworkType: "geth-reorg",
+			Values: map[string]interface{}{
 				"geth": map[string]interface{}{
 					"genesis": map[string]interface{}{
 						"networkId": "1337",
 					},
 				},
-			})).
+			},
+		})).
 		AddHelm(chainlink.New(map[string]interface{}{
 			"replicas": 5,
 			"env": map[string]interface{}{

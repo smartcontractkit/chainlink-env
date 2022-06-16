@@ -78,24 +78,28 @@ func EVMReorg(config *environment.Config) error {
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
-		AddHelm(reorg.New(
-			"geth-reorg",
-			map[string]interface{}{
+		AddHelm(reorg.New(&reorg.Props{
+			NetworkName: "geth",
+			NetworkType: "geth-reorg",
+			Values: map[string]interface{}{
 				"geth": map[string]interface{}{
 					"genesis": map[string]interface{}{
 						"networkId": "1337",
 					},
 				},
-			})).
-		AddHelm(reorg.New(
-			"geth-reorg-2",
-			map[string]interface{}{
+			},
+		})).
+		AddHelm(reorg.New(&reorg.Props{
+			NetworkName: "geth-2",
+			NetworkType: "geth-reorg",
+			Values: map[string]interface{}{
 				"geth": map[string]interface{}{
 					"genesis": map[string]interface{}{
 						"networkId": "2337",
 					},
 				},
-			})).
+			},
+		})).
 		AddHelm(chainlink.New(map[string]interface{}{
 			"replicas": 5,
 			"env": map[string]interface{}{
