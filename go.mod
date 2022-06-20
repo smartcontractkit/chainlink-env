@@ -7,7 +7,6 @@ require (
 	github.com/aws/jsii-runtime-go v1.59.0
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.3.14
-	github.com/davecgh/go-spew v1.1.1
 	github.com/fatih/color v1.13.0
 	github.com/fatih/structs v1.1.0
 	github.com/google/uuid v1.3.0
@@ -19,7 +18,7 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.24.1
-	k8s.io/apimachinery v0.24.1
+	k8s.io/apimachinery v0.24.2
 	k8s.io/cli-runtime v0.24.1
 	k8s.io/client-go v0.24.1
 	k8s.io/kubectl v0.24.1
@@ -32,6 +31,7 @@ require (
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
