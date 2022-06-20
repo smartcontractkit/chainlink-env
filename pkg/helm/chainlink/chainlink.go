@@ -65,6 +65,9 @@ func (m Chart) ExportData(e *environment.Environment) error {
 			return err
 		}
 		e.URLs[NodesInternalURLsKey] = append(e.URLs[NodesInternalURLsKey], n)
+		if e.Cfg.InsideK8s {
+			e.URLs[NodesLocalURLsKey] = e.URLs[NodesInternalURLsKey]
+		}
 		log.Info().Int("Node", i).Str("URL", n).Msg("Remote (in cluster) connection")
 	}
 	for i := 0; i < len(pods.Items); i++ {

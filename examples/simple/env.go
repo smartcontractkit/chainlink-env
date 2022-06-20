@@ -12,6 +12,8 @@ import (
 
 func main() {
 	// example of quick usage to debug env, removed on SIGINT
+	//os.Setenv("CHAINLINK_IMAGE", "ddd")
+	//os.Setenv("CHAINLINK_TAG", "aaa")
 	err := environment.New(&environment.Config{
 		Labels:            []string{fmt.Sprintf("envType=%s", pkg.EnvTypeEVM5)},
 		KeepConnection:    true,

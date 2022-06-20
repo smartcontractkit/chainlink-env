@@ -74,6 +74,9 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], gethLocal)
 		internalName := fmt.Sprintf("%s_internal", m.Props.NetworkName)
 		e.URLs[internalName] = append(e.URLs[internalName], gethInternal)
+		if e.Cfg.InsideK8s {
+			e.URLs[m.Props.NetworkName] = e.URLs[internalName]
+		}
 		log.Info().Str("Name", "Geth").Str("URLs", gethLocal).Msg("Geth network")
 	case External:
 		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkType], m.Props.WsURLs...)

@@ -51,7 +51,11 @@ func (m Chart) ExportData(e *environment.Environment) error {
 	if err != nil {
 		return err
 	}
-	urls = append(urls, mock, mockInternal)
+	if e.Cfg.InsideK8s {
+		urls = append(urls, mockInternal, mockInternal)
+	} else {
+		urls = append(urls, mock, mockInternal)
+	}
 	e.URLs[URLsKey] = urls
 	log.Info().Str("URL", mock).Msg("Mockserver local connection")
 	log.Info().Str("URL", mockInternal).Msg("Mockserver remote connection")
