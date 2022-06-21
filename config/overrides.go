@@ -16,7 +16,7 @@ const (
 	EnvVarCLImageDescription = "Chainlink image repository"
 	EnvVarCLImageExample     = "public.ecr.aws/chainlink/chainlink"
 
-	EnvVarCLTag            = "CHAINLINK_TAG"
+	EnvVarCLTag            = "CHAINLINK_VERSION"
 	EnvVarCLTagDescription = "Chainlink image tag"
 	EnvVarCLTagExample     = "1.4.0-root"
 
