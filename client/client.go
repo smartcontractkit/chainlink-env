@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -27,7 +28,7 @@ import (
 )
 
 const (
-	TempDebugManifest          = "tmp-manifest.yaml"
+	TempDebugManifest          = "tmp-manifest-%s.yaml"
 	ContainerStatePollInterval = 3 * time.Second
 	AppLabel                   = "app"
 )
@@ -245,11 +246,12 @@ func (m *K8sClient) CheckReady(namespace string, c *ReadyCheckData) error {
 
 // Apply applying a manifest to a currently connected k8s context
 func (m *K8sClient) Apply(manifest string) error {
-	log.Info().Msg("Applying manifest")
-	if err := os.WriteFile(TempDebugManifest, []byte(manifest), os.ModePerm); err != nil {
+	manifestFile := fmt.Sprintf(TempDebugManifest, uuid.NewString())
+	log.Info().Str("File", manifestFile).Msg("Applying manifest")
+	if err := os.WriteFile(manifestFile, []byte(manifest), os.ModePerm); err != nil {
 		return err
 	}
-	cmd := fmt.Sprintf("kubectl apply -f %s", TempDebugManifest)
+	cmd := fmt.Sprintf("kubectl apply -f %s", manifestFile)
 	return ExecCmd(cmd)
 }
 
@@ -260,18 +262,20 @@ func (m *K8sClient) DeleteResource(namespace string, resource string, instance s
 
 // Create creating a manifest to a currently connected k8s context
 func (m *K8sClient) Create(manifest string) error {
-	log.Info().Msg("Creating manifest")
-	if err := os.WriteFile(TempDebugManifest, []byte(manifest), os.ModePerm); err != nil {
+	manifestFile := fmt.Sprintf(TempDebugManifest, uuid.NewString())
+	log.Info().Str("File", manifestFile).Msg("Creating manifest")
+	if err := os.WriteFile(manifestFile, []byte(manifest), os.ModePerm); err != nil {
 		return err
 	}
-	cmd := fmt.Sprintf("kubectl create -f %s", TempDebugManifest)
+	cmd := fmt.Sprintf("kubectl create -f %s", manifestFile)
 	return ExecCmd(cmd)
 }
 
 // DryRun generates manifest and writes it in a file
 func (m *K8sClient) DryRun(manifest string) error {
-	log.Info().Msg("Creating manifest")
-	if err := os.WriteFile(TempDebugManifest, []byte(manifest), os.ModePerm); err != nil {
+	manifestFile := fmt.Sprintf(TempDebugManifest, uuid.NewString())
+	log.Info().Str("File", manifestFile).Msg("Creating manifest")
+	if err := os.WriteFile(manifestFile, []byte(manifest), os.ModePerm); err != nil {
 		return err
 	}
 	return nil
