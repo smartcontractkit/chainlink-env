@@ -24,7 +24,7 @@ const (
 	EnvVarUserDescription = "Owner of an environment"
 	EnvVarUserExample     = "Satoshi"
 
-	EnvVarLogLevel            = "ENV_LOG_LEVEL"
+	EnvVarLogLevel            = "LOG_LEVEL"
 	EnvVarLogLevelDescription = "Environment logging level"
 	EnvVarLogLevelExample     = "info | debug | trace"
 
