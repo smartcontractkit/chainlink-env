@@ -5,6 +5,8 @@ import (
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/cmd/wizard/presets"
 	"github.com/smartcontractkit/chainlink-env/environment"
+	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
+	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -67,6 +69,17 @@ func TestSimpleEnv(t *testing.T) {
 		err := presets.MultiNetwork(&environment.Config{
 			Labels: []string{fmt.Sprintf("envType=%s", TestEnvType)},
 		}, &presets.MultiNetworkOpts{})
+		require.NoError(t, err)
+	})
+	t.Run("test multiple instances of the same type", func(t *testing.T) {
+		defer cleanEnvs(t)
+		err := environment.New(&environment.Config{
+			Labels: []string{fmt.Sprintf("envType=%s", TestEnvType)},
+		}).
+			AddHelm(ethereum.New(nil)).
+			AddHelm(chainlink.New(0, nil)).
+			AddHelm(chainlink.New(1, nil)).
+			Run()
 		require.NoError(t, err)
 	})
 	// TODO: assert export data

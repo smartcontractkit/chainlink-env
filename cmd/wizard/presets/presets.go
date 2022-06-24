@@ -17,7 +17,7 @@ func EVMOneNode(config *environment.Config) error {
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(nil)).
+		AddHelm(chainlink.New(0, nil)).
 		Run()
 }
 
@@ -29,7 +29,7 @@ func EVMMinimalLocalBS(config *environment.Config) error {
 		AddHelm(mockserver.New(nil)).
 		AddChart(blockscout.New(&blockscout.Props{})).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(map[string]interface{}{
+		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 5,
 		})).
 		Run()
@@ -42,7 +42,7 @@ func EVMMinimalLocal(config *environment.Config) error {
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(map[string]interface{}{
+		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 5,
 		})).
 		Run()
@@ -70,7 +70,7 @@ func MultiNetwork(config *environment.Config, opts *MultiNetworkOpts) error {
 			"eth_chain_id": opts.Networks[0].ChainID,
 		},
 	}
-	return e.AddHelm(chainlink.New(clVars)).Run()
+	return e.AddHelm(chainlink.New(0, clVars)).Run()
 }
 
 // EVMReorg deployment for two Ethereum networks re-org test
@@ -100,7 +100,7 @@ func EVMReorg(config *environment.Config) error {
 				},
 			},
 		})).
-		AddHelm(chainlink.New(map[string]interface{}{
+		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 5,
 			"env": map[string]interface{}{
 				"eth_url": "ws://geth-reorg-ethereum-geth:8546",
@@ -129,7 +129,7 @@ func EVMSoak(config *environment.Config) error {
 				},
 			},
 		})).
-		AddHelm(chainlink.New(map[string]interface{}{
+		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 5,
 			"db": map[string]interface{}{
 				"stateful": true,

@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	AppName              = "chainlink-node"
+	AppName              = "chainlink"
 	NodesLocalURLsKey    = "chainlink_local"
 	NodesInternalURLsKey = "chainlink_internal"
 	DBsLocalURLsKey      = "chainlink_db"
@@ -19,6 +19,7 @@ type Props struct{}
 
 type Chart struct {
 	Name   string
+	Index  int
 	Path   string
 	Props  *Props
 	Values *map[string]interface{}
@@ -45,21 +46,22 @@ func (m Chart) GetValues() *map[string]interface{} {
 }
 
 func (m Chart) ExportData(e *environment.Environment) error {
-	pods, err := e.Fwd.Client.ListPods(e.Cfg.Namespace, fmt.Sprintf("app=%s", AppName))
+	// fetching all apps with label app=chainlink-${deploymentIndex}:${instanceIndex}
+	pods, err := e.Fwd.Client.ListPods(e.Cfg.Namespace, fmt.Sprintf("app=%s", m.Name))
 	if err != nil {
 		return err
 	}
 	for i := 0; i < len(pods.Items); i++ {
-		n, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", AppName, i), "node", "access").
+		n, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
 			As(client.LocalConnection, client.HTTP)
 		if err != nil {
 			return err
 		}
 		e.URLs[NodesLocalURLsKey] = append(e.URLs[NodesLocalURLsKey], n)
-		log.Info().Int("Node", i).Str("URL", n).Msg("Local connection")
+		log.Info().Str("Deployment", m.Name).Int("Node", i).Str("URL", n).Msg("Local connection")
 	}
 	for i := 0; i < len(pods.Items); i++ {
-		n, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", AppName, i), "node", "access").
+		n, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
 			As(client.RemoteConnection, client.HTTP)
 		if err != nil {
 			return err
@@ -68,16 +70,16 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		if e.Cfg.InsideK8s {
 			e.URLs[NodesLocalURLsKey] = e.URLs[NodesInternalURLsKey]
 		}
-		log.Info().Int("Node", i).Str("URL", n).Msg("Remote (in cluster) connection")
+		log.Info().Str("Deployment", m.Name).Int("Node", i).Str("URL", n).Msg("Remote (in cluster) connection")
 	}
 	for i := 0; i < len(pods.Items); i++ {
-		n, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", AppName, i), "chainlink-db", "postgres").
+		n, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "chainlink-db", "postgres").
 			As(client.LocalConnection, client.HTTP)
 		if err != nil {
 			return err
 		}
 		e.URLs[DBsLocalURLsKey] = append(e.URLs[DBsLocalURLsKey], n)
-		log.Info().Int("Node", i).Str("URL", n).Msg("DB local Connection")
+		log.Info().Str("Deployment", m.Name).Int("Node", i).Str("URL", n).Msg("DB local Connection")
 	}
 	return nil
 }
@@ -123,12 +125,13 @@ func defaultProps() map[string]interface{} {
 	}
 }
 
-func New(props map[string]interface{}) environment.ConnectedChart {
+func New(index int, props map[string]interface{}) environment.ConnectedChart {
 	dp := defaultProps()
 	config.MustEnvOverrideVersion(&dp)
 	config.MustEnvCodeOverrideMap("CL_VALUES", &dp, props)
 	return Chart{
-		Name:   "chainlink",
+		Index:  index,
+		Name:   fmt.Sprintf("%s-%d", AppName, index),
 		Path:   "chainlink-qa/chainlink",
 		Values: &dp,
 	}
