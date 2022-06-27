@@ -2,6 +2,11 @@ package environment
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -11,10 +16,6 @@ import (
 	"github.com/smartcontractkit/chainlink-env/logging"
 	"github.com/smartcontractkit/chainlink-env/pkg"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 )
 
 var (
@@ -104,6 +105,10 @@ func (m *Environment) initApp(namespace string) {
 	m.Cfg.Namespace = namespace
 	m.Cfg.Labels = append(m.Cfg.Labels, "generatedBy=cdk8s")
 	m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("owner=%s", os.Getenv(config.EnvVarUser)))
+	if os.Getenv(config.EnvVarCLCommitSha) != "" {
+		m.Cfg.Labels = append(m.Cfg.Labels, os.Getenv(config.EnvVarCLCommitSha))
+	}
+
 	m.Cfg.NSLabels, err = a.ConvertLabels(m.Cfg.Labels)
 	if err != nil {
 		log.Fatal().Err(err).Send()

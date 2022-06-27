@@ -1,6 +1,9 @@
 package remotetestrunner
 
 import (
+	"os"
+
+	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/environment"
 )
@@ -40,12 +43,25 @@ func (m Chart) ExportData(e *environment.Environment) error {
 }
 
 func defaultProps() map[string]interface{} {
+	slackKey := os.Getenv(config.EnvVarSlackKey)
+	slackChannel := os.Getenv(config.EnvVarSlackChannel)
+	slackUser := os.Getenv(config.EnvVarSlackUser)
+	if slackKey == "" {
+		log.Warn().Msg("SLACK_API_KEY not set, the test won't be able to report results to Slack")
+	}
+	if slackChannel == "" {
+		log.Warn().Msg("SLACK_CHANNEL not set, the test won't be able to report results to Slack")
+	}
+	if slackUser == "" {
+		log.Warn().Msg("SLACK_USER not set, the test may not be able to report results to Slack")
+	}
+	log.Info().Str("API Key", slackKey).Str("Channel", slackChannel).Str("User", slackUser).Msg("Using Slack Creds")
 	return map[string]interface{}{
 		"remote_test_runner": map[string]interface{}{
 			"test_name":        "@soak-ocr",
-			"slack_api":        "default",
-			"slack_channel":    "default",
-			"slack_user_id":    "default",
+			"slack_api":        slackKey,
+			"slack_channel":    slackChannel,
+			"slack_user_id":    slackUser,
 			"remote_test_size": 0,
 			"access_port":      8080,
 		},

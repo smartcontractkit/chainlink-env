@@ -5,6 +5,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"regexp"
+	"strconv"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -14,10 +19,6 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/kubectl/pkg/cmd/cp"
-	"os"
-	"regexp"
-	"strconv"
-	"time"
 
 	v1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -128,7 +129,8 @@ func isPodRunning(c kubernetes.Interface, podName, namespace string) wait.Condit
 // AddLabel adds a label to a pod
 func (m *K8sClient) AddLabel(namespace string, pod v1.Pod, key, value string) error {
 	labelPatch := fmt.Sprintf(`[{"op":"add","path":"/metadata/labels/%s","value":"%s" }]`, key, value)
-	_, err := m.ClientSet.CoreV1().Pods(namespace).Patch(context.Background(), pod.GetName(), types.JSONPatchType, []byte(labelPatch), metaV1.PatchOptions{})
+	_, err := m.ClientSet.CoreV1().Pods(namespace).Patch(
+		context.Background(), pod.GetName(), types.JSONPatchType, []byte(labelPatch), metaV1.PatchOptions{})
 	if err != nil {
 		return err
 	}

@@ -4,3 +4,5 @@ bin/
 tmp-manifest.yaml
 # remote runner binary
 remote.test
+
+.vscode/
