@@ -1,13 +1,14 @@
 package main
 
 import (
+	"time"
+
 	"github.com/smartcontractkit/chainlink-env/chaos"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/mockserver"
 	mockservercfg "github.com/smartcontractkit/chainlink-env/pkg/helm/mockserver-cfg"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/reorg"
-	"time"
 )
 
 func main() {
@@ -27,7 +28,7 @@ func main() {
 				},
 			},
 		})).
-		AddHelm(chainlink.New(map[string]interface{}{
+		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 5,
 			"env": map[string]interface{}{
 				"eth_url": "ws://geth-reorg-ethereum-geth:8546",

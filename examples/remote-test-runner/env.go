@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
@@ -21,7 +22,7 @@ func main() {
 		AddHelm(mockserver.New(nil)).
 		AddHelm(remotetestrunner.New(nil)).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(nil)).
+		AddHelm(chainlink.New(0, nil)).
 		Run()
 	if err != nil {
 		panic(err)

@@ -2,13 +2,14 @@ package config
 
 import (
 	"encoding/base64"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"github.com/imdario/mergo"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 const (
@@ -27,6 +28,22 @@ const (
 	EnvVarLogLevel            = "LOG_LEVEL"
 	EnvVarLogLevelDescription = "Environment logging level"
 	EnvVarLogLevelExample     = "info | debug | trace"
+
+	EnvVarSlackKey            = "SLACK_API_KEY"
+	EnvVarSlackKeyDescription = "The OAuth Slack API key to report tests results with"
+	EnvVarSlackKeyExample     = "xoxb-example-key"
+
+	EnvVarSlackChannel            = "SLACK_CHANNEL"
+	EnvVarSlackChannelDescription = "The Slack code for the channel you want to send the notification to"
+	EnvVarSlackChannelExample     = "C000000000"
+
+	EnvVarSlackUser            = "SLACK_USER"
+	EnvVarSlackUserDescription = "The Slack code for the user you want to notify"
+	EnvVarSlackUserExample     = "U000000000"
+
+	EnvVarCLCommitSha            = "CHAINLINK_COMMIT_SHA"
+	EnvVarCLCommitShaDescription = "The sha of the commit that you're running tests on. Mostly used for CI"
+	EnvVarCLCommitShaExample     = "${{ github.sha }}"
 
 	EnvVarNetworksConfigFile            = "NETWORKS_CONFIG_FILE"
 	EnvVarNetworksConfigFileDescription = "Blockchain networks connection info"
