@@ -3,14 +3,15 @@ package client
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -77,6 +78,37 @@ func (m *K8sClient) ListNamespaces(selector string) (*v1.NamespaceList, error) {
 	return m.ClientSet.CoreV1().Namespaces().List(context.Background(), metaV1.ListOptions{LabelSelector: selector})
 }
 
+// AddLabel adds a new label to a group of pods defined by selector
+func (m *K8sClient) AddLabel(namespace string, selector string, label string) error {
+	podList, err := m.ListPods(namespace, selector)
+	if err != nil {
+		return err
+	}
+	l := strings.Split(label, "=")
+	if len(l) != 2 {
+		return errors.New("labels must be in format key=value")
+	}
+	for _, pod := range podList.Items {
+		labelPatch := fmt.Sprintf(`[{"op":"add","path":"/metadata/labels/%s","value":"%s" }]`, l[0], l[1])
+		_, err := m.ClientSet.CoreV1().Pods(namespace).Patch(context.Background(), pod.GetName(), types.JSONPatchType, []byte(labelPatch), metaV1.PatchOptions{})
+		if err != nil {
+			return errors.Wrapf(err, "failed to update labels %s for pod %s", labelPatch, pod.Name)
+		}
+	}
+	log.Debug().Str("Selector", selector).Str("Label", label).Msg("Updated label")
+	return nil
+}
+
+func (m *K8sClient) LabelChaosGroup(namespace string, startInstance int, endInstance int, group string) error {
+	for i := startInstance; i <= endInstance; i++ {
+		err := m.AddLabel(namespace, fmt.Sprintf("instance=%d", i), fmt.Sprintf("%s=1", group))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // UniqueLabels gets all unique application labels
 func (m *K8sClient) UniqueLabels(namespace string, selector string) ([]string, error) {
 	uniqueLabels := make([]string, 0)
@@ -126,8 +158,8 @@ func isPodRunning(c kubernetes.Interface, podName, namespace string) wait.Condit
 	}
 }
 
-// AddLabel adds a label to a pod
-func (m *K8sClient) AddLabel(namespace string, pod v1.Pod, key, value string) error {
+// AddLabelByPod adds a label to a pod
+func (m *K8sClient) AddLabelByPod(namespace string, pod v1.Pod, key, value string) error {
 	labelPatch := fmt.Sprintf(`[{"op":"add","path":"/metadata/labels/%s","value":"%s" }]`, key, value)
 	_, err := m.ClientSet.CoreV1().Pods(namespace).Patch(
 		context.Background(), pod.GetName(), types.JSONPatchType, []byte(labelPatch), metaV1.PatchOptions{})
@@ -147,7 +179,7 @@ func (m *K8sClient) EnumerateInstances(namespace string, selector string) error 
 		return err
 	}
 	for id, pod := range podList.Items {
-		if err := m.AddLabel(namespace, pod, "instance", strconv.Itoa(id)); err != nil {
+		if err := m.AddLabelByPod(namespace, pod, "instance", strconv.Itoa(id)); err != nil {
 			return err
 		}
 	}
