@@ -71,9 +71,9 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		if err != nil {
 			return err
 		}
-		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], gethLocal)
+		e.URLs[m.Props.NetworkName] = []string{gethLocal}
 		internalName := fmt.Sprintf("%s_internal", m.Props.NetworkName)
-		e.URLs[internalName] = append(e.URLs[internalName], gethInternal)
+		e.URLs[internalName] = []string{gethInternal}
 		if e.Cfg.InsideK8s {
 			e.URLs[m.Props.NetworkName] = e.URLs[internalName]
 		}
@@ -113,7 +113,9 @@ func defaultProps() *Props {
 
 func New(props *Props) environment.ConnectedChart {
 	if props == nil {
-		props = &Props{}
+		props = &Props{
+			NetworkType: Geth,
+		}
 	}
 	targetProps := defaultProps()
 	config.MustEnvCodeOverrideStruct("ETHEREUM", targetProps, props)

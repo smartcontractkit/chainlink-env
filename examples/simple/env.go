@@ -6,6 +6,8 @@ import (
 	"github.com/smartcontractkit/chainlink-env/pkg"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
+	"github.com/smartcontractkit/chainlink-env/pkg/helm/mockserver"
+	mockservercfg "github.com/smartcontractkit/chainlink-env/pkg/helm/mockserver-cfg"
 )
 
 func main() {
@@ -17,38 +19,10 @@ func main() {
 		KeepConnection:    true,
 		RemoveOnInterrupt: true,
 	}).
-		//AddHelm(mockservercfg.New(nil)).
-		//AddHelm(mockserver.New(nil)).
+		AddHelm(mockservercfg.New(nil)).
+		AddHelm(mockserver.New(nil)).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, map[string]interface{}{
-			"chainlink": map[string]interface{}{
-				"resources": map[string]interface{}{
-					"requests": map[string]interface{}{
-						"cpu": "344m",
-					},
-					"limits": map[string]interface{}{
-						"cpu": "344m",
-					},
-				},
-			},
-			"db": map[string]interface{}{
-				"stateful": "true",
-				"capacity": "5Gi",
-			},
-		})).
-		AddHelm(chainlink.New(1,
-			map[string]interface{}{
-				"chainlink": map[string]interface{}{
-					"resources": map[string]interface{}{
-						"requests": map[string]interface{}{
-							"cpu": "577m",
-						},
-						"limits": map[string]interface{}{
-							"cpu": "577m",
-						},
-					},
-				},
-			})).
+		AddHelm(chainlink.New(0, nil)).
 		Run()
 	if err != nil {
 		panic(err)
