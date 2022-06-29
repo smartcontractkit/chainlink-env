@@ -58,13 +58,13 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		if err != nil {
 			return err
 		}
-		e.NetworkURLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], gethLocal)
+		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], gethLocal)
 		if e.Cfg.InsideK8s {
-			e.NetworkURLs[m.Props.NetworkName] = []string{gethInternal}
+			e.URLs[m.Props.NetworkName] = []string{gethInternal}
 		}
 		log.Info().Str("Name", "Geth").Str("URLs", gethLocal).Msg("Geth network")
 	} else {
-		e.NetworkURLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], m.Props.WsURLs...)
+		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], m.Props.WsURLs...)
 		log.Info().Str("Name", m.Props.NetworkName).Strs("URLs", m.Props.WsURLs).Msg("Ethereum network")
 	}
 	return nil

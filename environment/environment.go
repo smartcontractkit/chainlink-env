@@ -59,16 +59,15 @@ func defaultEnvConfig() *Config {
 
 // Environment describes a launched test environment
 type Environment struct {
-	App         cdk8s.App
-	root        cdk8s.Chart
-	Charts      []ConnectedChart  // All connected charts in the
-	Cfg         *Config           // The environment specific config
-	Client      *client.K8sClient // Client connecting to the K8s cluster
-	Fwd         *client.Forwarder // Used to forward ports from local machine to the K8s cluster
-	Artifacts   *Artifacts
-	Chaos       *client.Chaos
-	URLs        map[string][]string // General URLs of launched resources. Uses '_local' to delineate forwarded ports
-	NetworkURLs map[string][]string // URLs of blockchain networks. Uses '_local' to delineate forwarded ports
+	App       cdk8s.App
+	root      cdk8s.Chart
+	Charts    []ConnectedChart  // All connected charts in the
+	Cfg       *Config           // The environment specific config
+	Client    *client.K8sClient // Client connecting to the K8s cluster
+	Fwd       *client.Forwarder // Used to forward ports from local machine to the K8s cluster
+	Artifacts *Artifacts
+	Chaos     *client.Chaos
+	URLs      map[string][]string // General URLs of launched resources. Uses '_local' to delineate forwarded ports
 }
 
 // New creates new environment
@@ -81,12 +80,11 @@ func New(cfg *Config) *Environment {
 	config.MustEnvCodeOverrideStruct("ENV_CONFIG", targetCfg, cfg)
 	c := client.NewK8sClient()
 	e := &Environment{
-		URLs:        make(map[string][]string),
-		NetworkURLs: make(map[string][]string),
-		Charts:      make([]ConnectedChart, 0),
-		Client:      c,
-		Cfg:         targetCfg,
-		Fwd:         client.NewForwarder(c, targetCfg.KeepConnection),
+		URLs:   make(map[string][]string),
+		Charts: make([]ConnectedChart, 0),
+		Client: c,
+		Cfg:    targetCfg,
+		Fwd:    client.NewForwarder(c, targetCfg.KeepConnection),
 	}
 	e.initApp(fmt.Sprintf("%s-%s", e.Cfg.NamespacePrefix, uuid.NewString()[0:5]))
 	k8s.NewKubeNamespace(e.root, a.Str("namespace"), &k8s.KubeNamespaceProps{
