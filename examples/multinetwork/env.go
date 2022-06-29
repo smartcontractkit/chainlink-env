@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/smartcontractkit/chainlink-env/cmd/wizard/presets"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg"
-	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
 )
 
 func main() {
@@ -18,11 +18,11 @@ func main() {
 	}, &presets.MultiNetworkOpts{
 		Networks: presets.Networks{
 			{
-				Name:     ethereum.Geth,
-				Type:     ethereum.Geth,
-				HttpURLs: []string{"http://geth:8544"},
-				WsURLs:   []string{"ws://geth:8546"},
-				ChainID:  "1337",
+				Name:      "Testnet",
+				Simulated: true,
+				HttpURLs:  []string{"http://geth:8544"},
+				WsURLs:    []string{"ws://geth:8546"},
+				ChainID:   "1337",
 			},
 		},
 	})

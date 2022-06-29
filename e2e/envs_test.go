@@ -2,21 +2,26 @@ package e2e_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/cmd/wizard/presets"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 const (
-	TestEnvType = "test"
+	TestEnvType = "chainlink-env-test"
 )
 
 var (
-	testSelector = fmt.Sprintf("envType=%s", TestEnvType)
+	testSelector  = fmt.Sprintf("envType=%s", TestEnvType)
+	testEnvConfig = &environment.Config{
+		NamespacePrefix: TestEnvType,
+		Labels:          []string{testSelector},
+	}
 )
 
 func cleanEnvs(t *testing.T) {
@@ -31,51 +36,37 @@ func cleanEnvs(t *testing.T) {
 func TestSimpleEnv(t *testing.T) {
 	t.Run("test 5 nodes soak environment with PVCs", func(t *testing.T) {
 		defer cleanEnvs(t)
-		err := presets.EVMSoak(&environment.Config{
-			Labels: []string{fmt.Sprintf("envType=%s", TestEnvType)},
-		})
+		err := presets.EVMSoak(testEnvConfig)
 		require.NoError(t, err)
 	})
 	t.Run("smoke test with a single node env", func(t *testing.T) {
 		defer cleanEnvs(t)
-		err := presets.EVMOneNode(&environment.Config{
-			Labels: []string{fmt.Sprintf("envType=%s", TestEnvType)},
-		})
+		err := presets.EVMOneNode(testEnvConfig)
 		require.NoError(t, err)
 	})
 	t.Run("test min resources 5 nodes env", func(t *testing.T) {
 		defer cleanEnvs(t)
-		err := presets.EVMMinimalLocal(&environment.Config{
-			Labels: []string{fmt.Sprintf("envType=%s", TestEnvType)},
-		})
+		err := presets.EVMMinimalLocal(testEnvConfig)
 		require.NoError(t, err)
 	})
 	t.Run("test min resources 5 nodes env with blockscout", func(t *testing.T) {
 		defer cleanEnvs(t)
-		err := presets.EVMMinimalLocalBS(&environment.Config{
-			Labels: []string{fmt.Sprintf("envType=%s", TestEnvType)},
-		})
+		err := presets.EVMMinimalLocalBS(testEnvConfig)
 		require.NoError(t, err)
 	})
 	t.Run("test 5 nodes + 2 mining geths, reorg env", func(t *testing.T) {
 		defer cleanEnvs(t)
-		err := presets.EVMReorg(&environment.Config{
-			Labels: []string{fmt.Sprintf("envType=%s", TestEnvType)},
-		})
+		err := presets.EVMReorg(testEnvConfig)
 		require.NoError(t, err)
 	})
 	t.Run("test 5 nodes env with an external network", func(t *testing.T) {
 		defer cleanEnvs(t)
-		err := presets.MultiNetwork(&environment.Config{
-			Labels: []string{fmt.Sprintf("envType=%s", TestEnvType)},
-		}, &presets.MultiNetworkOpts{})
+		err := presets.MultiNetwork(testEnvConfig, &presets.MultiNetworkOpts{})
 		require.NoError(t, err)
 	})
 	t.Run("test multiple instances of the same type", func(t *testing.T) {
 		defer cleanEnvs(t)
-		err := environment.New(&environment.Config{
-			Labels: []string{fmt.Sprintf("envType=%s", TestEnvType)},
-		}).
+		err := environment.New(testEnvConfig).
 			AddHelm(ethereum.New(nil)).
 			AddHelm(chainlink.New(0, nil)).
 			AddHelm(chainlink.New(1, nil)).

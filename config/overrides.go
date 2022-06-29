@@ -19,11 +19,15 @@ const (
 
 	EnvVarCLTag            = "CHAINLINK_VERSION"
 	EnvVarCLTagDescription = "Chainlink image tag"
-	EnvVarCLTagExample     = "1.4.0-root"
+	EnvVarCLTagExample     = "1.5.1-root"
 
 	EnvVarUser            = "CHAINLINK_ENV_USER"
 	EnvVarUserDescription = "Owner of an environment"
 	EnvVarUserExample     = "Satoshi"
+
+	EnvVarCLCommitSha            = "CHAINLINK_COMMIT_SHA"
+	EnvVarCLCommitShaDescription = "The sha of the commit that you're running tests on. Mostly used for CI"
+	EnvVarCLCommitShaExample     = "${{ github.sha }}"
 
 	EnvVarLogLevel            = "LOG_LEVEL"
 	EnvVarLogLevelDescription = "Environment logging level"
@@ -40,10 +44,6 @@ const (
 	EnvVarSlackUser            = "SLACK_USER"
 	EnvVarSlackUserDescription = "The Slack code for the user you want to notify"
 	EnvVarSlackUserExample     = "U000000000"
-
-	EnvVarCLCommitSha            = "CHAINLINK_COMMIT_SHA"
-	EnvVarCLCommitShaDescription = "The sha of the commit that you're running tests on. Mostly used for CI"
-	EnvVarCLCommitShaExample     = "${{ github.sha }}"
 
 	EnvVarNetworksConfigFile            = "NETWORKS_CONFIG_FILE"
 	EnvVarNetworksConfigFileDescription = "Blockchain networks connection info"

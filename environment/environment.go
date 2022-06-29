@@ -57,16 +57,17 @@ func defaultEnvConfig() *Config {
 	}
 }
 
+// Environment describes a launched test environment
 type Environment struct {
 	App       cdk8s.App
 	root      cdk8s.Chart
-	Charts    []ConnectedChart
-	Cfg       *Config
-	Client    *client.K8sClient
-	Fwd       *client.Forwarder
+	Charts    []ConnectedChart  // All connected charts in the
+	Cfg       *Config           // The environment specific config
+	Client    *client.K8sClient // Client connecting to the K8s cluster
+	Fwd       *client.Forwarder // Used to forward ports from local machine to the K8s cluster
 	Artifacts *Artifacts
 	Chaos     *client.Chaos
-	URLs      map[string][]string
+	URLs      map[string][]string // General URLs of launched resources. Uses '_local' to delineate forwarded ports
 }
 
 // New creates new environment
@@ -168,7 +169,7 @@ func (m *Environment) Run() error {
 	if !m.Client.NamespaceExists(ns) {
 		manifest := m.App.SynthYaml().(string)
 		if err := m.Deploy(manifest); err != nil {
-			log.Warn().Err(err).Msg("error deploying environment")
+			log.Error().Err(err).Msg("Error deploying environment")
 			return m.Shutdown()
 		}
 	} else {

@@ -1,12 +1,13 @@
 package presets_test
 
 import (
+	"os"
+	"testing"
+
 	"github.com/smartcontractkit/chainlink-env/cmd/wizard/presets"
 	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/logging"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 func TestOverrideCodeEnv(t *testing.T) {
@@ -15,20 +16,20 @@ func TestOverrideCodeEnv(t *testing.T) {
 		codeProps := &presets.MultiNetworkOpts{
 			Networks: presets.Networks{
 				{
-					Name:     "codeName",
-					Type:     "external",
-					HttpURLs: []string{"defaultHttp"},
-					WsURLs:   []string{"defaultWS"},
+					Name:      "codeName",
+					Simulated: false,
+					HttpURLs:  []string{"defaultHttp"},
+					WsURLs:    []string{"defaultWS"},
 				},
 			},
 		}
 		defaultCodeProps := &presets.MultiNetworkOpts{
 			Networks: presets.Networks{
 				{
-					Name:     "default",
-					Type:     "external",
-					HttpURLs: []string{"defaultHttp"},
-					WsURLs:   []string{"defaultWS"},
+					Name:      "default",
+					Simulated: false,
+					HttpURLs:  []string{"defaultHttp"},
+					WsURLs:    []string{"defaultWS"},
 				},
 			},
 		}
@@ -44,20 +45,20 @@ func TestOverrideCodeEnv(t *testing.T) {
 		codeProps := &presets.MultiNetworkOpts{
 			Networks: presets.Networks{
 				{
-					Name:     "codeName",
-					Type:     "external",
-					HttpURLs: []string{"codeHttp"},
-					WsURLs:   []string{"codeWs"},
+					Name:      "codeName",
+					Simulated: false,
+					HttpURLs:  []string{"codeHttp"},
+					WsURLs:    []string{"codeWs"},
 				},
 			},
 		}
 		defaultCodeProps := &presets.MultiNetworkOpts{
 			Networks: presets.Networks{
 				{
-					Name:     "default",
-					Type:     "external",
-					HttpURLs: []string{"defaultHttp"},
-					WsURLs:   []string{"defaultWS"},
+					Name:      "default",
+					Simulated: false,
+					HttpURLs:  []string{"defaultHttp"},
+					WsURLs:    []string{"defaultWS"},
 				},
 			},
 		}

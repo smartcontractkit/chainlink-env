@@ -1,21 +1,17 @@
 package ethereum
 
 import (
-	"fmt"
+	"github.com/imdario/mergo"
 	"github.com/rs/zerolog/log"
+
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/environment"
 )
 
-const (
-	Geth     = "geth"
-	External = "external"
-)
-
 type Props struct {
 	NetworkName string   `envconfig:"network_name"`
-	NetworkType string   `envconfig:"network_type"`
+	Simulated   bool     `envconfig:"network_simulated"`
 	HttpURLs    []string `envconfig:"http_url"`
 	WsURLs      []string `envconfig:"ws_url"`
 	Values      map[string]interface{}
@@ -33,15 +29,7 @@ type Chart struct {
 }
 
 func (m Chart) IsDeploymentNeeded() bool {
-	switch m.Props.NetworkType {
-	case Geth:
-		return true
-	case External:
-		return false
-	default:
-		log.Fatal().Msg("unknown network type")
-		return false
-	}
+	return m.Props.Simulated
 }
 
 func (m Chart) GetProps() interface{} {
@@ -61,8 +49,7 @@ func (m Chart) GetValues() *map[string]interface{} {
 }
 
 func (m Chart) ExportData(e *environment.Environment) error {
-	switch m.Props.NetworkType {
-	case Geth:
+	if m.Props.Simulated {
 		gethLocal, err := e.Fwd.FindPort("geth:0", "geth-network", "ws-rpc").As(client.LocalConnection, client.WS)
 		if err != nil {
 			return err
@@ -71,15 +58,13 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		if err != nil {
 			return err
 		}
-		e.URLs[m.Props.NetworkName] = []string{gethLocal}
-		internalName := fmt.Sprintf("%s_internal", m.Props.NetworkName)
-		e.URLs[internalName] = []string{gethInternal}
+		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], gethLocal)
 		if e.Cfg.InsideK8s {
-			e.URLs[m.Props.NetworkName] = e.URLs[internalName]
+			e.URLs[m.Props.NetworkName] = []string{gethInternal}
 		}
 		log.Info().Str("Name", "Geth").Str("URLs", gethLocal).Msg("Geth network")
-	case External:
-		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkType], m.Props.WsURLs...)
+	} else {
+		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], m.Props.WsURLs...)
 		log.Info().Str("Name", m.Props.NetworkName).Strs("URLs", m.Props.WsURLs).Msg("Ethereum network")
 	}
 	return nil
@@ -87,8 +72,8 @@ func (m Chart) ExportData(e *environment.Environment) error {
 
 func defaultProps() *Props {
 	return &Props{
-		NetworkName: "geth",
-		NetworkType: Geth,
+		NetworkName: "Simulated Geth",
+		Simulated:   true,
 		Values: map[string]interface{}{
 			"replicas": "1",
 			"geth": map[string]interface{}{
@@ -112,16 +97,16 @@ func defaultProps() *Props {
 }
 
 func New(props *Props) environment.ConnectedChart {
-	if props == nil {
-		props = &Props{
-			NetworkType: Geth,
-		}
-	}
 	targetProps := defaultProps()
-	config.MustEnvCodeOverrideStruct("ETHEREUM", targetProps, props)
+	if props == nil {
+		props = targetProps
+	}
+	if err := mergo.MergeWithOverwrite(targetProps, props); err != nil {
+		log.Fatal().Err(err).Msg("Error merging ethereum props")
+	}
 	config.MustEnvCodeOverrideMap("ETHEREUM_VALUES", &targetProps.Values, props.Values)
-	switch targetProps.NetworkType {
-	case Geth:
+	targetProps.Simulated = props.Simulated // Mergo has issues with boolean merging for simulated networks
+	if targetProps.Simulated {
 		return Chart{
 			HelmProps: &HelmProps{
 				Name:   "geth",
@@ -130,12 +115,8 @@ func New(props *Props) environment.ConnectedChart {
 			},
 			Props: targetProps,
 		}
-	case External:
-		return Chart{
-			Props: targetProps,
-		}
-	default:
-		log.Fatal().Msg("unknown Ethereum network type")
-		return nil
+	}
+	return Chart{
+		Props: targetProps,
 	}
 }

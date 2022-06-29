@@ -1,7 +1,7 @@
 cmd/chaos
 bin/
 # temp manifest for deployment and validation
-tmp-manifest.yaml
+tmp-manifest-*.yaml
 # remote runner binary
 remote.test
 
