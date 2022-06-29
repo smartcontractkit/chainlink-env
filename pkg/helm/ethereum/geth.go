@@ -99,10 +99,16 @@ func defaultProps() *Props {
 func New(props *Props) environment.ConnectedChart {
 	targetProps := defaultProps()
 	if props == nil {
+<<<<<<< HEAD
 		props = targetProps
 	}
 	if err := mergo.MergeWithOverwrite(targetProps, props); err != nil {
 		log.Fatal().Err(err).Msg("Error merging ethereum props")
+=======
+		props = &Props{
+			NetworkType: Geth,
+		}
+>>>>>>> 719651160495ccd5da04957bd97ff748c0434a31
 	}
 	config.MustEnvCodeOverrideMap("ETHEREUM_VALUES", &targetProps.Values, props.Values)
 	targetProps.Simulated = props.Simulated // Mergo has issues with boolean merging for simulated networks
