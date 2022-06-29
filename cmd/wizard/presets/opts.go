@@ -1,8 +1,9 @@
 package presets
 
 import (
-	"github.com/smartcontractkit/chainlink-env/config"
 	"strings"
+
+	"github.com/smartcontractkit/chainlink-env/config"
 )
 
 type MultiNetworkOpts struct {
@@ -20,9 +21,9 @@ func (m *Networks) Decode(path string) error {
 }
 
 type Network struct {
-	Name     string   `envconfig:"name" yaml:"name"`
-	Type     string   `envconfig:"type" yaml:"type"`
-	HttpURLs []string `envconfig:"http_urls" yaml:"http_urls"`
-	WsURLs   []string `envconfig:"ws_urls" yaml:"ws_urls"`
-	ChainID  string   `envconfig:"chain_id" yaml:"chain_id"`
+	Name      string   `envconfig:"name" yaml:"name"`
+	Simulated bool     `envconfig:"simulated" yaml:"simulated"`
+	HttpURLs  []string `envconfig:"http_urls" yaml:"http_urls"`
+	WsURLs    []string `envconfig:"ws_urls" yaml:"ws_urls"`
+	ChainID   string   `envconfig:"chain_id" yaml:"chain_id"`
 }

@@ -56,7 +56,7 @@ func MultiNetwork(config *environment.Config, opts *MultiNetworkOpts) error {
 	for _, net := range opts.Networks {
 		e.AddHelm(ethereum.New(&ethereum.Props{
 			NetworkName: net.Name,
-			NetworkType: net.Type,
+			Simulated:   net.Simulated,
 			HttpURLs:    net.HttpURLs,
 			WsURLs:      net.WsURLs,
 		}))
@@ -115,7 +115,7 @@ func EVMSoak(config *environment.Config) error {
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethereum.New(&ethereum.Props{
-			NetworkType: ethereum.Geth,
+			Simulated: true,
 			Values: map[string]interface{}{
 				"resources": map[string]interface{}{
 					"requests": map[string]interface{}{

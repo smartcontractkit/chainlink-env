@@ -2,6 +2,7 @@ package chainlink
 
 import (
 	"fmt"
+
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
@@ -93,7 +94,7 @@ func defaultProps() map[string]interface{} {
 		"chainlink": map[string]interface{}{
 			"image": map[string]interface{}{
 				"image":   "public.ecr.aws/chainlink/chainlink",
-				"version": "1.4.1-root",
+				"version": "1.5.1-root",
 			},
 			"web_port": "6688",
 			"p2p_port": "8090",
