@@ -6,7 +6,7 @@ require (
 	github.com/aws/constructs-go/constructs/v10 v10.1.42
 	github.com/aws/jsii-runtime-go v1.61.0
 	github.com/c-bata/go-prompt v0.2.6
-	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.3.40
+	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.3.41
 	github.com/fatih/color v1.13.0
 	github.com/fatih/structs v1.1.0
 	github.com/google/uuid v1.3.0
