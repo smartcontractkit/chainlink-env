@@ -107,7 +107,7 @@ func (m *Environment) initApp(namespace string) {
 	m.Cfg.Labels = append(m.Cfg.Labels, "generatedBy=cdk8s")
 	m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("owner=%s", os.Getenv(config.EnvVarUser)))
 	if os.Getenv(config.EnvVarCLCommitSha) != "" {
-		m.Cfg.Labels = append(m.Cfg.Labels, os.Getenv(config.EnvVarCLCommitSha))
+		m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("commit=%s", os.Getenv(config.EnvVarCLCommitSha)))
 	}
 
 	m.Cfg.NSLabels, err = a.ConvertLabels(m.Cfg.Labels)

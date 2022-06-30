@@ -50,7 +50,7 @@ func ConvertLabels(labels []string) (*map[string]*string, error) {
 	for _, s := range labels {
 		a := strings.Split(s, "=")
 		if len(a) != 2 {
-			return nil, fmt.Errorf("invalid label '%s' provide, please provide labels in format key=value", a)
+			return nil, fmt.Errorf("invalid label '%s' provided, please provide labels in format key=value", a)
 		}
 		cdk8sLabels[a[0]] = Str(a[1])
 	}
