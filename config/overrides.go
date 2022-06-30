@@ -33,7 +33,7 @@ const (
 	EnvVarTestTriggerDescription = "How the test was triggered, either manual or CI."
 	EnvVarTestTriggerExample     = "CI"
 
-	EnvVarLogLevel            = "LOG_LEVEL"
+	EnvVarLogLevel            = "TEST_LOG_LEVEL"
 	EnvVarLogLevelDescription = "Environment logging level"
 	EnvVarLogLevelExample     = "info | debug | trace"
 
