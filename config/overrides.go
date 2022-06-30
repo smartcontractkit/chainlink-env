@@ -29,6 +29,10 @@ const (
 	EnvVarCLCommitShaDescription = "The sha of the commit that you're running tests on. Mostly used for CI"
 	EnvVarCLCommitShaExample     = "${{ github.sha }}"
 
+	EnvVarTestTrigger            = "TEST_TRIGGERED_BY"
+	EnvVarTestTriggerDescription = "How the test was triggered, either manual or CI."
+	EnvVarTestTriggerExample     = "CI"
+
 	EnvVarLogLevel            = "LOG_LEVEL"
 	EnvVarLogLevelDescription = "Environment logging level"
 	EnvVarLogLevelExample     = "info | debug | trace"

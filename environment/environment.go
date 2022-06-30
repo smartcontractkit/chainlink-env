@@ -106,8 +106,14 @@ func (m *Environment) initApp(namespace string) {
 	m.Cfg.Namespace = namespace
 	m.Cfg.Labels = append(m.Cfg.Labels, "generatedBy=cdk8s")
 	m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("owner=%s", os.Getenv(config.EnvVarUser)))
+
 	if os.Getenv(config.EnvVarCLCommitSha) != "" {
 		m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("commit=%s", os.Getenv(config.EnvVarCLCommitSha)))
+	}
+	if os.Getenv(config.EnvVarTestTrigger) != "" {
+		m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("triggered-by=%s", os.Getenv(config.EnvVarTestTrigger)))
+	} else { // Assume default is manual launch
+		m.Cfg.Labels = append(m.Cfg.Labels, "triggered-by=manual")
 	}
 
 	m.Cfg.NSLabels, err = a.ConvertLabels(m.Cfg.Labels)
