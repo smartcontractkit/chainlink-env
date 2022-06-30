@@ -1,14 +1,15 @@
 package alias
 
 import (
-	"errors"
+	"fmt"
+	"reflect"
+	"strings"
+	"time"
+
 	jsii "github.com/aws/jsii-runtime-go"
 	"github.com/fatih/structs"
 	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
-	"reflect"
-	"strings"
-	"time"
 )
 
 func Str(value string) *string {
@@ -49,7 +50,7 @@ func ConvertLabels(labels []string) (*map[string]*string, error) {
 	for _, s := range labels {
 		a := strings.Split(s, "=")
 		if len(a) != 2 {
-			return nil, errors.New("please provide labels in format key=value")
+			return nil, fmt.Errorf("invalid label '%s' provide, please provide labels in format key=value", a)
 		}
 		cdk8sLabels[a[0]] = Str(a[1])
 	}
