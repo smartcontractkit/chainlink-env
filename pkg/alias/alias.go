@@ -2,13 +2,10 @@ package alias
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 	"time"
 
 	jsii "github.com/aws/jsii-runtime-go"
-	"github.com/fatih/structs"
-	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
 )
 
@@ -30,19 +27,6 @@ func ShortDur(d time.Duration) *string {
 		s = s[:len(s)-2]
 	}
 	return Str(s)
-}
-
-// MustChartEnvVarsFromStruct parses typed configs into manifest env vars
-func MustChartEnvVarsFromStruct(prefix string, defaults interface{}, s interface{}) *[]*k8s.EnvVar {
-	config.MustEnvCodeOverrideStruct(prefix, defaults, s)
-	var e []*k8s.EnvVar
-	ma := structs.Map(defaults)
-	for k, v := range ma {
-		field, _ := reflect.TypeOf(defaults).Elem().FieldByName(k)
-		tag := field.Tag.Get("envconfig")
-		e = append(e, EnvVarStr(tag, v.(string)))
-	}
-	return &e
 }
 
 func ConvertLabels(labels []string) (*map[string]*string, error) {

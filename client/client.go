@@ -148,11 +148,10 @@ func isPodRunning(c kubernetes.Interface, podName, namespace string) wait.Condit
 		}
 		switch pod.Status.Phase {
 		case v1.PodRunning:
+		case v1.PodSucceeded:
 			return true, nil
 		case v1.PodFailed:
 			return false, errors.New("pod failed")
-		case v1.PodSucceeded:
-			return false, errors.New("pod succeeded, are we expecting a Job type")
 		}
 		return false, nil
 	}
