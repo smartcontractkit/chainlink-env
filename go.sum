@@ -88,8 +88,8 @@ github.com/bketelsen/crypt v0.0.4/go.mod h1:aI6NrJ0pMGgvZKL1iVgXLnfIFJtfV+bKCoqO
 github.com/blang/semver/v4 v4.0.0/go.mod h1:IbckMUScFkM3pff0VJDNKRiT6TG/YpiHIM2yvyW5YoQ=
 github.com/c-bata/go-prompt v0.2.6 h1:POP+nrHE+DfLYx370bedwNhsqmpCUynWPxuHi0C5vZI=
 github.com/c-bata/go-prompt v0.2.6/go.mod h1:/LMAke8wD2FsNu9EXNdHxNLbd9MedkPnCdfpU9wwHfY=
-github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.3.41 h1:eS/ohntbEOFGagaYwxjSMF50Qdk0/JO+LlWwn20p+wU=
-github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.3.41/go.mod h1:LgPDb0Qz4fGqI4JTqXUAumn+kggDfDIjm1mpyb4qvlA=
+github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.3.51 h1:acuupjKTXZ5+a8pIJTRkmlti5HAa+HrFs3dQceL8syI=
+github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.3.51/go.mod h1:LgPDb0Qz4fGqI4JTqXUAumn+kggDfDIjm1mpyb4qvlA=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/cespare/xxhash/v2 v2.1.1/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
