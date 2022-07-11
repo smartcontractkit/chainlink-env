@@ -22,13 +22,6 @@ const (
 	EnvTypeSolana5          = "solana-5-default"
 )
 
-type ResourcesMode int
-
-const (
-	MinimalLocalResourcesMode ResourcesMode = iota
-	SoakResourcesMode
-)
-
 func PGIsReadyCheck() *[]*string {
 	return &[]*string{
 		a.Str("pg_isready"),
