@@ -6,3 +6,4 @@ tmp-manifest-*.yaml
 remote.test
 
 .vscode/
+.idea

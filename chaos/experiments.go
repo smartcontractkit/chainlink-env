@@ -5,10 +5,12 @@ import (
 	networkChaos "github.com/smartcontractkit/chainlink-env/imports/k8s/networkchaos/chaosmeshorg"
 	podChaos "github.com/smartcontractkit/chainlink-env/imports/k8s/podchaos/chaosmeshorg"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
+	"strconv"
 )
 
 var (
 	FOREVER = a.Str("999h")
+	experimentNr = 0
 )
 
 type ManifestFunc func(namespace string, props *Props) (cdk8s.App, string, string)
@@ -47,7 +49,8 @@ func NewKillPods(namespace string, props *Props) (cdk8s.App, string, string) {
 
 func NewFailPods(namespace string, props *Props) (cdk8s.App, string, string) {
 	app, root := blankManifest(namespace)
-	c := podChaos.NewPodChaos(root, a.Str("experiment"), &podChaos.PodChaosProps{
+	experimentNr = experimentNr + 1
+	c := podChaos.NewPodChaos(root, a.Str("experiment" + strconv.Itoa(experimentNr)), &podChaos.PodChaosProps{
 		Spec: &podChaos.PodChaosSpec{
 			Action: podChaos.PodChaosSpecAction_POD_FAILURE,
 			Mode:   podChaos.PodChaosSpecMode_ALL,
