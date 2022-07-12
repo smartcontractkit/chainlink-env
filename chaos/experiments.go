@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	FOREVER = a.Str("999h")
+	FOREVER      = a.Str("999h")
 	experimentNr = 0
 )
 
@@ -34,7 +34,8 @@ func blankManifest(namespace string) (cdk8s.App, cdk8s.Chart) {
 
 func NewKillPods(namespace string, props *Props) (cdk8s.App, string, string) {
 	app, root := blankManifest(namespace)
-	c := podChaos.NewPodChaos(root, a.Str("experiment"), &podChaos.PodChaosProps{
+	experimentNr = experimentNr + 1
+	c := podChaos.NewPodChaos(root, a.Str("experiment-"+strconv.Itoa(experimentNr)), &podChaos.PodChaosProps{
 		Spec: &podChaos.PodChaosSpec{
 			Action: podChaos.PodChaosSpecAction_POD_KILL,
 			Mode:   podChaos.PodChaosSpecMode_ALL,
@@ -50,7 +51,7 @@ func NewKillPods(namespace string, props *Props) (cdk8s.App, string, string) {
 func NewFailPods(namespace string, props *Props) (cdk8s.App, string, string) {
 	app, root := blankManifest(namespace)
 	experimentNr = experimentNr + 1
-	c := podChaos.NewPodChaos(root, a.Str("experiment" + strconv.Itoa(experimentNr)), &podChaos.PodChaosProps{
+	c := podChaos.NewPodChaos(root, a.Str("experiment-"+strconv.Itoa(experimentNr)), &podChaos.PodChaosProps{
 		Spec: &podChaos.PodChaosSpec{
 			Action: podChaos.PodChaosSpecAction_POD_FAILURE,
 			Mode:   podChaos.PodChaosSpecMode_ALL,
@@ -65,7 +66,8 @@ func NewFailPods(namespace string, props *Props) (cdk8s.App, string, string) {
 
 func NewFailContainers(namespace string, props *Props) (cdk8s.App, string, string) {
 	app, root := blankManifest(namespace)
-	c := podChaos.NewPodChaos(root, a.Str("experiment"), &podChaos.PodChaosProps{
+	experimentNr = experimentNr + 1
+	c := podChaos.NewPodChaos(root, a.Str("experiment-"+strconv.Itoa(experimentNr)), &podChaos.PodChaosProps{
 		Spec: &podChaos.PodChaosSpec{
 			Action: podChaos.PodChaosSpecAction_POD_KILL,
 			Mode:   podChaos.PodChaosSpecMode_ALL,
@@ -81,7 +83,8 @@ func NewFailContainers(namespace string, props *Props) (cdk8s.App, string, strin
 
 func NewContainerKill(namespace string, props *Props) (cdk8s.App, string, string) {
 	app, root := blankManifest(namespace)
-	c := podChaos.NewPodChaos(root, a.Str("experiment"), &podChaos.PodChaosProps{
+	experimentNr = experimentNr + 1
+	c := podChaos.NewPodChaos(root, a.Str("experiment-"+strconv.Itoa(experimentNr)), &podChaos.PodChaosProps{
 		Spec: &podChaos.PodChaosSpec{
 			Action: podChaos.PodChaosSpecAction_POD_KILL,
 			Mode:   podChaos.PodChaosSpecMode_ALL,
@@ -96,7 +99,8 @@ func NewContainerKill(namespace string, props *Props) (cdk8s.App, string, string
 
 func NewNetworkPartition(namespace string, props *Props) (cdk8s.App, string, string) {
 	app, root := blankManifest(namespace)
-	c := networkChaos.NewNetworkChaos(root, a.Str("experiment"), &networkChaos.NetworkChaosProps{
+	experimentNr = experimentNr + 1
+	c := networkChaos.NewNetworkChaos(root, a.Str("experiment-"+strconv.Itoa(experimentNr)), &networkChaos.NetworkChaosProps{
 		Spec: &networkChaos.NetworkChaosSpec{
 			Action: networkChaos.NetworkChaosSpecAction_PARTITION,
 			Mode:   networkChaos.NetworkChaosSpecMode_ALL,
