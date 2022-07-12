@@ -205,6 +205,9 @@ func (m *K8sClient) WaitContainersReady(ns string, rcd *ReadyCheckData) error {
 			log.Debug().Interface("Pods", podNames(podList)).Msg("Waiting for pods readiness probes")
 			allReady := true
 			for _, pod := range podList.Items {
+				if pod.Status.Phase == "Succeeded" {
+					continue
+				}
 				for _, c := range pod.Status.ContainerStatuses {
 					if !c.Ready {
 						log.Debug().
