@@ -54,6 +54,9 @@ func (m *Forwarder) forwardPodPorts(pod v1.Pod, namespaceName string) error {
 		Msg("Attempting to forward ports")
 
 	portRules := m.portRulesForPod(pod)
+	if len(portRules) == 0 {
+		return nil
+	}
 	forwarder, err := portforward.New(dialer, portRules, stopChan, readyChan, out, errOut)
 	if err != nil {
 		return err
