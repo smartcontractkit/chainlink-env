@@ -176,7 +176,8 @@ func (m *Environment) Run() error {
 		manifest := m.App.SynthYaml().(string)
 		if err := m.Deploy(manifest); err != nil {
 			log.Error().Err(err).Msg("Error deploying environment")
-			return m.Shutdown()
+			_ = m.Shutdown()
+			return err
 		}
 	} else {
 		log.Info().Str("Namespace", ns).Msg("Namespace found")
