@@ -2,6 +2,7 @@ package environment
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"os/signal"
 	"syscall"
@@ -163,6 +164,30 @@ func (m *Environment) PrintURLs() error {
 	}
 	log.Debug().Interface("URLs", m.URLs).Msg("Connection URLs")
 	return nil
+}
+
+// ResourcesSummary returns resources summary for selected pods as a map, used in reports
+func (m *Environment) ResourcesSummary(selector string) (map[string]map[string]string, error) {
+	pl, err := m.Client.ListPods(m.Cfg.Namespace, selector)
+	if err != nil {
+		return nil, err
+	}
+	if len(pl.Items) == 0 {
+		return nil, errors.Errorf("no pods found for selector: %s", selector)
+	}
+	resources := make(map[string]map[string]string)
+	for _, p := range pl.Items {
+		for _, c := range p.Spec.Containers {
+			if resources[c.Name] == nil {
+				resources[c.Name] = make(map[string]string)
+			}
+			cpuRes := c.Resources.Requests["cpu"]
+			resources[c.Name]["cpu"] = cpuRes.String()
+			memRes := c.Resources.Requests["memory"]
+			resources[c.Name]["memory"] = memRes.String()
+		}
+	}
+	return resources, nil
 }
 
 func (m *Environment) Clear() {
