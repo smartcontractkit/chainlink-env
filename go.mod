@@ -8,7 +8,6 @@ require (
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.3.41
 	github.com/fatih/color v1.13.0
-	github.com/fatih/structs v1.1.0
 	github.com/google/uuid v1.3.0
 	github.com/imdario/mergo v0.3.13
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -17,11 +16,11 @@ require (
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.24.2
-	k8s.io/apimachinery v0.24.2
-	k8s.io/cli-runtime v0.24.2
-	k8s.io/client-go v0.24.2
-	k8s.io/kubectl v0.24.2
+	k8s.io/api v0.24.3
+	k8s.io/apimachinery v0.24.3
+	k8s.io/cli-runtime v0.24.3
+	k8s.io/client-go v0.24.3
+	k8s.io/kubectl v0.24.3
 )
 
 require (
@@ -91,7 +90,7 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/component-base v0.24.2 // indirect
+	k8s.io/component-base v0.24.3 // indirect
 	k8s.io/klog/v2 v2.60.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220328201542-3ee0da9b0b42 // indirect
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
