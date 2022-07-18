@@ -1,7 +1,0 @@
-- name: fileName
-  type: fileType
-  http_urls:
-    - "fileURL1"
-  ws_urls:
-    - "fileURL2"
-  chain_id: 337
