@@ -25,11 +25,19 @@ var (
 
 // ConnectedChart interface to interact both with cdk8s apps and helm charts
 type ConnectedChart interface {
+	// IsDeploymentNeeded
+	// true - we deploy/connect and expose environment data
+	// false - we are using external environment, but still exposing data
 	IsDeploymentNeeded() bool
+	// GetName name of the deployed part
 	GetName() string
+	// GetPath get Helm chart path, repo or local path
 	GetPath() string
+	// GetProps get code props if it's typed environment
 	GetProps() interface{}
+	// GetValues get values.yml props as map, if it's Helm
 	GetValues() *map[string]interface{}
+	// ExportData export deployment part data in the env
 	ExportData(e *Environment) error
 }
 
@@ -263,7 +271,7 @@ func (m *Environment) Deploy(manifest string) error {
 		}
 		return nil
 	}
-	if err := m.Client.Create(manifest); err != nil {
+	if err := m.Client.Apply(manifest); err != nil {
 		return err
 	}
 	if err := m.enumerateApps(); err != nil {
