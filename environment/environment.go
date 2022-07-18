@@ -174,6 +174,18 @@ func (m *Environment) PrintURLs() error {
 	return nil
 }
 
+// DumpLogs dumps all logs into a file
+func (m *Environment) DumpLogs(path string) error {
+	arts, err := NewArtifacts(m.Client, m.Cfg.Namespace)
+	if err != nil {
+		return err
+	}
+	if path == "" {
+		path = fmt.Sprintf("logs/%s-%d", m.Cfg.Namespace, time.Now().Unix())
+	}
+	return arts.DumpTestResult(path, "chainlink")
+}
+
 // ResourcesSummary returns resources summary for selected pods as a map, used in reports
 func (m *Environment) ResourcesSummary(selector string) (map[string]map[string]string, error) {
 	pl, err := m.Client.ListPods(m.Cfg.Namespace, selector)

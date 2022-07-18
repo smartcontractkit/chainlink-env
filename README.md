@@ -11,10 +11,6 @@ Set up deps, you need to have [yarn](https://classic.yarnpkg.com/lang/en/docs/in
 ```shell
 make install_deps
 ```
-Install CLI wizard
-```
-make install
-```
 
 ### Usage
 Run 
@@ -32,10 +28,10 @@ go run examples/simple/env.go
 ```
 If you have another env of that type, you can connect by overriding environment name
 ```
-ENV_NAMESPACE="..."  go run examples/chainlink/enc.go
+ENV_NAMESPACE="..."  go run examples/chainlink/env.go
 ```
 
-Add more CLI presets [here](./cmd/wizard/presets)
+Add more presets [here](./presets)
 
 Add more programmatic examples [here](./examples/)
 

@@ -1,7 +1,6 @@
 package presets
 
 import (
-	cfg "github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg/cdk8s/blockscout"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
@@ -12,18 +11,17 @@ import (
 )
 
 // EVMOneNode local development Chainlink deployment
-func EVMOneNode(config *environment.Config) error {
+func EVMOneNode(config *environment.Config) *environment.Environment {
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, nil)).
-		Run()
+		AddHelm(chainlink.New(0, nil))
 }
 
 // EVMMinimalLocalBS local development Chainlink deployment,
 // 1 bootstrap + 4 oracles (minimal requirements for OCR) + Blockscout
-func EVMMinimalLocalBS(config *environment.Config) error {
+func EVMMinimalLocalBS(config *environment.Config) *environment.Environment {
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
@@ -31,50 +29,23 @@ func EVMMinimalLocalBS(config *environment.Config) error {
 		AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 5,
-		})).
-		Run()
+		}))
 }
 
 // EVMMinimalLocal local development Chainlink deployment,
 // 1 bootstrap + 4 oracles (minimal requirements for OCR)
-func EVMMinimalLocal(config *environment.Config) error {
+func EVMMinimalLocal(config *environment.Config) *environment.Environment {
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 5,
-		})).
-		Run()
-}
-
-// MultiNetwork local development Chainlink deployment for multiple networks
-func MultiNetwork(config *environment.Config, opts *MultiNetworkOpts) error {
-	cfg.MustEnvOverrideStruct("", opts)
-	e := environment.New(config)
-	e.AddHelm(mockservercfg.New(nil)).AddHelm(mockserver.New(nil))
-	for _, net := range opts.Networks {
-		e.AddHelm(ethereum.New(&ethereum.Props{
-			NetworkName: net.Name,
-			Simulated:   net.Simulated,
-			HttpURLs:    net.HttpURLs,
-			WsURLs:      net.WsURLs,
 		}))
-	}
-	// TODO: make proper configuration for all networks after config refactoring,
-	// TODO: configuration for 1+ networks will change soon to TOML
-	clVars := map[string]interface{}{
-		"env": map[string]interface{}{
-			"eth_http_url": opts.Networks[0].HttpURLs[0],
-			"eth_url":      opts.Networks[0].WsURLs[0],
-			"eth_chain_id": opts.Networks[0].ChainID,
-		},
-	}
-	return e.AddHelm(chainlink.New(0, clVars)).Run()
 }
 
 // EVMReorg deployment for two Ethereum networks re-org test
-func EVMReorg(config *environment.Config) error {
+func EVMReorg(config *environment.Config) *environment.Environment {
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
@@ -105,12 +76,11 @@ func EVMReorg(config *environment.Config) error {
 			"env": map[string]interface{}{
 				"eth_url": "ws://geth-reorg-ethereum-geth:8546",
 			},
-		})).
-		Run()
+		}))
 }
 
 // EVMSoak deployment for a long running soak tests
-func EVMSoak(config *environment.Config) error {
+func EVMSoak(config *environment.Config) *environment.Environment {
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
@@ -157,6 +127,5 @@ func EVMSoak(config *environment.Config) error {
 					},
 				},
 			},
-		})).
-		Run()
+		}))
 }
