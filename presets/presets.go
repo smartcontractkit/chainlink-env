@@ -23,9 +23,9 @@ func EVMOneNode(config *environment.Config) *environment.Environment {
 // 1 bootstrap + 4 oracles (minimal requirements for OCR) + Blockscout
 func EVMMinimalLocalBS(config *environment.Config) *environment.Environment {
 	return environment.New(config).
+		AddChart(blockscout.New(&blockscout.Props{})).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
-		AddChart(blockscout.New(&blockscout.Props{})).
 		AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 5,

@@ -1,7 +1,6 @@
 package ethereum
 
 import (
-	"github.com/imdario/mergo"
 	"github.com/rs/zerolog/log"
 
 	"github.com/smartcontractkit/chainlink-env/client"
@@ -101,10 +100,8 @@ func New(props *Props) environment.ConnectedChart {
 	if props == nil {
 		props = targetProps
 	}
-	if err := mergo.MergeWithOverwrite(targetProps, props); err != nil {
-		log.Fatal().Err(err).Msg("Error merging ethereum props")
-	}
-	config.MustEnvCodeOverrideMap("ETHEREUM_VALUES", &targetProps.Values, props.Values)
+	config.MustMerge(targetProps, props)
+	config.MustMerge(&targetProps.Values, props.Values)
 	targetProps.Simulated = props.Simulated // Mergo has issues with boolean merging for simulated networks
 	if targetProps.Simulated {
 		return Chart{

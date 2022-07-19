@@ -96,7 +96,7 @@ func defaultProps() map[string]interface{} {
 
 func New(props map[string]interface{}) environment.ConnectedChart {
 	dp := defaultProps()
-	config.MustEnvCodeOverrideMap("GETH_VALUES", &dp, props)
+	config.MustMerge(&dp, props)
 	return Chart{
 		Name:   "mockserver",
 		Path:   "chainlink-qa/mockserver",

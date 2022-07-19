@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"time"
-
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg"
 	"github.com/smartcontractkit/chainlink-env/pkg/cdk8s/blockscout"
@@ -26,12 +24,15 @@ func main() {
 		panic(err)
 	}
 	// do some other stuff with deployed charts
-	time.Sleep(5 * time.Second)
+
+	// deploy another part
 	err = e.
 		AddChart(blockscout.New(&blockscout.Props{})). // you can also add cdk8s charts if you like Go code
 		AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, nil)).
 		Run()
+	// nolint
+	defer e.Shutdown()
 	if err != nil {
 		panic(err)
 	}

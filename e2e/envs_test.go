@@ -5,8 +5,11 @@ import (
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
+	"github.com/smartcontractkit/chainlink-env/pkg/helm/remotetestrunner"
 	"github.com/smartcontractkit/chainlink-env/presets"
 	"github.com/stretchr/testify/require"
+	"os"
+	"path"
 	"testing"
 )
 
@@ -22,26 +25,28 @@ var (
 	}
 )
 
-//func TestLogs(t *testing.T) {
-//	e := presets.EVMMinimalLocal(testEnvConfig)
-//	err := e.Run()
-//	// nolint
-//	defer e.Shutdown()
-//	require.NoError(t, err)
-//	logDir := "logs/mytest"
-//	err = e.DumpLogs(logDir)
-//	require.NoError(t, err)
-//	clDir := "chainlink-0_0"
-//	_, err = os.Stat(path.Join(logDir, clDir))
-//	require.NoError(t, err)
-//	fi, err := os.Stat(path.Join(logDir, clDir, "node.log"))
-//	require.NoError(t, err)
-//	require.Greaterf(t, fi.Size(), int64(0), "file is empty")
-//	_, err = os.Stat(path.Join(logDir, "geth_0"))
-//	require.NoError(t, err)
-//	_, err = os.Stat(path.Join(logDir, "mockserver_0"))
-//	require.NoError(t, err)
-//}
+// TODO: GHA have some problems with filepaths, using afero will add another param for the filesystem
+func TestLogs(t *testing.T) {
+	t.Skip("problems with GHA and afero")
+	e := presets.EVMMinimalLocal(testEnvConfig)
+	err := e.Run()
+	// nolint
+	defer e.Shutdown()
+	require.NoError(t, err)
+	logDir := "./logs/mytest"
+	err = e.DumpLogs(logDir)
+	require.NoError(t, err)
+	clDir := "chainlink-0_0"
+	_, err = os.Stat(path.Join(logDir, clDir))
+	require.NoError(t, err)
+	fi, err := os.Stat(path.Join(logDir, clDir, "node.log"))
+	require.NoError(t, err)
+	require.Greaterf(t, fi.Size(), int64(0), "file is empty")
+	_, err = os.Stat(path.Join(logDir, "geth_0"))
+	require.NoError(t, err)
+	_, err = os.Stat(path.Join(logDir, "mockserver_0"))
+	require.NoError(t, err)
+}
 
 func TestSimpleEnv(t *testing.T) {
 	t.Run("test 5 nodes soak environment with PVCs", func(t *testing.T) {
@@ -84,6 +89,32 @@ func TestSimpleEnv(t *testing.T) {
 			AddHelm(ethereum.New(nil)).
 			AddHelm(chainlink.New(0, nil)).
 			AddHelm(chainlink.New(1, nil))
+		err := e.Run()
+		// nolint
+		defer e.Shutdown()
+		require.NoError(t, err)
+	})
+	t.Run("test remote runner", func(t *testing.T) {
+		e := environment.New(testEnvConfig).
+			AddHelm(ethereum.New(nil)).
+			AddHelm(chainlink.New(0, nil)).
+			AddHelm(remotetestrunner.New(map[string]interface{}{
+				"remote_test_runner": map[string]interface{}{
+					"test_name":        "@soak-ocr",
+					"remote_test_size": 0,
+					"access_port":      8080,
+				},
+				"resources": map[string]interface{}{
+					"requests": map[string]interface{}{
+						"cpu":    "500m",
+						"memory": "512Mi",
+					},
+					"limits": map[string]interface{}{
+						"cpu":    "500m",
+						"memory": "512Mi",
+					},
+				},
+			}))
 		err := e.Run()
 		// nolint
 		defer e.Shutdown()

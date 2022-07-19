@@ -115,8 +115,8 @@ func defaultProps() *Props {
 
 func New(props *Props) environment.ConnectedChart {
 	targetProps := defaultProps()
-	config.MustEnvCodeOverrideStruct("ETHEREUM", targetProps, props)
-	config.MustEnvCodeOverrideMap("ETHEREUM_VALUES", &targetProps.Values, props.Values)
+	config.MustMerge(targetProps, props)
+	config.MustMerge(&targetProps.Values, props.Values)
 	return Chart{
 		Name:   targetProps.NetworkName,
 		Path:   "chainlink-qa/ethereum",

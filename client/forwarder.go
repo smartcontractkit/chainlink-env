@@ -136,7 +136,7 @@ func (m *Forwarder) Connect(namespaceName string, selector string, insideK8s boo
 	if err != nil {
 		return err
 	}
-	eg := errgroup.Group{}
+	eg := &errgroup.Group{}
 	for _, p := range pods.Items {
 		p := p
 		if insideK8s {

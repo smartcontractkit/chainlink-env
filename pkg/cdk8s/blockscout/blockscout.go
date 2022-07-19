@@ -53,21 +53,22 @@ func (m Chart) ExportData(e *environment.Environment) error {
 func New(props *Props) func(root cdk8s.Chart) environment.ConnectedChart {
 	return func(root cdk8s.Chart) environment.ConnectedChart {
 		dp := defaultProps()
-		config.MustEnvCodeOverrideStruct("BLOCKSCOUT", dp, props)
-		s := vars{
+		config.MustMerge(dp, props)
+		c := &Chart{
+			Props: dp,
+		}
+		vars := vars{
 			Labels: &map[string]*string{
-				"app": a.Str("blockscout"),
+				"app": a.Str(c.GetName()),
 			},
-			ConfigMapName: "blockscout-cm",
-			BaseName:      "blockscout",
+			ConfigMapName: fmt.Sprintf("%s-cm", c.GetName()),
+			BaseName:      c.GetName(),
 			Port:          4000,
 			Props:         dp,
 		}
-		service(root, s)
-		deployment(root, s)
-		return &Chart{
-			Props: dp,
-		}
+		service(root, vars)
+		deployment(root, vars)
+		return c
 	}
 }
 

@@ -86,7 +86,7 @@ func New(cfg *Config) *Environment {
 		cfg = &Config{}
 	}
 	targetCfg := defaultEnvConfig()
-	config.MustEnvCodeOverrideStruct("ENV_CONFIG", targetCfg, cfg)
+	config.MustMerge(targetCfg, cfg)
 	c := client.NewK8sClient()
 	e := &Environment{
 		URLs:   make(map[string][]string),
@@ -136,8 +136,42 @@ func (m *Environment) initApp(namespace string) {
 	})
 }
 
+// AddChart adds a chart to the deployment
 func (m *Environment) AddChart(f func(root cdk8s.Chart) ConnectedChart) *Environment {
 	m.Charts = append(m.Charts, f(m.root))
+	return m
+}
+
+func (m *Environment) removeChart(name string) {
+	for i, c := range m.Charts {
+		if c.GetName() == name {
+			m.Charts = append(m.Charts[:i], m.Charts[i+1:]...)
+		}
+	}
+	m.root.Node().TryRemoveChild(a.Str(name))
+}
+
+// ModifyHelm modifies helm chart in deployment
+func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment {
+	m.removeChart(name)
+	if chart.IsDeploymentNeeded() {
+		log.Trace().
+			Str("Chart", chart.GetName()).
+			Str("Path", chart.GetPath()).
+			Interface("Props", chart.GetProps()).
+			Interface("Values", chart.GetValues()).
+			Msg("Chart deployment values")
+		cdk8s.NewHelm(m.root, a.Str(name), &cdk8s.HelmProps{
+			Chart: a.Str(chart.GetPath()),
+			HelmFlags: &[]*string{
+				a.Str("--namespace"),
+				a.Str(m.Cfg.Namespace),
+			},
+			ReleaseName: a.Str(name),
+			Values:      chart.GetValues(),
+		})
+	}
+	m.Charts = append(m.Charts, chart)
 	return m
 }
 
@@ -163,7 +197,8 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	return m
 }
 
-func (m *Environment) PrintURLs() error {
+// PrintExportData prints export data
+func (m *Environment) PrintExportData() error {
 	for _, c := range m.Charts {
 		err := c.ExportData(m)
 		if err != nil {
@@ -210,7 +245,9 @@ func (m *Environment) ResourcesSummary(selector string) (map[string]map[string]s
 	return resources, nil
 }
 
-func (m *Environment) Clear() {
+// ClearCharts recreates cdk8s app
+func (m *Environment) ClearCharts() {
+	m.Charts = make([]ConnectedChart, 0)
 	m.initApp(m.Cfg.Namespace)
 }
 
@@ -236,7 +273,7 @@ func (m *Environment) Run() error {
 		return err
 	}
 	log.Debug().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
-	if err := m.PrintURLs(); err != nil {
+	if err := m.PrintExportData(); err != nil {
 		return err
 	}
 	arts, err := NewArtifacts(m.Client, m.Cfg.Namespace)
@@ -244,7 +281,6 @@ func (m *Environment) Run() error {
 		log.Fatal().Err(err).Msg("failed to create artifacts client")
 	}
 	m.Artifacts = arts
-	m.Clear()
 	if m.Cfg.KeepConnection {
 		log.Info().Msg("Keeping forwarder connections, press Ctrl+C to interrupt")
 		if m.Cfg.RemoveOnInterrupt {
