@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	// Multiple environments of the same type
+	// Multiple environments of the same type/chart
 	err := environment.New(&environment.Config{
 		Labels:            []string{fmt.Sprintf("envType=%s", pkg.EnvTypeEVM5)},
 		KeepConnection:    true,

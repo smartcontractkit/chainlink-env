@@ -41,17 +41,31 @@ type ConnectedChart interface {
 	ExportData(e *Environment) error
 }
 
-// Config environment configuration
+// Config is an environment common configuration, labels, annotations, connection types, readiness check, etc.
 type Config struct {
-	TTL               time.Duration
-	NamespacePrefix   string
-	Namespace         string
-	Labels            []string
-	NSLabels          *map[string]*string
-	ReadyCheckData    *client.ReadyCheckData
-	DryRun            bool
-	InsideK8s         bool
-	KeepConnection    bool
+	// TTL is time to live for the environment, used with kube-janitor
+	TTL time.Duration
+	// NamespacePrefix is a static namespace prefix
+	NamespacePrefix string
+	// Namespace is full namespace name
+	Namespace string
+	// Labels is a set of labels applied to the namespace in a format of "key=value"
+	Labels   []string
+	nsLabels *map[string]*string
+	// ReadyCheckData is settings for readiness probes checks for all deployment components
+	// checking that all pods are ready by default with 4 minutes timeout
+	//	&client.ReadyCheckData{
+	//		ReadinessProbeCheckSelector: "",
+	//		Timeout:                     4 * time.Minute,
+	//	}
+	ReadyCheckData *client.ReadyCheckData
+	// DryRun if true, app will just generate a manifest in local dir
+	DryRun bool
+	// InsideK8s used for long-running soak tests where you connect to env from the inside
+	InsideK8s bool
+	// KeepConnection keeps connection until interrupted with a signal, useful when prototyping and debugging a new env
+	KeepConnection bool
+	// RemoveOnInterrupt automatically removes an environment on interrupt
 	RemoveOnInterrupt bool
 }
 
@@ -99,7 +113,7 @@ func New(cfg *Config) *Environment {
 	k8s.NewKubeNamespace(e.root, a.Str("namespace"), &k8s.KubeNamespaceProps{
 		Metadata: &k8s.ObjectMeta{
 			Name:        a.Str(e.Cfg.Namespace),
-			Labels:      e.Cfg.NSLabels,
+			Labels:      e.Cfg.nsLabels,
 			Annotations: &defaultAnnotations,
 		},
 	})
@@ -125,13 +139,13 @@ func (m *Environment) initApp(namespace string) {
 		m.Cfg.Labels = append(m.Cfg.Labels, "triggered-by=manual")
 	}
 
-	m.Cfg.NSLabels, err = a.ConvertLabels(m.Cfg.Labels)
+	m.Cfg.nsLabels, err = a.ConvertLabels(m.Cfg.Labels)
 	if err != nil {
 		log.Fatal().Err(err).Send()
 	}
 	defaultAnnotations[pkg.TTLLabelKey] = a.ShortDur(m.Cfg.TTL)
 	m.root = cdk8s.NewChart(m.App, a.Str("root-chart"), &cdk8s.ChartProps{
-		Labels:    m.Cfg.NSLabels,
+		Labels:    m.Cfg.nsLabels,
 		Namespace: a.Str(m.Cfg.Namespace),
 	})
 }
@@ -253,7 +267,7 @@ func (m *Environment) ClearCharts() {
 
 // Run deploys or connects to already created environment
 func (m *Environment) Run() error {
-	ns := os.Getenv("ENV_NAMESPACE")
+	ns := os.Getenv(config.EnvVarNamespace)
 	if !m.Client.NamespaceExists(ns) {
 		manifest := m.App.SynthYaml().(string)
 		if err := m.Deploy(manifest); err != nil {

@@ -7,7 +7,6 @@ import (
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/mockserver"
 	mockservercfg "github.com/smartcontractkit/chainlink-env/pkg/helm/mockserver-cfg"
-	"time"
 )
 
 func main() {
@@ -25,14 +24,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	e.Cfg.KeepConnection = true
+	e.Cfg.RemoveOnInterrupt = true
 	err = e.
 		ModifyHelm("chainlink-0", chainlink.New(0, map[string]interface{}{
 			"replicas": 2,
 		})).Run()
-	// nolint
-	defer e.Shutdown()
 	if err != nil {
 		panic(err)
 	}
-	time.Sleep(3 * time.Minute)
 }

@@ -7,6 +7,10 @@ import (
 )
 
 const (
+	EnvVarNamespace            = "ENV_NAMESPACE"
+	EnvVarNamespaceDescription = "Namespace name to connect to"
+	EnvVarNamespaceExample     = "chainlink-test-epic"
+
 	EnvVarCLImage            = "CHAINLINK_IMAGE"
 	EnvVarCLImageDescription = "Chainlink image repository"
 	EnvVarCLImageExample     = "public.ecr.aws/chainlink/chainlink"
