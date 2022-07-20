@@ -340,7 +340,7 @@ func (m *K8sClient) CopyToPod(namespace, src, destination, containername string)
 		return nil, nil, nil, fmt.Errorf("destination string improperly formatted, see reference 'NAMESPACE/POD_NAME:folder/FILE_NAME'")
 	}
 
-	log.Debug().
+	log.Info().
 		Str("Namespace", namespace).
 		Str("Source", src).
 		Str("Destination", destination).
@@ -356,6 +356,7 @@ func (m *K8sClient) CopyToPod(namespace, src, destination, containername string)
 
 // ExecuteInPod is similar to kubectl exec
 func (m *K8sClient) ExecuteInPod(namespace, podName, containerName string, command []string) ([]byte, []byte, error) {
+	log.Info().Interface("Command", command).Msg("Executing command in pod")
 	req := m.ClientSet.CoreV1().RESTClient().Post().
 		Resource("pods").
 		Name(podName).

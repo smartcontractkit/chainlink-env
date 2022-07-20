@@ -6,7 +6,6 @@ import (
 	"github.com/smartcontractkit/chainlink-env/pkg/cdk8s/blockscout"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
-	"time"
 )
 
 func main() {
@@ -36,10 +35,7 @@ func main() {
 			"replicas": 1,
 		})).
 		Run()
-	// nolint
-	defer e.Shutdown()
 	if err != nil {
 		panic(err)
 	}
-	time.Sleep(5 * time.Minute)
 }
