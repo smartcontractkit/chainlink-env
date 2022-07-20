@@ -80,7 +80,7 @@ func defaultProps() map[string]interface{} {
 
 func New(props map[string]interface{}) environment.ConnectedChart {
 	dp := defaultProps()
-	config.MustEnvCodeOverrideMap("REMOTE_TEST_RUNNER_VALUES", &dp, props)
+	config.MustMerge(&dp, props)
 	return Chart{
 		Name:   "remote-test-runner",
 		Path:   "chainlink-qa/remote-test-runner",

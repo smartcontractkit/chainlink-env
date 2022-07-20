@@ -1,4 +1,4 @@
-package blockscout
+package deployment_part_cdk8s
 
 import (
 	"fmt"

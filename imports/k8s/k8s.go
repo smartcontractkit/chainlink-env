@@ -696,7 +696,7 @@ type CsiDriverSpec struct {
 	//
 	// This field is immutable.
 	//
-	// Defaults to ReadWriteOnceWithFSType, which will examine each volume to determine if Kubernetes should modify ownership and permissions of the volume. With the default policy the defined fsGroup will only be applied if a fstype is defined and the volume's access mode contains ReadWriteOnce.
+	// Defaults to ReadWriteOnceWithFSType, which will examine each volume to determine if Kubernetes should modify_helm ownership and permissions of the volume. With the default policy the defined fsGroup will only be applied if a fstype is defined and the volume's access mode contains ReadWriteOnce.
 	FsGroupPolicy *string `field:"optional" json:"fsGroupPolicy" yaml:"fsGroupPolicy"`
 	// If set to true, podInfoOnMount indicates this CSI volume driver requires additional pod information (like podName, podUID, etc.) during mount operations. If set to false, pod information will not be passed on mount. Default is false. The CSI driver specifies podInfoOnMount as part of driver deployment. If true, Kubelet will pass pod information as VolumeContext in the CSI NodePublishVolume() calls. The CSI driver is responsible for parsing and validating the information passed in as VolumeContext. The following VolumeConext will be passed if podInfoOnMount is set to true. This list might grow, but the prefix will be used. "csi.storage.k8s.io/pod.name": pod.Name "csi.storage.k8s.io/pod.namespace": pod.Namespace "csi.storage.k8s.io/pod.uid": string(pod.UID) "csi.storage.k8s.io/ephemeral": "true" if the volume is an ephemeral inline volume defined by a CSIVolumeSource, otherwise "false".
 	//
@@ -43046,7 +43046,7 @@ type ObjectMetricSourceV2Beta2 struct {
 	Target *MetricTargetV2Beta2 `field:"required" json:"target" yaml:"target"`
 }
 
-// ObjectReference contains enough information to let you inspect or modify the referred object.
+// ObjectReference contains enough information to let you inspect or modify_helm the referred object.
 type ObjectReference struct {
 	// API version of the referent.
 	ApiVersion *string `field:"optional" json:"apiVersion" yaml:"apiVersion"`
@@ -43390,7 +43390,7 @@ type PodSecurityContext struct {
 	//
 	// 1. The owning GID will be the FSGroup 2. The setgid bit is set (new files created in the volume will be owned by FSGroup) 3. The permission bits are OR'd with rw-rw----
 	//
-	// If unset, the Kubelet will not modify the ownership and permissions of any volume.
+	// If unset, the Kubelet will not modify_helm the ownership and permissions of any volume.
 	FsGroup *float64 `field:"optional" json:"fsGroup" yaml:"fsGroup"`
 	// fsGroupChangePolicy defines behavior of changing ownership and permission of the volume before being exposed inside Pod.
 	//
@@ -44725,7 +44725,7 @@ type ServiceSpec struct {
 	PublishNotReadyAddresses *bool `field:"optional" json:"publishNotReadyAddresses" yaml:"publishNotReadyAddresses"`
 	// Route service traffic to pods with label keys and values matching this selector.
 	//
-	// If empty or not present, the service is assumed to have an external process managing its endpoints, which Kubernetes will not modify. Only applies to types ClusterIP, NodePort, and LoadBalancer. Ignored if type is ExternalName. More info: https://kubernetes.io/docs/concepts/services-networking/service/
+	// If empty or not present, the service is assumed to have an external process managing its endpoints, which Kubernetes will not modify_helm. Only applies to types ClusterIP, NodePort, and LoadBalancer. Ignored if type is ExternalName. More info: https://kubernetes.io/docs/concepts/services-networking/service/
 	Selector *map[string]*string `field:"optional" json:"selector" yaml:"selector"`
 	// Supports "ClientIP" and "None".
 	//

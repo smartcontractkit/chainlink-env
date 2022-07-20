@@ -129,7 +129,7 @@ func defaultProps() map[string]interface{} {
 func New(index int, props map[string]interface{}) environment.ConnectedChart {
 	dp := defaultProps()
 	config.MustEnvOverrideVersion(&dp)
-	config.MustEnvCodeOverrideMap("CL_VALUES", &dp, props)
+	config.MustMerge(&dp, props)
 	return Chart{
 		Index:  index,
 		Name:   fmt.Sprintf("%s-%d", AppName, index),

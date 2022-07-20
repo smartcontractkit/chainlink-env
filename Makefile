@@ -10,10 +10,6 @@ lint:
 golangci:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${BIN_DIR} v1.46.2
 
-.PHONY: install_cli
-install: # installs CLI wizard
-	go install cmd/wizard/chainlink-env.go
-
 .PHONY: install_deps, golangci
 install_deps: golangci
 	yarn global add cdk8s-cli@2.0.0-rc.1
