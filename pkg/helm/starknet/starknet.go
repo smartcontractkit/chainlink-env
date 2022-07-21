@@ -1,4 +1,4 @@
-package sol
+package starknet
 
 import (
 	"github.com/smartcontractkit/chainlink-env/environment"
