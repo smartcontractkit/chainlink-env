@@ -50,11 +50,11 @@ func (m Chart) GetValues() *map[string]interface{} {
 
 func (m Chart) ExportData(e *environment.Environment) error {
 	urls := make([]string, 0)
-	devnet, err := e.Fwd.FindPort("mockserver:0", "mockserver", "serviceport").As(client.LocalConnection, client.HTTP)
+	devnet, err := e.Fwd.FindPort("devnet:0", "devnet", "serviceport").As(client.LocalConnection, client.HTTP)
 	if err != nil {
 		return err
 	}
-	devnetInternal, err := e.Fwd.FindPort("mockserver:0", "mockserver", "serviceport").As(client.RemoteConnection, client.HTTP)
+	devnetInternal, err := e.Fwd.FindPort("devnet:0", "devnet", "serviceport").As(client.RemoteConnection, client.HTTP)
 	if err != nil {
 		return err
 	}
