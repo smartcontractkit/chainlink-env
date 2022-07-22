@@ -75,8 +75,7 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		log.Info().Str("Name", "Geth").Str("URLs", gethLocalWs).Msg("Geth network")
 
 	} else {
-		e.URLs[m.Props.NetworkName] = m.Props.WsURLs
-		e.URLs[m.Props.NetworkName] = m.Props.HttpURLs
+		e.URLs[m.Props.NetworkName] = append(m.Props.WsURLs, m.Props.HttpURLs...)
 		log.Info().Str("Name", m.Props.NetworkName).Strs("URLs", m.Props.WsURLs).Msg("Ethereum network")
 	}
 	return nil

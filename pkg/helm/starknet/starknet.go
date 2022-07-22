@@ -54,12 +54,8 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		return err
 	}
 	e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], devnetLocalHttp)
-
-	if e.Cfg.InsideK8s {
-		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], devnetInternalHttp)
-	}
+	e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], devnetInternalHttp)
 	log.Info().Str("Name", "Devnet").Str("URLs", devnetLocalHttp).Msg("Devnet network")
-
 	return nil
 }
 
