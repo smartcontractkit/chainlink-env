@@ -49,32 +49,30 @@ func (m Chart) GetValues() *map[string]interface{} {
 }
 
 func (m Chart) ExportData(e *environment.Environment) error {
-	urls := make([]string, 0)
-	devnet, err := e.Fwd.FindPort("devnet:0", "devnet", "serviceport").As(client.LocalConnection, client.HTTP)
+	devnetLocalHttp, err := e.Fwd.FindPort("starknet-dev:0", "starknet-dev").As(client.LocalConnection, client.HTTP)
 	if err != nil {
 		return err
 	}
-	devnetInternal, err := e.Fwd.FindPort("devnet:0", "devnet", "serviceport").As(client.RemoteConnection, client.HTTP)
+	devnetInternalHttp, err := e.Fwd.FindPort("starknet-dev:0,", "starknet-dev").As(client.RemoteConnection, client.HTTP)
 	if err != nil {
 		return err
 	}
+	e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], devnetLocalHttp)
+
 	if e.Cfg.InsideK8s {
-		urls = append(urls, devnetInternal, devnetInternal)
-	} else {
-		urls = append(urls, devnet, devnetInternal)
+		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], devnetInternalHttp)
 	}
-	e.URLs[URLsKey] = urls
-	log.Info().Str("URL", devnet).Msg("Devnet local connection")
-	log.Info().Str("URL", devnetInternal).Msg("Devnet remote connection")
+	log.Info().Str("Name", "Devnet").Str("URLs", devnetLocalHttp).Msg("Devnet network")
+
 	return nil
 }
 
 func defaultProps() *Props {
 	return &Props{
-		NetworkName: "devnet",
+		NetworkName: "starknet-dev",
 		Values: map[string]interface{}{
 			"replicas": "1",
-			"devnet": map[string]interface{}{
+			"starknet-dev": map[string]interface{}{
 				"image": map[string]interface{}{
 					"image":   "shardlabs/starknet-devnet",
 					"version": "v0.2.6",
@@ -102,8 +100,8 @@ func New(props *Props) environment.ConnectedChart {
 	}
 	return Chart{
 		HelmProps: &HelmProps{
-			Name:   "devnet",
-			Path:   "chainlink-qa/starknet",
+			Name:   "starknet-dev",
+			Path:   "../../../qa-charts/charts/starknet",
 			Values: &props.Values,
 		},
 		Props: props,
