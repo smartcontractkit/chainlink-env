@@ -1,6 +1,8 @@
 package starknet
 
 import (
+	"github.com/rs/zerolog/log"
+	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/environment"
 )
 
@@ -43,15 +45,26 @@ func (m Chart) GetValues() *map[string]interface{} {
 }
 
 func (m Chart) ExportData(e *environment.Environment) error {
+	devnetLocalHttp, err := e.Fwd.FindPort("starknet-dev:0", "starknetdev", "http").As(client.LocalConnection, client.HTTP)
+	if err != nil {
+		return err
+	}
+	devnetInternalHttp, err := e.Fwd.FindPort("starknet-dev:0", "starknetdev", "http").As(client.RemoteConnection, client.HTTP)
+	if err != nil {
+		return err
+	}
+	e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], devnetLocalHttp)
+	e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], devnetInternalHttp)
+	log.Info().Str("Name", "Devnet").Str("URLs", devnetLocalHttp).Msg("Devnet network")
 	return nil
 }
 
 func defaultProps() *Props {
 	return &Props{
-		NetworkName: "devnet",
+		NetworkName: "starknet-dev",
 		Values: map[string]interface{}{
 			"replicas": "1",
-			"devnet": map[string]interface{}{
+			"starknet-dev": map[string]interface{}{
 				"image": map[string]interface{}{
 					"image":   "shardlabs/starknet-devnet",
 					"version": "v0.2.6",
@@ -79,7 +92,7 @@ func New(props *Props) environment.ConnectedChart {
 	}
 	return Chart{
 		HelmProps: &HelmProps{
-			Name:   "devnet",
+			Name:   "starknet-dev",
 			Path:   "chainlink-qa/starknet",
 			Values: &props.Values,
 		},

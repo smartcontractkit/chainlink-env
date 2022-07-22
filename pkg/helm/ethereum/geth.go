@@ -49,21 +49,33 @@ func (m Chart) GetValues() *map[string]interface{} {
 
 func (m Chart) ExportData(e *environment.Environment) error {
 	if m.Props.Simulated {
-		gethLocal, err := e.Fwd.FindPort("geth:0", "geth-network", "ws-rpc").As(client.LocalConnection, client.WS)
+		gethLocalHttp, err := e.Fwd.FindPort("geth:0", "geth-network", "http-rpc").As(client.LocalConnection, client.HTTP)
 		if err != nil {
 			return err
 		}
-		gethInternal, err := e.Fwd.FindPort("geth:0", "geth-network", "ws-rpc").As(client.RemoteConnection, client.WS)
+		gethInternalHttp, err := e.Fwd.FindPort("geth:0", "geth-network", "http-rpc").As(client.RemoteConnection, client.HTTP)
 		if err != nil {
 			return err
 		}
-		e.URLs[m.Props.NetworkName] = []string{gethLocal}
-		if e.Cfg.InsideK8s {
-			e.URLs[m.Props.NetworkName] = []string{gethInternal}
+		gethLocalWs, err := e.Fwd.FindPort("geth:0", "geth-network", "ws-rpc").As(client.LocalConnection, client.WS)
+		if err != nil {
+			return err
 		}
-		log.Info().Str("Name", "Geth").Str("URLs", gethLocal).Msg("Geth network")
+		gethInternalWs, err := e.Fwd.FindPort("geth:0", "geth-network", "ws-rpc").As(client.RemoteConnection, client.WS)
+		if err != nil {
+			return err
+		}
+		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], gethLocalWs)
+		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], gethLocalHttp)
+
+		// For cases like starknet we need the internalHttp address to set up the L1<>L2 interaction
+		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], gethInternalWs)
+		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], gethInternalHttp)
+
+		log.Info().Str("Name", "Geth").Str("URLs", gethLocalWs).Msg("Geth network")
+
 	} else {
-		e.URLs[m.Props.NetworkName] = m.Props.WsURLs
+		e.URLs[m.Props.NetworkName] = append(m.Props.WsURLs, m.Props.HttpURLs...)
 		log.Info().Str("Name", m.Props.NetworkName).Strs("URLs", m.Props.WsURLs).Msg("Ethereum network")
 	}
 	return nil
