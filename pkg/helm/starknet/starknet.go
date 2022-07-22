@@ -6,10 +6,6 @@ import (
 	"github.com/smartcontractkit/chainlink-env/environment"
 )
 
-const (
-	URLsKey = "starknet-dev"
-)
-
 type Props struct {
 	NetworkName string   `envconfig:"network_name"`
 	HttpURLs    []string `envconfig:"http_url"`
