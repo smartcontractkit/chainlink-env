@@ -49,11 +49,11 @@ func (m Chart) GetValues() *map[string]interface{} {
 }
 
 func (m Chart) ExportData(e *environment.Environment) error {
-	devnetLocalHttp, err := e.Fwd.FindPort("starknet-dev:0", "starknet-dev").As(client.LocalConnection, client.HTTP)
+	devnetLocalHttp, err := e.Fwd.FindPort("starknet-dev:0", "starknet-dev", "http").As(client.LocalConnection, client.HTTP)
 	if err != nil {
 		return err
 	}
-	devnetInternalHttp, err := e.Fwd.FindPort("starknet-dev:0,", "starknet-dev").As(client.RemoteConnection, client.HTTP)
+	devnetInternalHttp, err := e.Fwd.FindPort("starknet-dev:0,", "starknet-dev", "http").As(client.RemoteConnection, client.HTTP)
 	if err != nil {
 		return err
 	}
