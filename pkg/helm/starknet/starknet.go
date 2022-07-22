@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	URLsKey = "devnet"
+	URLsKey = "starknet-dev"
 )
 
 type Props struct {
@@ -49,11 +49,11 @@ func (m Chart) GetValues() *map[string]interface{} {
 }
 
 func (m Chart) ExportData(e *environment.Environment) error {
-	devnetLocalHttp, err := e.Fwd.FindPort("starknet-dev:0", "starknet-dev", "http").As(client.LocalConnection, client.HTTP)
+	devnetLocalHttp, err := e.Fwd.FindPort("starknet-dev:0", "starknetdev", "http").As(client.LocalConnection, client.HTTP)
 	if err != nil {
 		return err
 	}
-	devnetInternalHttp, err := e.Fwd.FindPort("starknet-dev:0,", "starknet-dev", "http").As(client.RemoteConnection, client.HTTP)
+	devnetInternalHttp, err := e.Fwd.FindPort("starknet-dev:0", "starknetdev", "http").As(client.RemoteConnection, client.HTTP)
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func New(props *Props) environment.ConnectedChart {
 	return Chart{
 		HelmProps: &HelmProps{
 			Name:   "starknet-dev",
-			Path:   "../../../qa-charts/charts/starknet",
+			Path:   "chainlink-qa/starknet",
 			Values: &props.Values,
 		},
 		Props: props,
