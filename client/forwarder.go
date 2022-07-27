@@ -163,7 +163,7 @@ func lookupMap(m map[string]interface{}, ks ...string) (rval interface{}, err er
 		return nil, fmt.Errorf("select port path like $app_name:$instance $container_name $port_name")
 	}
 	if rval, ok = m[ks[0]]; !ok {
-		return ConnectionInfo{}, fmt.Errorf("key not found; remaining keys: %v", ks)
+		return ConnectionInfo{}, fmt.Errorf("key not found: %s remaining keys: %s", ks[0], ks)
 	} else if len(ks) == 1 {
 		return rval, nil
 	} else {
