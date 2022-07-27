@@ -336,10 +336,10 @@ func (m *Environment) Deploy(manifest string) error {
 	if err := m.Client.Apply(manifest); err != nil {
 		return err
 	}
-	if err := m.enumerateApps(); err != nil {
+	if err := m.Client.CheckReady(m.Cfg.Namespace, m.Cfg.ReadyCheckData); err != nil {
 		return err
 	}
-	return m.Client.CheckReady(m.Cfg.Namespace, m.Cfg.ReadyCheckData)
+	return m.enumerateApps()
 }
 
 // Shutdown environment, remove namespace
