@@ -25,10 +25,6 @@ jobs:
           kubeconfig: ${{ secrets.QA_KUBECONFIG }}
       - name: Install deps
         run: make install_deps
-      - name: Install and upgrade CL Helm repo
-        run: |
-          helm repo add chainlink-qa https://${{ secrets.GHA_TOKEN }}@raw.githubusercontent.com/smartcontractkit/charts/gh-pages/
-          helm repo update
       - name: Test deployments
         env:
           NETWORKS_CONFIG_FILE: ${{ secrets.NETWORKS_CONFIG_FILE }}

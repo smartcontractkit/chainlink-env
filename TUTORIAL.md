@@ -9,7 +9,7 @@
   - [Using multi-stage environment](#using-multi-stage-environment)
 - [Modifying environments](#modifying-environments)
   - [Modifying environment from code](#modifying-environment-from-code)
-  - [Updating environment part from code](#modifying-environment-part-from-code)
+  - [Modifying environment part from code](#modifying-environment-part-from-code)
 - [Configuring](#configuring)
     - [Environment variables](#environment-variables)
     - [Environment config](#environment-config)
@@ -69,6 +69,32 @@ You can get the namespace name from logs on creation time
 # Creating environments
 
 ## Debugging a new integration environment
+You can spin up environment and block on forwarder if you'd like to run some other code
+```golang
+package main
+
+import (
+	"github.com/smartcontractkit/chainlink-env/environment"
+	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
+	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
+)
+
+func main() {
+	err := environment.New(&environment.Config{
+		Labels:            []string{"type=construction-in-progress"},
+		NamespacePrefix:   "new-environment",
+		KeepConnection:    true,
+		RemoveOnInterrupt: true,
+	}).
+		AddHelm(ethereum.New(nil)).
+		AddHelm(chainlink.New(0, nil)).
+		Run()
+	if err != nil {
+		panic(err)
+	}
+}
+```
+Send any signal to remove the namespace then, for example `Ctrl+C` `SIGINT`
 
 ## Creating a new deployment part in Helm
 Let's add a new [deployment part](examples/deployment_part/sol.go), it should implement an interface
@@ -337,8 +363,6 @@ func main() {
 	}
 }
 ```
-
-## Modifying already deployed environment
 
 # Configuring
 
