@@ -66,16 +66,15 @@ func (m Chart) ExportData(e *environment.Environment) error {
 			return err
 		}
 		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], gethLocalWs)
-		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], gethLocalHttp)
+		e.URLs[m.Props.NetworkName+"_http"] = append(e.URLs[m.Props.NetworkName], gethLocalHttp)
 
 		// For cases like starknet we need the internalHttp address to set up the L1<>L2 interaction
-		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], gethInternalWs)
-		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], gethInternalHttp)
+		e.URLs[m.Props.NetworkName+"_internal"] = append(e.URLs[m.Props.NetworkName], gethInternalWs)
+		e.URLs[m.Props.NetworkName+"_internal_http"] = append(e.URLs[m.Props.NetworkName], gethInternalHttp)
 
 		log.Info().Str("Name", "Geth").Str("URLs", gethLocalWs).Msg("Geth network")
-
 	} else {
-		e.URLs[m.Props.NetworkName] = append(m.Props.WsURLs, m.Props.HttpURLs...)
+		e.URLs[m.Props.NetworkName] = m.Props.WsURLs
 		log.Info().Str("Name", m.Props.NetworkName).Strs("URLs", m.Props.WsURLs).Msg("Ethereum network")
 	}
 	return nil
