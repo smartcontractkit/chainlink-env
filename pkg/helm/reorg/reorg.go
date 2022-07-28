@@ -1,6 +1,7 @@
 package reorg
 
 import (
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
@@ -48,15 +49,18 @@ func (m Chart) GetValues() *map[string]interface{} {
 
 func (m Chart) ExportData(e *environment.Environment) error {
 	urls := make([]string, 0)
-	txNode, err := e.Fwd.FindPort("geth-ethereum-geth:0", "geth", "ws-rpc").As(client.LocalConnection, client.WS)
+	txPodName := fmt.Sprintf("%s-ethereum-geth:0", m.Props.NetworkName)
+	miner1PodName := fmt.Sprintf("%s-ethereum-miner-node:0", m.Props.NetworkName)
+	miner2PodName := fmt.Sprintf("%s-ethereum-miner-node:1", m.Props.NetworkName)
+	txNode, err := e.Fwd.FindPort(txPodName, "geth", "ws-rpc").As(client.LocalConnection, client.WS)
 	if err != nil {
 		return err
 	}
-	miner1, err := e.Fwd.FindPort("geth-ethereum-miner-node:0", "geth-miner", "ws-rpc-miner").As(client.LocalConnection, client.WS)
+	miner1, err := e.Fwd.FindPort(miner1PodName, "geth-miner", "ws-rpc-miner").As(client.LocalConnection, client.WS)
 	if err != nil {
 		return err
 	}
-	miner2, err := e.Fwd.FindPort("geth-ethereum-miner-node:1", "geth-miner", "ws-rpc-miner").As(client.LocalConnection, client.WS)
+	miner2, err := e.Fwd.FindPort(miner2PodName, "geth-miner", "ws-rpc-miner").As(client.LocalConnection, client.WS)
 	if err != nil {
 		return err
 	}
