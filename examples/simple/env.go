@@ -8,8 +8,8 @@ import (
 
 func main() {
 	err := environment.New(&environment.Config{
-		KeepConnection:    false,
-		RemoveOnInterrupt: false,
+		KeepConnection:    true,
+		RemoveOnInterrupt: true,
 	}).
 		AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, nil)).
