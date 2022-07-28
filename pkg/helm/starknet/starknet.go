@@ -93,7 +93,7 @@ func New(props *Props) environment.ConnectedChart {
 	return Chart{
 		HelmProps: &HelmProps{
 			Name:   "starknet-dev",
-			Path:   "chainlink-qa/starknet",
+			Path:   "chainlink-qa/starknetdev",
 			Values: &props.Values,
 		},
 		Props: props,
