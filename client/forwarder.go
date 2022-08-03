@@ -3,15 +3,16 @@ package client
 import (
 	"bytes"
 	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+	"sync"
+
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
-	"net/http"
-	"net/url"
-	"strings"
-	"sync"
 )
 
 type Forwarder struct {
@@ -36,6 +37,10 @@ func NewForwarder(client *K8sClient, keepConnection bool) *Forwarder {
 }
 
 func (m *Forwarder) forwardPodPorts(pod v1.Pod, namespaceName string) error {
+	if pod.Status.Phase != v1.PodRunning {
+		log.Debug().Str("Pod", pod.Name).Interface("Phase", pod.Status.Phase).Msg("Skipping pod")
+		return nil
+	}
 	roundTripper, upgrader, err := spdy.RoundTripperFor(m.Client.RESTConfig)
 	if err != nil {
 		return err
