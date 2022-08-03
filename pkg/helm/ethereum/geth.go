@@ -65,12 +65,16 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		if err != nil {
 			return err
 		}
-		e.URLs[m.Props.NetworkName] = append(e.URLs[m.Props.NetworkName], gethLocalWs)
-		e.URLs[m.Props.NetworkName+"_http"] = append(e.URLs[m.Props.NetworkName], gethLocalHttp)
+		if e.Cfg.InsideK8s {
+			e.URLs[m.Props.NetworkName] = []string{gethInternalWs}
+		} else {
+			e.URLs[m.Props.NetworkName] = []string{gethLocalWs}
+		}
+		e.URLs[m.Props.NetworkName+"_http"] = []string{gethLocalHttp}
 
 		// For cases like starknet we need the internalHttp address to set up the L1<>L2 interaction
-		e.URLs[m.Props.NetworkName+"_internal"] = append(e.URLs[m.Props.NetworkName], gethInternalWs)
-		e.URLs[m.Props.NetworkName+"_internal_http"] = append(e.URLs[m.Props.NetworkName], gethInternalHttp)
+		e.URLs[m.Props.NetworkName+"_internal"] = []string{gethInternalWs}
+		e.URLs[m.Props.NetworkName+"_internal_http"] = []string{gethInternalHttp}
 
 		log.Info().Str("Name", "Geth").Str("URLs", gethLocalWs).Msg("Geth network")
 	} else {
