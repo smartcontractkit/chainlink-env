@@ -3,8 +3,8 @@ module github.com/smartcontractkit/chainlink-env
 go 1.18
 
 require (
-	github.com/aws/constructs-go/constructs/v10 v10.1.43
-	github.com/aws/jsii-runtime-go v1.61.0
+	github.com/aws/constructs-go/constructs/v10 v10.1.70
+	github.com/aws/jsii-runtime-go v1.63.2
 	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.3.41
 	github.com/google/uuid v1.3.0
 	github.com/imdario/mergo v0.3.13
