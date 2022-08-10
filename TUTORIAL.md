@@ -425,10 +425,10 @@ type Config struct {
 	Labels            []string
 	nsLabels          *map[string]*string
 	// ReadyCheckData is settings for readiness probes checks for all deployment components
-	// checking that all pods are ready by default with 4 minutes timeout
+	// checking that all pods are ready by default with 8 minutes timeout
 	//	&client.ReadyCheckData{
 	//		ReadinessProbeCheckSelector: "",
-	//		Timeout:                     4 * time.Minute,
+	//		Timeout:                     8 * time.Minute,
 	//	}
 	ReadyCheckData    *client.ReadyCheckData
 	// DryRun if true, app will just generate a manifest in local dir
