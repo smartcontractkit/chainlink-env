@@ -267,9 +267,6 @@ func (m *K8sClient) RemoveNamespace(namespace string) error {
 // ReadyCheckData data to check if selected pods are running and all containers are ready ( readiness check ) are ready
 type ReadyCheckData struct {
 	ReadinessProbeCheckSelector string
-	Selector                    string
-	Container                   string
-	LogSubStr                   string
 	Timeout                     time.Duration
 }
 
