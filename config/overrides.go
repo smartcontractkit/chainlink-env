@@ -1,9 +1,10 @@
 package config
 
 import (
+	"os"
+
 	"github.com/imdario/mergo"
 	"github.com/rs/zerolog/log"
-	"os"
 )
 
 const (

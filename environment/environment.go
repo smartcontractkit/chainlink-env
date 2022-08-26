@@ -68,6 +68,8 @@ type Config struct {
 	KeepConnection bool
 	// RemoveOnInterrupt automatically removes an environment on interrupt
 	RemoveOnInterrupt bool
+	// UpdateWaitInterval an interval to wait for deployment update started
+	UpdateWaitInterval time.Duration
 }
 
 func defaultEnvConfig() *Config {
@@ -336,6 +338,9 @@ func (m *Environment) Deploy(manifest string) error {
 	}
 	if err := m.Client.Apply(manifest); err != nil {
 		return err
+	}
+	if int64(m.Cfg.UpdateWaitInterval) != 0 {
+		time.Sleep(m.Cfg.UpdateWaitInterval)
 	}
 	if err := m.Client.CheckReady(m.Cfg.Namespace, m.Cfg.ReadyCheckData); err != nil {
 		return err

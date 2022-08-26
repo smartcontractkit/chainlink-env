@@ -1,10 +1,11 @@
 package logging
 
 import (
+	"os"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/config"
-	"os"
 )
 
 func Init() {
