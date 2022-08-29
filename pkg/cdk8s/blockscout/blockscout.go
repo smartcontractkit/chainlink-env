@@ -2,8 +2,10 @@ package blockscout
 
 import (
 	"fmt"
-	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
+
+	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/rs/zerolog/log"
+
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/environment"
@@ -25,7 +27,10 @@ func (m *Chart) IsDeploymentNeeded() bool {
 }
 
 func (m Chart) GetName() string {
-	return "blockscout"
+	if m.Props == nil {
+		return "blockscout"
+	}
+	return m.Props.Name
 }
 
 func (m Chart) GetProps() interface{} {
@@ -41,7 +46,10 @@ func (m Chart) GetValues() *map[string]interface{} {
 }
 
 func (m Chart) ExportData(e *environment.Environment) error {
-	bsURL, err := e.Fwd.FindPort("blockscout:0", "blockscout-node", "explorer").As(client.LocalConnection, client.HTTP)
+	bsURL, err := e.Fwd.FindPort(
+		fmt.Sprintf("%s:0", m.GetName()),
+		fmt.Sprintf("%s-node", m.GetName()), "explorer").
+		As(client.LocalConnection, client.HTTP)
 	if err != nil {
 		return err
 	}
@@ -73,6 +81,7 @@ func New(props *Props) func(root cdk8s.Chart) environment.ConnectedChart {
 }
 
 type Props struct {
+	Name    string
 	HttpURL string `envconfig:"http_url"`
 	WsURL   string `envconfig:"ws_url"`
 }
