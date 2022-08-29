@@ -12,6 +12,7 @@ jobs:
         id: tool-versions
     outputs:
       go-version: ${{ steps.tool-versions.outputs.golang_version }}
+      golangci-lint-version: ${{ steps.tool-versions.outputs.golangci-lint_version }}
   golangci:
     name: Linting
     runs-on: ubuntu-latest
@@ -25,6 +26,8 @@ jobs:
           go-version: ${{ needs.tools.outputs.go-version }}
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
+        with:
+          version: v${{ needs.tools.outputs.golangci-lint-version }}
 
   vulnerabilities-check:
     name: Check for Vulnerabilities
