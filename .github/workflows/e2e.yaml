@@ -1,15 +1,17 @@
 name: Deployments tests (E2E)
 on:
-  push:
+  pull_request:
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Go
+      - uses: smartcontractkit/tool-versions-to-env-action@v1.0.7
+        id: tool-versions
+      - name: Set up Go ${{ steps.tool-versions.outputs.golang_version }}
         uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: ${{ steps.tool-versions.outputs.golang_version }}
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
