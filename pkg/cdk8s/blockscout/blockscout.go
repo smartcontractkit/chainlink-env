@@ -27,7 +27,7 @@ func (m *Chart) IsDeploymentNeeded() bool {
 }
 
 func (m Chart) GetName() string {
-	if m.Props == nil {
+	if m.Props == nil || m.Props.Name == "" {
 		return "blockscout"
 	}
 	return m.Props.Name
