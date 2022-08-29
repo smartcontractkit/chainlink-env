@@ -29,5 +29,8 @@ jobs:
         run: make install_deps
       - name: Test deployments
         env:
+          CHAINLINK_COMMIT_SHA: ${{ github.sha }}
+          CHAINLINK_ENV_USER: ${{ github.actor }}
+          TEST_TRIGGERED_BY: chainlink-env-ci
           NETWORKS_CONFIG_FILE: ${{ secrets.NETWORKS_CONFIG_FILE }}
         run: make test_e2e
