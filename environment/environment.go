@@ -53,6 +53,10 @@ type Config struct {
 	// Labels is a set of labels applied to the namespace in a format of "key=value"
 	Labels   []string
 	nsLabels *map[string]*string
+	// Allow deployment to nodes with these olerances
+	Tolerations []map[string]string
+	// Restrict deployment to only nodes matching a particular node role
+	NodeSelector map[string]string
 	// ReadyCheckData is settings for readiness probes checks for all deployment components
 	// checking that all pods are ready by default with 8 minutes timeout
 	//	&client.ReadyCheckData{
@@ -142,6 +146,21 @@ func (m *Environment) initApp(namespace string) {
 		m.Cfg.Labels = append(m.Cfg.Labels, "triggered-by=manual")
 	}
 
+	if tolerationRole := os.Getenv(config.EnvVarToleration); tolerationRole != "" {
+		m.Cfg.Tolerations = []map[string]string{{
+			"key":      "node-role",
+			"operator": "Equal",
+			"value":    tolerationRole,
+			"effect":   "NoSchedule",
+		}}
+	}
+
+	if selectorRole := os.Getenv(config.EnvVarNodeSelector); selectorRole != "" {
+		m.Cfg.NodeSelector = map[string]string{
+			"node-role": selectorRole,
+		}
+	}
+
 	m.Cfg.nsLabels, err = a.ConvertLabels(m.Cfg.Labels)
 	if err != nil {
 		log.Fatal().Err(err).Send()
@@ -194,11 +213,16 @@ func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment
 
 func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	if chart.IsDeploymentNeeded() {
+		values := &map[string]interface{}{
+			"tolerations":  m.Cfg.Tolerations,
+			"nodeSelector": m.Cfg.NodeSelector,
+		}
+		config.MustMerge(values, chart.GetValues())
 		log.Trace().
 			Str("Chart", chart.GetName()).
 			Str("Path", chart.GetPath()).
 			Interface("Props", chart.GetProps()).
-			Interface("Values", chart.GetValues()).
+			Interface("Values", values).
 			Msg("Chart deployment values")
 		cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
 			Chart: a.Str(chart.GetPath()),
@@ -207,7 +231,7 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 				a.Str(m.Cfg.Namespace),
 			},
 			ReleaseName: a.Str(chart.GetName()),
-			Values:      chart.GetValues(),
+			Values:      values,
 		})
 	}
 	m.Charts = append(m.Charts, chart)

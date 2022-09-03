@@ -47,6 +47,14 @@ const (
 	EnvVarSlackUser            = "SLACK_USER"
 	EnvVarSlackUserDescription = "The Slack code for the user you want to notify"
 	EnvVarSlackUserExample     = "U000000000"
+
+	EnvVarToleration                 = "K8S_TOLERATION"
+	EnvVarTolerationsUserDescription = "Node roles to tolerate"
+	EnvVarTolerationsExample         = "foundations"
+
+	EnvVarNodeSelector                = "K8S_NODE_SELECTOR"
+	EnvVarNodeSelectorUserDescription = "Node role to deploy to"
+	EnvVarNodeSelectorExample         = "foundations"
 )
 
 func MustMerge(targetVars interface{}, codeVars interface{}) {
