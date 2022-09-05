@@ -10,6 +10,11 @@ lint:
 golangci:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${BIN_DIR} v1.46.2
 
+.PHONY: docker_prune
+docker_prune:
+	docker system prune -a -f
+	docker volume prune -f
+
 .PHONY: install_deps, golangci
 install_deps: golangci
 	yarn global add cdk8s-cli@2.0.0-rc.1
@@ -18,8 +23,39 @@ install_deps: golangci
 	mv kubectl ./bin
 	curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 	helm repo add chainlink-qa https://raw.githubusercontent.com/smartcontractkit/qa-charts/gh-pages/
+	helm repo add grafana https://grafana.github.io/helm-charts
 	helm repo update
 	cdk8s import
+	mkdir /tmp/k3dvolume/ || true
+
+.PHONY: create_cluster
+create_cluster:
+	k3d cluster create local --config k3d.yaml
+
+.PHONY: start_cluster
+start_cluster:
+	k3d cluster start local
+
+.PHONY: stop_cluster
+stop_cluster:
+	k3d cluster stop local
+
+.PHONY: stop_cluster
+delete_cluster:
+	k3d cluster delete local
+
+
+.PHONY: install_monitoring
+install_monitoring:
+	helm repo add grafana https://grafana.github.io/helm-charts
+	helm repo update
+	kubectl create namespace monitoring || true
+	helm upgrade --wait --namespace monitoring --install loki grafana/loki-stack  --set grafana.enabled=true,prometheus.enabled=true,prometheus.alertmanager.persistentVolume.enabled=false,prometheus.server.persistentVolume.enabled=false,loki.persistence.enabled=false --values grafana/values.yml
+	kubectl port-forward --namespace monitoring service/loki-grafana 3000:80
+
+.PHONY: uninstall_monitoring
+uninstall_monitoring:
+	helm uninstall --namespace monitoring loki
 
 .PHONY: test
 test:
