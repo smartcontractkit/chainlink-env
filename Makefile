@@ -17,7 +17,8 @@ docker_prune:
 
 .PHONY: install_deps, golangci
 install_deps: golangci
-	yarn global add cdk8s-cli@2.0.0-rc.1
+	mkdir /tmp/k3dvolume/ || true
+	yarn global add cdk8s-cli@2.0.103
 	curl -LO https://dl.k8s.io/release/v1.24.0/bin/darwin/amd64/kubectl
 	chmod +x ./kubectl
 	mv kubectl ./bin
@@ -26,7 +27,6 @@ install_deps: golangci
 	helm repo add grafana https://grafana.github.io/helm-charts
 	helm repo update
 	cdk8s import
-	mkdir /tmp/k3dvolume/ || true
 
 .PHONY: create_cluster
 create_cluster:
@@ -43,7 +43,6 @@ stop_cluster:
 .PHONY: stop_cluster
 delete_cluster:
 	k3d cluster delete local
-
 
 .PHONY: install_monitoring
 install_monitoring:
