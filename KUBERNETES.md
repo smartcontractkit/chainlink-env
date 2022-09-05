@@ -17,5 +17,10 @@ or from source [here](https://github.com/smartcontractkit/helmenv)
 11. `make delete_cluster`
 
 ### Typical problems
-1. `NodeHasDiskPressure` errors, pods get evicted
+1. Not enough memory/CPU or cluster is slow
+   Recommended settings for Docker are (Docker -> Preferences -> Resources):
+   - 6 CPU
+   - 10Gb MEM
+   - 50-150Gb Disk
+2. `NodeHasDiskPressure` errors, pods get evicted
     Use `make docker_prune` to clean up all pods and volumes

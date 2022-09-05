@@ -26,7 +26,6 @@ install_deps: golangci
 	helm repo add chainlink-qa https://raw.githubusercontent.com/smartcontractkit/qa-charts/gh-pages/
 	helm repo add grafana https://grafana.github.io/helm-charts
 	helm repo update
-	cdk8s import
 
 .PHONY: create_cluster
 create_cluster:
