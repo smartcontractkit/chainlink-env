@@ -2,15 +2,16 @@ package e2e_test
 
 import (
 	"fmt"
+	"os"
+	"path"
+	"testing"
+
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/remotetestrunner"
 	"github.com/smartcontractkit/chainlink-env/presets"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path"
-	"testing"
 )
 
 const (
