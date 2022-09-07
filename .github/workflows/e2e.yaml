@@ -4,6 +4,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: integration
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v3
       - uses: smartcontractkit/tool-versions-to-env-action@v1.0.7
@@ -15,8 +19,6 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.QA_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.QA_AWS_SECRET_KEY }}
           aws-region: ${{ secrets.QA_AWS_REGION }}
           role-to-assume: ${{ secrets.QA_AWS_ROLE_TO_ASSUME }}
           role-duration-seconds: 3600
