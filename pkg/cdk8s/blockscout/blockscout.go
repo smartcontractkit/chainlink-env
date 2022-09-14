@@ -211,6 +211,6 @@ func container(vars vars) *k8s.Container {
 			a.EnvVarStr("ETHEREUM_JSONRPC_WS_URL", vars.Props.WsURL),
 			a.EnvVarStr("DATABASE_URL", "postgresql://postgres:@localhost:5432/blockscout?ssl=false"),
 		},
-		Resources: a.ContainerResources("300m", "2048Mi", "300m", "2048Mi"),
+		Resources: a.ContainerResources("2000m", "2048Mi", "2000m", "2048Mi"),
 	}
 }
