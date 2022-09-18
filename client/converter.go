@@ -18,6 +18,8 @@ type Protocol int
 const (
 	// WS : Web Socket Protocol
 	WS Protocol = iota
+	// WSSUFFIX : Web Socket Protocol
+	WSSUFFIX
 	// WSS : Web Socket Secure Protocol
 	WSS
 	// HTTP : Hypertext Transfer Protocol
@@ -58,6 +60,8 @@ func (m *URLConverter) As(conn ConnectionMode, proto Protocol) (string, error) {
 		return fmt.Sprintf("https://%s:%d", host, port), nil
 	case WS:
 		return fmt.Sprintf("ws://%s:%d", host, port), nil
+	case WSSUFFIX:
+		return fmt.Sprintf("ws://%s:%d/ws", host, port), nil
 	case WSS:
 		return fmt.Sprintf("wss://%s:%d", host, port), nil
 	default:
