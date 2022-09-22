@@ -11,7 +11,6 @@ jobs:
       - uses: smartcontractkit/tool-versions-to-env-action@v1.0.7
         id: tool-versions
     outputs:
-      go-version: ${{ steps.tool-versions.outputs.golang_version }}
       golangci-lint-version: ${{ steps.tool-versions.outputs.golangci-lint_version }}
   golangci:
     name: Linting
@@ -20,10 +19,11 @@ jobs:
     steps:
       - name: Check out Code
         uses: actions/checkout@v3
-      - name: Install Go ${{ needs.tools.outputs.go-version }}
+      - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version: ${{ needs.tools.outputs.go-version }}
+          go-version-file: "go.mod"
+          check-latest: true
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
@@ -36,10 +36,11 @@ jobs:
     steps:
       - name: Check out Code
         uses: actions/checkout@v3
-      - name: Install Go ${{ needs.tools.outputs.go-version }}
+      - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version: ${{ needs.tools.outputs.go-version }}
+          go-version-file: "go.mod"
+          check-latest: true
       - name: Write Go List
         run: go list -json -deps ./... > go.list
       - name: Nancy
