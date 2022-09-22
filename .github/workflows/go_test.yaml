@@ -2,15 +2,14 @@ name: Go test
 on:
   pull_request:
 jobs:
-  build:
+  unit_test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: smartcontractkit/tool-versions-to-env-action@v1.0.7
-        id: tool-versions
-      - name: Set up Go ${{ steps.tool-versions.outputs.golang_version }}
+      - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: ${{ steps.tool-versions.outputs.golang_version }}
+          go-version-file: "go.mod"
+          check-latest: true
       - name: Test
         run: make test

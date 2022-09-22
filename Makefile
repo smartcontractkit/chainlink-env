@@ -57,11 +57,11 @@ uninstall_monitoring:
 
 .PHONY: test
 test:
-	go test ./config -count 1 -v
+	go test -race ./config -count 1 -v
 
 .PHONY: test_e2e
 test_e2e:
-	go test ./e2e -count 1 -v
+	go test -race ./e2e -count 1 -v
 
 .PHONY: examples
 examples:
