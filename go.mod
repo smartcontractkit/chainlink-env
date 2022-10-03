@@ -4,8 +4,8 @@ go 1.19
 
 require (
 	github.com/aws/constructs-go/constructs/v10 v10.1.90
-	github.com/aws/jsii-runtime-go v1.65.1
-	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.4.14
+	github.com/aws/jsii-runtime-go v1.69.0
+	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.5.4
 	github.com/google/uuid v1.3.0
 	github.com/imdario/mergo v0.3.13
 	github.com/pkg/errors v0.9.1
@@ -65,13 +65,17 @@ require (
 	github.com/spf13/cobra v1.5.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
+	github.com/yuin/goldmark v1.4.13 // indirect
 	go.starlark.net v0.0.0-20220817180228-f738f5508c12 // indirect
+	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
+	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/net v0.0.0-20220826154423-83b083e8dc8b // indirect
 	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094 // indirect
 	golang.org/x/sys v0.0.0-20220825204002-c680a09ffe64 // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
+	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
