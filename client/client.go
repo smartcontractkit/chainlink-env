@@ -109,17 +109,23 @@ func (m *K8sClient) LabelChaosGroup(namespace string, startInstance int, endInst
 	return nil
 }
 
-func (m *K8sClient) LabelChaosGroupByApp(namespace string, app string, startInstance int, endInstance int, group string) error {
-	for i := startInstance; i <= endInstance; i++ {
-		podList, err := m.ListPods(namespace, fmt.Sprintf("app=%s, instance=%d", app, i))
+func (m *K8sClient) LabelChaosGroupByLabels(namespace string, labels map[string]string, group string) error {
+	labelSelector := ""
+	for key, value := range labels {
+		if labelSelector == "" {
+			labelSelector = fmt.Sprintf("%s=%s", key, value)
+		} else {
+			labelSelector = fmt.Sprintf("%s, %s=%s", labelSelector, key, value)
+		}
+	}
+	podList, err := m.ListPods(namespace, labelSelector)
+	if err != nil {
+		return err
+	}
+	for _, pod := range podList.Items {
+		err = m.AddLabelByPod(namespace, pod, group, "1")
 		if err != nil {
 			return err
-		}
-		for _, pod := range podList.Items {
-			err = m.AddLabelByPod(namespace, pod, group, "1")
-			if err != nil {
-				return err
-			}
 		}
 	}
 	return nil
