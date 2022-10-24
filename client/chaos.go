@@ -74,7 +74,7 @@ func (c *Chaos) waitForChaosStatus(id string, condition v1alpha1.ChaosConditionT
 	})
 }
 
-func (c *Chaos) Recover(id string) error {
+func (c *Chaos) WaitForAllRecovered(id string) error {
 	return c.waitForChaosStatus(id, v1alpha1.ConditionAllRecovered)
 }
 
