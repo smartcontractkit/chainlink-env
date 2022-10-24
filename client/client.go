@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -70,7 +71,11 @@ func NewK8sClient() *K8sClient {
 
 // ListPods lists pods for a namespace and selector
 func (m *K8sClient) ListPods(namespace, selector string) (*v1.PodList, error) {
-	return m.ClientSet.CoreV1().Pods(namespace).List(context.Background(), metaV1.ListOptions{LabelSelector: selector})
+	pods, err := m.ClientSet.CoreV1().Pods(namespace).List(context.Background(), metaV1.ListOptions{LabelSelector: selector})
+	sort.Slice(pods.Items, func(i, j int) bool {
+		return pods.Items[i].CreationTimestamp.Before(pods.Items[j].CreationTimestamp.DeepCopy())
+	})
+	return pods, err
 }
 
 // ListNamespaces lists k8s namespaces
@@ -109,17 +114,23 @@ func (m *K8sClient) LabelChaosGroup(namespace string, startInstance int, endInst
 	return nil
 }
 
-func (m *K8sClient) LabelChaosGroupByApp(namespace string, app string, startInstance int, endInstance int, group string) error {
-	for i := startInstance; i <= endInstance; i++ {
-		podList, err := m.ListPods(namespace, fmt.Sprintf("app=%s, instance=%d", app, i))
+func (m *K8sClient) LabelChaosGroupByLabels(namespace string, labels map[string]string, group string) error {
+	labelSelector := ""
+	for key, value := range labels {
+		if labelSelector == "" {
+			labelSelector = fmt.Sprintf("%s=%s", key, value)
+		} else {
+			labelSelector = fmt.Sprintf("%s, %s=%s", labelSelector, key, value)
+		}
+	}
+	podList, err := m.ListPods(namespace, labelSelector)
+	if err != nil {
+		return err
+	}
+	for _, pod := range podList.Items {
+		err = m.AddLabelByPod(namespace, pod, group, "1")
 		if err != nil {
 			return err
-		}
-		for _, pod := range podList.Items {
-			err = m.AddLabelByPod(namespace, pod, group, "1")
-			if err != nil {
-				return err
-			}
 		}
 	}
 	return nil
@@ -187,10 +198,7 @@ func (m *K8sClient) AddLabelByPod(namespace string, pod v1.Pod, key, value strin
 
 // EnumerateInstances enumerate pods with instance label
 func (m *K8sClient) EnumerateInstances(namespace string, selector string) error {
-	k8sPods := m.ClientSet.CoreV1().Pods(namespace)
-	podList, err := k8sPods.List(context.Background(), metaV1.ListOptions{
-		LabelSelector: selector,
-	})
+	podList, err := m.ListPods(namespace, selector)
 	if err != nil {
 		return err
 	}
