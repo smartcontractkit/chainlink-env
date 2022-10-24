@@ -11,7 +11,7 @@ require (
 	github.com/imdario/mergo v0.3.13
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.28.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde
 	k8s.io/api v0.25.0
 	k8s.io/apimachinery v0.25.0
