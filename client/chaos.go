@@ -21,7 +21,7 @@ type Chaos struct {
 }
 
 type ChaosState struct {
-	ChaosDetails v1alpha1.ChaosStatus `json:"status,inline"`
+	ChaosDetails v1alpha1.ChaosStatus `json:"status"`
 }
 
 // NewChaos creates controller to run and stop chaos experiments
