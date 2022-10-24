@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -70,7 +71,11 @@ func NewK8sClient() *K8sClient {
 
 // ListPods lists pods for a namespace and selector
 func (m *K8sClient) ListPods(namespace, selector string) (*v1.PodList, error) {
-	return m.ClientSet.CoreV1().Pods(namespace).List(context.Background(), metaV1.ListOptions{LabelSelector: selector})
+	pods, err := m.ClientSet.CoreV1().Pods(namespace).List(context.Background(), metaV1.ListOptions{LabelSelector: selector})
+	sort.Slice(pods.Items, func(i, j int) bool {
+		return pods.Items[i].CreationTimestamp.Before(pods.Items[j].CreationTimestamp.DeepCopy())
+	})
+	return pods, err
 }
 
 // ListNamespaces lists k8s namespaces
@@ -193,10 +198,7 @@ func (m *K8sClient) AddLabelByPod(namespace string, pod v1.Pod, key, value strin
 
 // EnumerateInstances enumerate pods with instance label
 func (m *K8sClient) EnumerateInstances(namespace string, selector string) error {
-	k8sPods := m.ClientSet.CoreV1().Pods(namespace)
-	podList, err := k8sPods.List(context.Background(), metaV1.ListOptions{
-		LabelSelector: selector,
-	})
+	podList, err := m.ListPods(namespace, selector)
 	if err != nil {
 		return err
 	}

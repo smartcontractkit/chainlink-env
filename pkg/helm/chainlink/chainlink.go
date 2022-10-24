@@ -2,7 +2,6 @@ package chainlink
 
 import (
 	"fmt"
-	"regexp"
 
 	"github.com/rs/zerolog/log"
 
@@ -63,7 +62,6 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		e.URLs[NodesLocalURLsKey] = append(e.URLs[NodesLocalURLsKey], n)
 		log.Info().Str("Deployment", m.Name).Int("Node", i).Str("URL", n).Msg("Local connection")
 	}
-
 	for i := 0; i < len(pods.Items); i++ {
 		n, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
 			As(client.RemoteConnection, client.HTTP)
@@ -71,14 +69,6 @@ func (m Chart) ExportData(e *environment.Environment) error {
 			return err
 		}
 		e.URLs[NodesInternalURLsKey] = append(e.URLs[NodesInternalURLsKey], n)
-
-		// add label with host name to filter the pod by hostname
-		r := regexp.MustCompile(`://(?P<Host>.*):`)
-		hostname := r.FindStringSubmatch(n)[1]
-		err = e.Client.AddLabelByPod(e.Cfg.Namespace, pods.Items[i], "hostIP", hostname)
-		if err != nil {
-			return err
-		}
 		if e.Cfg.InsideK8s {
 			e.URLs[NodesLocalURLsKey] = e.URLs[NodesInternalURLsKey]
 		}
