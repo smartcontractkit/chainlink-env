@@ -3,7 +3,7 @@ module github.com/smartcontractkit/chainlink-env
 go 1.19
 
 require (
-	github.com/aws/constructs-go/constructs/v10 v10.1.138
+	github.com/aws/constructs-go/constructs/v10 v10.1.141
 	github.com/aws/jsii-runtime-go v1.70.0
 	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.5.26
 	github.com/chaos-mesh/chaos-mesh/api/v1alpha1 v0.0.0-20220226050744-799408773657
