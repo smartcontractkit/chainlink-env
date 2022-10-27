@@ -18,7 +18,7 @@ const (
 
 	EnvVarCLTag            = "CHAINLINK_VERSION"
 	EnvVarCLTagDescription = "Chainlink image tag"
-	EnvVarCLTagExample     = "1.5.1-root"
+	EnvVarCLTagExample     = "1.9.0"
 
 	EnvVarUser            = "CHAINLINK_ENV_USER"
 	EnvVarUserDescription = "Owner of an environment"

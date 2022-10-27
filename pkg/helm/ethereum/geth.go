@@ -93,7 +93,7 @@ func defaultProps() *Props {
 			"geth": map[string]interface{}{
 				"image": map[string]interface{}{
 					"image":   "ethereum/client-go",
-					"version": "v1.10.17",
+					"version": "v1.10.25",
 				},
 			},
 			"resources": map[string]interface{}{
