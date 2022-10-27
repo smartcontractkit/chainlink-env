@@ -74,7 +74,7 @@ func defaultProps() *Props {
 			"sol": map[string]interface{}{
 				"image": map[string]interface{}{
 					"image":   "solanalabs/solana",
-					"version": "v1.9.14",
+					"version": "v1.13.3",
 				},
 				"resources": map[string]interface{}{
 					"requests": map[string]interface{}{
