@@ -224,7 +224,7 @@ func (m *K8sClient) WaitContainersReady(ns string, rcd *ReadyCheckData) error {
 				return err
 			}
 			if len(podList.Items) == 0 {
-				return fmt.Errorf("no pods in %s with selector %s", ns, rcd.Timeout)
+				return fmt.Errorf("no pods in %s with selector %s", ns, rcd.ReadinessProbeCheckSelector)
 			}
 			log.Debug().Interface("Pods", podNames(podList)).Msg("Waiting for pods readiness probes")
 			allReady := true
