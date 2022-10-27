@@ -8,7 +8,7 @@ jobs:
     steps:
       - name: Check out Code
         uses: actions/checkout@v3
-      - uses: smartcontractkit/tool-versions-to-env-action@v1.0.7
+      - uses: smartcontractkit/tool-versions-to-env-action@v1.0.8
         id: tool-versions
     outputs:
       golangci-lint-version: ${{ steps.tool-versions.outputs.golangci-lint_version }}
