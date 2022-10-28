@@ -2,7 +2,9 @@ package reorg
 
 import (
 	"fmt"
+
 	"github.com/rs/zerolog/log"
+
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/environment"
@@ -52,23 +54,31 @@ func (m Chart) ExportData(e *environment.Environment) error {
 	txPodName := fmt.Sprintf("%s-ethereum-geth:0", m.Props.NetworkName)
 	miner1PodName := fmt.Sprintf("%s-ethereum-miner-node:0", m.Props.NetworkName)
 	miner2PodName := fmt.Sprintf("%s-ethereum-miner-node:1", m.Props.NetworkName)
+	minerPods, err := e.Client.ListPods(e.Cfg.Namespace, fmt.Sprintf("app=%s-ethereum-miner-node", m.Props.NetworkName))
+	if err != nil {
+		return err
+	}
 	txNode, err := e.Fwd.FindPort(txPodName, "geth", "ws-rpc").As(client.LocalConnection, client.WS)
 	if err != nil {
 		return err
 	}
-	miner1, err := e.Fwd.FindPort(miner1PodName, "geth-miner", "ws-rpc-miner").As(client.LocalConnection, client.WS)
-	if err != nil {
-		return err
+	urls = append(urls, txNode)
+	if len(minerPods.Items) > 0 {
+		miner1, err := e.Fwd.FindPort(miner1PodName, "geth-miner", "ws-rpc-miner").As(client.LocalConnection, client.WS)
+		if err != nil {
+			return err
+		}
+		miner2, err := e.Fwd.FindPort(miner2PodName, "geth-miner", "ws-rpc-miner").As(client.LocalConnection, client.WS)
+		if err != nil {
+			return err
+		}
+		urls = append(urls, miner1, miner2)
+		log.Info().Str("URL", miner1).Msg("Geth network (Miner #1)")
+		log.Info().Str("URL", miner2).Msg("Geth network (Miner #2)")
 	}
-	miner2, err := e.Fwd.FindPort(miner2PodName, "geth-miner", "ws-rpc-miner").As(client.LocalConnection, client.WS)
-	if err != nil {
-		return err
-	}
-	urls = append(urls, txNode, miner1, miner2)
+
 	e.URLs[m.Props.NetworkName] = urls
 	log.Info().Str("URL", txNode).Msg("Geth network (TX Node)")
-	log.Info().Str("URL", miner1).Msg("Geth network (Miner #1)")
-	log.Info().Str("URL", miner2).Msg("Geth network (Miner #2)")
 	return nil
 }
 
@@ -82,7 +92,7 @@ func defaultProps() *Props {
 				"replicas": "2",
 				"image": map[string]interface{}{
 					"repository": "ethereum/client-go",
-					"tag":        "alltools-v1.10.6",
+					"tag":        "alltools-v1.10.25",
 				},
 			},
 			"bootnodeRegistrar": map[string]interface{}{
@@ -95,7 +105,7 @@ func defaultProps() *Props {
 			"geth": map[string]interface{}{
 				"image": map[string]interface{}{
 					"repository": "ethereum/client-go",
-					"tag":        "v1.10.17",
+					"tag":        "v1.10.25",
 				},
 				"tx": map[string]interface{}{
 					"replicas": "1",
