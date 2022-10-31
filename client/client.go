@@ -259,7 +259,7 @@ func (m *K8sClient) WaitForPodBySelectorRunning(ns string, rcd *ReadyCheckData) 
 		return err
 	}
 	if len(podList.Items) == 0 {
-		return fmt.Errorf("no pods in %s with selector %s", ns, rcd.Timeout)
+		return fmt.Errorf("no pods in %s with selector %s", ns, rcd.ReadinessProbeCheckSelector)
 	}
 
 	log.Info().Interface("Pods", podNames(podList)).Msg("Waiting for pods in state Running")
