@@ -71,8 +71,8 @@ github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPdPJAN/hZIm0C4OItdklCFmMRWYpio=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
 github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a/go.mod h1:lB+ZfQJz7igIIfQNfa7Ml4HSf2uFQQRzpGGRXenZAgY=
-github.com/aws/constructs-go/constructs/v10 v10.1.138 h1:GrRh27uifH7p/DP7fQHxKTrYzwOSLDWJyYT177sY2+s=
-github.com/aws/constructs-go/constructs/v10 v10.1.138/go.mod h1:L6ZTlHmRRQiWl8EAyoItmg9qUDvHmJ3PPFkAG91GRDw=
+github.com/aws/constructs-go/constructs/v10 v10.1.145 h1:cvK2Dueu0d9JhQWAnD6PvIx3ae09F9PlZWWMePUHFYk=
+github.com/aws/constructs-go/constructs/v10 v10.1.145/go.mod h1:L6ZTlHmRRQiWl8EAyoItmg9qUDvHmJ3PPFkAG91GRDw=
 github.com/aws/jsii-runtime-go v1.70.0 h1:grgd4ZcLn9rApgLOSzll4u3xJsBL4qKbs2McxASqz5g=
 github.com/aws/jsii-runtime-go v1.70.0/go.mod h1:Cd836+6/rhL8LbslPaGofAh8c7H75KVMF6bfHyNl7vY=
 github.com/benbjohnson/clock v1.0.3/go.mod h1:bGMdMPoPVvcYyt1gHDf4J2KE153Yf9BuiUKYMaxlTDM=
@@ -86,8 +86,8 @@ github.com/bketelsen/crypt v0.0.4/go.mod h1:aI6NrJ0pMGgvZKL1iVgXLnfIFJtfV+bKCoqO
 github.com/blang/semver/v4 v4.0.0/go.mod h1:IbckMUScFkM3pff0VJDNKRiT6TG/YpiHIM2yvyW5YoQ=
 github.com/buger/jsonparser v1.1.1/go.mod h1:6RYKKt7H4d4+iWqouImQ9R2FZql3VbhNgx27UK13J/0=
 github.com/bxcodec/faker v2.0.1+incompatible h1:P0KUpUw5w6WJXwrPfv35oc91i4d8nf40Nwln+M/+faA=
-github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.5.26 h1:EIuUre2AflQuLcBjqmJ9784kVnMP7hfF9LQpsBSDX/A=
-github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.5.26/go.mod h1:19pEx6YJhnygE49n7QfD9xKFqpcrHHHG95HYVMmtAh8=
+github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.5.33 h1:XCvGyLSpU7p9nO2cUxCyQJqjcli2qMYMIFCrOgePLgM=
+github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.5.33/go.mod h1:19pEx6YJhnygE49n7QfD9xKFqpcrHHHG95HYVMmtAh8=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/cespare/xxhash/v2 v2.1.1/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
