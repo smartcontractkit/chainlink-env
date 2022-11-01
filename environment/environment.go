@@ -116,14 +116,7 @@ func New(cfg *Config) *Environment {
 		Cfg:    targetCfg,
 		Fwd:    client.NewForwarder(c, targetCfg.KeepConnection),
 	}
-	ns := os.Getenv(config.EnvVarNamespace)
-	if e.Client.NamespaceExists(ns) {
-		log.Info().Str("Namespace", ns).Msg("Namespace found")
-		e.Cfg.Namespace = ns
-	} else {
-		e.Cfg.Namespace = fmt.Sprintf("%s-%s", e.Cfg.NamespacePrefix, uuid.NewString()[0:5])
-	}
-	e.initApp()
+	e.initApp(fmt.Sprintf("%s-%s", e.Cfg.NamespacePrefix, uuid.NewString()[0:5]))
 	k8s.NewKubeNamespace(e.root, a.Str("namespace"), &k8s.KubeNamespaceProps{
 		Metadata: &k8s.ObjectMeta{
 			Name:        a.Str(e.Cfg.Namespace),
@@ -135,11 +128,12 @@ func New(cfg *Config) *Environment {
 	return e
 }
 
-func (m *Environment) initApp() {
+func (m *Environment) initApp(namespace string) {
 	var err error
 	m.App = cdk8s.NewApp(&cdk8s.AppProps{
 		YamlOutputType: cdk8s.YamlOutputType_FILE_PER_APP,
 	})
+	m.Cfg.Namespace = namespace
 	m.Cfg.Labels = append(m.Cfg.Labels, "generatedBy=cdk8s")
 	m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("owner=%s", os.Getenv(config.EnvVarUser)))
 
@@ -295,16 +289,22 @@ func (m *Environment) ResourcesSummary(selector string) (map[string]map[string]s
 // ClearCharts recreates cdk8s app
 func (m *Environment) ClearCharts() {
 	m.Charts = make([]ConnectedChart, 0)
-	m.initApp()
+	m.initApp(m.Cfg.Namespace)
 }
 
 // Run deploys or connects to already created environment
 func (m *Environment) Run() error {
-	manifest := m.App.SynthYaml().(string)
-	if err := m.Deploy(manifest); err != nil {
-		log.Error().Err(err).Msg("Error deploying environment")
-		_ = m.Shutdown()
-		return err
+	ns := os.Getenv(config.EnvVarNamespace)
+	if !m.Client.NamespaceExists(ns) {
+		manifest := m.App.SynthYaml().(string)
+		if err := m.Deploy(manifest); err != nil {
+			log.Error().Err(err).Msg("Error deploying environment")
+			_ = m.Shutdown()
+			return err
+		}
+	} else {
+		log.Info().Str("Namespace", ns).Msg("Namespace found")
+		m.Cfg.Namespace = ns
 	}
 	if m.Cfg.DryRun {
 		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
