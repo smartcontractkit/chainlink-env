@@ -301,10 +301,12 @@ func (m *Environment) ClearCharts() {
 // Run deploys or connects to already created environment
 func (m *Environment) Run() error {
 	manifest := m.App.SynthYaml().(string)
-	if err := m.Deploy(manifest); err != nil {
-		log.Error().Err(err).Msg("Error deploying environment")
-		_ = m.Shutdown()
-		return err
+	if !m.Cfg.InsideK8s {
+		if err := m.Deploy(manifest); err != nil {
+			log.Error().Err(err).Msg("Error deploying environment")
+			_ = m.Shutdown()
+			return err
+		}
 	}
 	if m.Cfg.DryRun {
 		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
