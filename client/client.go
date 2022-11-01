@@ -212,19 +212,23 @@ func (m *K8sClient) EnumerateInstances(namespace string, selector string) error 
 
 // WaitContainersReady waits until all containers ReadinessChecks are passed
 func (m *K8sClient) WaitContainersReady(ns string, rcd *ReadyCheckData) error {
-	ctx, cancel := context.WithTimeout(context.Background(), rcd.Timeout)
-	defer cancel()
+	timeout := time.NewTimer(rcd.Timeout)
+	defer timeout.Stop()
 	for {
 		select {
-		case <-ctx.Done():
-			return errors.New("timeout waiting container readiness probes")
+		case <-timeout.C:
+			return fmt.Errorf("waitcontainersready, no pods in %s with selector %s after timeout %s", ns, rcd.ReadinessProbeCheckSelector, rcd.Timeout)
 		default:
 			podList, err := m.ListPods(ns, rcd.ReadinessProbeCheckSelector)
 			if err != nil {
 				return err
 			}
 			if len(podList.Items) == 0 {
-				return fmt.Errorf("waitcontainersready, no pods in %s with selector %s after timeout %s", ns, rcd.ReadinessProbeCheckSelector, rcd.Timeout)
+				log.Debug().
+					Str("Namespace", ns).
+					Str("Selector", rcd.ReadinessProbeCheckSelector).
+					Msg("No pods found with selector")
+				continue
 			}
 			log.Debug().Interface("Pods", podNames(podList)).Msg("Waiting for pods readiness probes")
 			allReady := true
