@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type Props struct {
@@ -15,7 +16,7 @@ func TestOverrideCodeEnv(t *testing.T) {
 		defaultCodeProps := map[string]interface{}{
 			"replicas": "1",
 			"env": map[string]interface{}{
-				"database_url": "postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable",
+				"cl_database_url": "postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable",
 			},
 			"chainlink": map[string]interface{}{
 				"image": map[string]interface{}{

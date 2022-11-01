@@ -74,7 +74,11 @@ func EVMReorg(config *environment.Config) *environment.Environment {
 		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 5,
 			"env": map[string]interface{}{
-				"eth_url": "ws://geth-reorg-ethereum-geth:8546",
+				"cl_config": `
+[[EVM.Node]]
+Name = 'primary'
+WSURL = 'ws://geth-reorg-ethereum-geth:8546'
+`,
 			},
 		}))
 }

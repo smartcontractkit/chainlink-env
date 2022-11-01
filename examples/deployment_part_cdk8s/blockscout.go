@@ -2,8 +2,10 @@ package deployment_part_cdk8s
 
 import (
 	"fmt"
-	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
+
+	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/rs/zerolog/log"
+
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/environment"
@@ -200,7 +202,7 @@ func container(vars vars) *k8s.Container {
 			a.EnvVarStr("ETHEREUM_JSONRPC_VARIANT", "geth"),
 			a.EnvVarStr("ETHEREUM_JSONRPC_HTTP_URL", vars.Props.HttpURL),
 			a.EnvVarStr("ETHEREUM_JSONRPC_WS_URL", vars.Props.WsURL),
-			a.EnvVarStr("DATABASE_URL", "postgresql://postgres:@localhost:5432/blockscout?ssl=false"),
+			a.EnvVarStr("CL_DATABASE_URL", "postgresql://postgres:@localhost:5432/blockscout?ssl=false"),
 		},
 		Resources: a.ContainerResources("300m", "2048Mi", "300m", "2048Mi"),
 	}

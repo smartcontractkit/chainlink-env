@@ -140,10 +140,11 @@ Now let's tie them together
 package main
 
 import (
-	"github.com/smartcontractkit/chainlink-env/environment"
-	"github.com/smartcontractkit/chainlink-env/examples/deployment_part"
-	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
-	"time"
+  "time"
+  
+  "github.com/smartcontractkit/chainlink-env/environment"
+  "github.com/smartcontractkit/chainlink-env/examples/deployment_part"
+  "github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
 )
 
 func main() {
@@ -157,17 +158,19 @@ func main() {
 		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 5,
 			"env": map[string]interface{}{
-				"SOLANA_ENABLED":              "true",
-				"EVM_ENABLED":                 "false",
-				"EVM_RPC_ENABLED":             "false",
-				"CHAINLINK_DEV":               "false",
-				"FEATURE_OFFCHAIN_REPORTING2": "true",
-				"feature_offchain_reporting":  "false",
-				"P2P_NETWORKING_STACK":        "V2",
-				"P2PV2_LISTEN_ADDRESSES":      "0.0.0.0:6690",
-				"P2PV2_DELTA_DIAL":            "5s",
-				"P2PV2_DELTA_RECONCILE":       "5s",
-				"p2p_listen_port":             "0",
+              "CL_DEV": "false",
+              "CL_CONFIG": `
+OCR.Enabled = false
+
+[OCR2]
+Enabled = true
+
+P2P.ListenPort = 0
+[P2P.V2]
+Enabled = true
+ListenAddresses = ['0.0.0.0:6690']
+DeltaDial = '5s'
+`,
 			},
 		}))
 	if err := e.Run(); err != nil {

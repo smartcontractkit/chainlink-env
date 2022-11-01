@@ -90,7 +90,7 @@ func defaultProps() map[string]interface{} {
 	return map[string]interface{}{
 		"replicas": "1",
 		"env": map[string]interface{}{
-			"DATABASE_URL": "postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable",
+			"CL_DATABASE_URL": "postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable",
 		},
 		"chainlink": map[string]interface{}{
 			"image": map[string]interface{}{
