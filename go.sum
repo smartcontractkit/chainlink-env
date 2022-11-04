@@ -49,8 +49,8 @@ github.com/alecthomas/units v0.0.0-20210927113745-59d0afb8317a h1:E/8AP5dFtMhl5K
 github.com/alecthomas/units v0.0.0-20210927113745-59d0afb8317a/go.mod h1:OMCwj8VM1Kc9e19TLln2VL61YJF0x1XFtfdL4JdbSyE=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPdPJAN/hZIm0C4OItdklCFmMRWYpio=
-github.com/aws/constructs-go/constructs/v10 v10.1.145 h1:cvK2Dueu0d9JhQWAnD6PvIx3ae09F9PlZWWMePUHFYk=
-github.com/aws/constructs-go/constructs/v10 v10.1.145/go.mod h1:L6ZTlHmRRQiWl8EAyoItmg9qUDvHmJ3PPFkAG91GRDw=
+github.com/aws/constructs-go/constructs/v10 v10.1.149 h1:Nz3pwYGPnt9JAx/sqXlmr5i8FqCte9lQN9axZcF3QEw=
+github.com/aws/constructs-go/constructs/v10 v10.1.149/go.mod h1:L6ZTlHmRRQiWl8EAyoItmg9qUDvHmJ3PPFkAG91GRDw=
 github.com/aws/jsii-runtime-go v1.70.0 h1:grgd4ZcLn9rApgLOSzll4u3xJsBL4qKbs2McxASqz5g=
 github.com/aws/jsii-runtime-go v1.70.0/go.mod h1:Cd836+6/rhL8LbslPaGofAh8c7H75KVMF6bfHyNl7vY=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
