@@ -28,6 +28,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 )
 
 const (
@@ -352,6 +353,13 @@ func (m *K8sClient) CopyToPod(namespace, src, destination, containername string)
 	ioStreams, in, out, errOut := genericclioptions.NewTestIOStreams()
 
 	copyOptions := cp.NewCopyOptions(ioStreams)
+	configFlags := genericclioptions.NewConfigFlags(false)
+	f := cmdutil.NewFactory(configFlags)
+	cmd := cp.NewCmdCp(f, ioStreams)
+	err := copyOptions.Complete(f, cmd, []string{src, destination})
+	if err != nil {
+		return nil, nil, nil, err
+	}
 	copyOptions.Clientset = m.ClientSet
 	copyOptions.ClientConfig = m.RESTConfig
 	copyOptions.Container = containername
@@ -371,8 +379,7 @@ func (m *K8sClient) CopyToPod(namespace, src, destination, containername string)
 		Str("Destination", destination).
 		Str("Container", containername).
 		Msg("Uploading file to pod")
-
-	err = copyOptions.Run([]string{src, destination})
+	err = copyOptions.Run()
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Could not run copy operation: %v", err)
 	}
