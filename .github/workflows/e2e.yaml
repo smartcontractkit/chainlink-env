@@ -32,7 +32,7 @@ jobs:
           method: kubeconfig
           kubeconfig: ${{ secrets.QA_KUBECONFIG }}
       - name: Install deps
-        run: make install_deps
+        run: make install_deps_ci
       - name: Test deployments
         env:
           CHAINLINK_COMMIT_SHA: ${{ github.sha }}

@@ -17,6 +17,7 @@
   - [Collecting logs](#collecting-logs)
   - [Resources summary](#resources-summary)
 - [Chaos](#chaos)
+- [Remote run](./REMOTE_RUN.md)
 
 
 ## Getting started

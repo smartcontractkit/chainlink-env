@@ -8,9 +8,19 @@ import (
 )
 
 const (
+	EnvVarPrefix = "TEST_"
+	
 	EnvVarNamespace            = "ENV_NAMESPACE"
 	EnvVarNamespaceDescription = "Namespace name to connect to"
 	EnvVarNamespaceExample     = "chainlink-test-epic"
+
+	EnvVarJobImage            = "ENV_JOB_IMAGE"
+	EnvVarJobImageDescription = "Image to run as a job in k8s"
+	EnvVarJobImageExample     = "795953128386.dkr.ecr.us-west-2.amazonaws.com/core-integration-tests:v1.0"
+
+	EnvVarInsideK8s            = "ENV_INSIDE_K8S"
+	EnvVarInsideK8sDescription = "Internal variable to turn forwarding strategy off inside k8s, do not use"
+	EnvVarInsideK8sExample     = ""
 
 	EnvVarCLImage            = "CHAINLINK_IMAGE"
 	EnvVarCLImageDescription = "Chainlink image repository"

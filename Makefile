@@ -15,8 +15,18 @@ docker_prune:
 	docker system prune -a -f
 	docker volume prune -f
 
-.PHONY: install_deps, golangci
+.PHONY: install_deps
 install_deps: golangci
+	mkdir /tmp/k3dvolume/ || true
+	yarn global add cdk8s-cli@2.0.103
+	brew install kubectl
+	curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+	helm repo add chainlink-qa https://raw.githubusercontent.com/smartcontractkit/qa-charts/gh-pages/
+	helm repo add grafana https://grafana.github.io/helm-charts
+	helm repo update
+
+.PHONY: install_deps_ci
+install_deps_ci: golangci
 	mkdir /tmp/k3dvolume/ || true
 	yarn global add cdk8s-cli@2.0.103
 	curl -LO https://dl.k8s.io/release/v1.24.0/bin/darwin/amd64/kubectl
