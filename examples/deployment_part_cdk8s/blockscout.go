@@ -2,6 +2,7 @@ package deployment_part_cdk8s
 
 import (
 	"fmt"
+
 	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
@@ -20,7 +21,7 @@ type Chart struct {
 	Props *Props
 }
 
-func (m *Chart) IsDeploymentNeeded() bool {
+func (m Chart) IsDeploymentNeeded() bool {
 	return true
 }
 

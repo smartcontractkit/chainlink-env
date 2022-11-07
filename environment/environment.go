@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
-	"github.com/pkg/errors"
-
 	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
@@ -46,6 +47,8 @@ type ConnectedChart interface {
 type Config struct {
 	// TTL is time to live for the environment, used with kube-janitor
 	TTL time.Duration
+	// JobImage an image to run environment as a job inside k8s
+	JobImage string
 	// NamespacePrefix is a static namespace prefix
 	NamespacePrefix string
 	// Namespace is full namespace name
@@ -108,6 +111,18 @@ func New(cfg *Config) *Environment {
 	}
 	targetCfg := defaultEnvConfig()
 	config.MustMerge(targetCfg, cfg)
+	ns := os.Getenv(config.EnvVarNamespace)
+	if ns != "" {
+		log.Info().Str("Namespace", ns).Msg("Namespace found")
+		targetCfg.Namespace = ns
+	} else {
+		targetCfg.Namespace = fmt.Sprintf("%s-%s", targetCfg.NamespacePrefix, uuid.NewString()[0:5])
+		log.Info().Str("Namespace", targetCfg.Namespace).Msg("Creating new namespace")
+	}
+	targetCfg.JobImage = os.Getenv(config.EnvVarJobImage)
+	insideK8s, _ := strconv.ParseBool(os.Getenv(config.EnvVarInsideK8s))
+	targetCfg.InsideK8s = insideK8s
+
 	c := client.NewK8sClient()
 	e := &Environment{
 		URLs:   make(map[string][]string),
@@ -116,21 +131,7 @@ func New(cfg *Config) *Environment {
 		Cfg:    targetCfg,
 		Fwd:    client.NewForwarder(c, targetCfg.KeepConnection),
 	}
-	ns := os.Getenv(config.EnvVarNamespace)
-	if e.Client.NamespaceExists(ns) {
-		log.Info().Str("Namespace", ns).Msg("Namespace found")
-		e.Cfg.Namespace = ns
-	} else {
-		e.Cfg.Namespace = fmt.Sprintf("%s-%s", e.Cfg.NamespacePrefix, uuid.NewString()[0:5])
-	}
 	e.initApp()
-	k8s.NewKubeNamespace(e.root, a.Str("namespace"), &k8s.KubeNamespaceProps{
-		Metadata: &k8s.ObjectMeta{
-			Name:        a.Str(e.Cfg.Namespace),
-			Labels:      e.Cfg.nsLabels,
-			Annotations: &defaultAnnotations,
-		},
-	})
 	e.Chaos = client.NewChaos(c, e.Cfg.Namespace)
 	return e
 }
@@ -176,6 +177,13 @@ func (m *Environment) initApp() {
 		Labels:    m.Cfg.nsLabels,
 		Namespace: a.Str(m.Cfg.Namespace),
 	})
+	k8s.NewKubeNamespace(m.root, a.Str("namespace"), &k8s.KubeNamespaceProps{
+		Metadata: &k8s.ObjectMeta{
+			Name:        a.Str(m.Cfg.Namespace),
+			Labels:      m.Cfg.nsLabels,
+			Annotations: &defaultAnnotations,
+		},
+	})
 }
 
 // AddChart adds a chart to the deployment
@@ -196,50 +204,52 @@ func (m *Environment) removeChart(name string) {
 // ModifyHelm modifies helm chart in deployment
 func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment {
 	m.removeChart(name)
-	if chart.IsDeploymentNeeded() {
-		log.Trace().
-			Str("Chart", chart.GetName()).
-			Str("Path", chart.GetPath()).
-			Interface("Props", chart.GetProps()).
-			Interface("Values", chart.GetValues()).
-			Msg("Chart deployment values")
-		cdk8s.NewHelm(m.root, a.Str(name), &cdk8s.HelmProps{
-			Chart: a.Str(chart.GetPath()),
-			HelmFlags: &[]*string{
-				a.Str("--namespace"),
-				a.Str(m.Cfg.Namespace),
-			},
-			ReleaseName: a.Str(name),
-			Values:      chart.GetValues(),
-		})
+	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
+		return m
 	}
+	log.Trace().
+		Str("Chart", chart.GetName()).
+		Str("Path", chart.GetPath()).
+		Interface("Props", chart.GetProps()).
+		Interface("Values", chart.GetValues()).
+		Msg("Chart deployment values")
+	cdk8s.NewHelm(m.root, a.Str(name), &cdk8s.HelmProps{
+		Chart: a.Str(chart.GetPath()),
+		HelmFlags: &[]*string{
+			a.Str("--namespace"),
+			a.Str(m.Cfg.Namespace),
+		},
+		ReleaseName: a.Str(name),
+		Values:      chart.GetValues(),
+	})
 	m.Charts = append(m.Charts, chart)
 	return m
 }
 
 func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
-	if chart.IsDeploymentNeeded() {
-		values := &map[string]interface{}{
-			"tolerations":  m.Cfg.Tolerations,
-			"nodeSelector": m.Cfg.NodeSelector,
-		}
-		config.MustMerge(values, chart.GetValues())
-		log.Trace().
-			Str("Chart", chart.GetName()).
-			Str("Path", chart.GetPath()).
-			Interface("Props", chart.GetProps()).
-			Interface("Values", values).
-			Msg("Chart deployment values")
-		cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
-			Chart: a.Str(chart.GetPath()),
-			HelmFlags: &[]*string{
-				a.Str("--namespace"),
-				a.Str(m.Cfg.Namespace),
-			},
-			ReleaseName: a.Str(chart.GetName()),
-			Values:      values,
-		})
+	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
+		return m
 	}
+	values := &map[string]interface{}{
+		"tolerations":  m.Cfg.Tolerations,
+		"nodeSelector": m.Cfg.NodeSelector,
+	}
+	config.MustMerge(values, chart.GetValues())
+	log.Trace().
+		Str("Chart", chart.GetName()).
+		Str("Path", chart.GetPath()).
+		Interface("Props", chart.GetProps()).
+		Interface("Values", values).
+		Msg("Chart deployment values")
+	cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
+		Chart: a.Str(chart.GetPath()),
+		HelmFlags: &[]*string{
+			a.Str("--namespace"),
+			a.Str(m.Cfg.Namespace),
+		},
+		ReleaseName: a.Str(chart.GetName()),
+		Values:      values,
+	})
 	m.Charts = append(m.Charts, chart)
 	return m
 }
@@ -300,41 +310,54 @@ func (m *Environment) ClearCharts() {
 
 // Run deploys or connects to already created environment
 func (m *Environment) Run() error {
+	if m.Cfg.JobImage != "" {
+		m.AddChart(NewRunner(&Props{
+			BaseName:        "remote-test-runner",
+			TargetNamespace: m.Cfg.Namespace,
+			Labels:          nil,
+			Image:           m.Cfg.JobImage,
+			EnvVars:         getEnvVarsMap(config.EnvVarPrefix),
+		}))
+	}
 	manifest := m.App.SynthYaml().(string)
-	if !m.Cfg.InsideK8s {
-		if err := m.Deploy(manifest); err != nil {
-			log.Error().Err(err).Msg("Error deploying environment")
-			_ = m.Shutdown()
-			return err
-		}
+	if err := m.Deploy(manifest); err != nil {
+		log.Error().Err(err).Msg("Error deploying environment")
+		_ = m.Shutdown()
+		return err
 	}
 	if m.Cfg.DryRun {
 		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
 		return nil
 	}
-	if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s); err != nil {
-		return err
-	}
-	log.Debug().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
-	if err := m.PrintExportData(); err != nil {
-		return err
-	}
-	arts, err := NewArtifacts(m.Client, m.Cfg.Namespace)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to create artifacts client")
-	}
-	m.Artifacts = arts
-	if m.Cfg.KeepConnection {
-		log.Info().Msg("Keeping forwarder connections, press Ctrl+C to interrupt")
-		if m.Cfg.RemoveOnInterrupt {
-			log.Warn().Msg("Environment will be removed on interrupt")
+	if m.Cfg.JobImage != "" {
+		if err := m.Client.WaitForJob(m.Cfg.Namespace, "remote-test-runner"); err != nil {
+			return err
 		}
-		ch := make(chan os.Signal, 1)
-		signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
-		<-ch
-		log.Warn().Msg("Interrupted")
-		if m.Cfg.RemoveOnInterrupt {
-			return m.Client.RemoveNamespace(m.Cfg.Namespace)
+	} else {
+		if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s); err != nil {
+			return err
+		}
+		log.Debug().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
+		if err := m.PrintExportData(); err != nil {
+			return err
+		}
+		arts, err := NewArtifacts(m.Client, m.Cfg.Namespace)
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to create artifacts client")
+		}
+		m.Artifacts = arts
+		if m.Cfg.KeepConnection {
+			log.Info().Msg("Keeping forwarder connections, press Ctrl+C to interrupt")
+			if m.Cfg.RemoveOnInterrupt {
+				log.Warn().Msg("Environment will be removed on interrupt")
+			}
+			ch := make(chan os.Signal, 1)
+			signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
+			<-ch
+			log.Warn().Msg("Interrupted")
+			if m.Cfg.RemoveOnInterrupt {
+				return m.Client.RemoveNamespace(m.Cfg.Namespace)
+			}
 		}
 	}
 	return nil
@@ -377,4 +400,16 @@ func (m *Environment) Deploy(manifest string) error {
 // Shutdown environment, remove namespace
 func (m *Environment) Shutdown() error {
 	return m.Client.RemoveNamespace(m.Cfg.Namespace)
+}
+
+func getEnvVarsMap(prefix string) map[string]string {
+	m := make(map[string]string)
+	for _, e := range os.Environ() {
+		if i := strings.Index(e, "="); i >= 0 {
+			if strings.HasPrefix(e[:i], prefix) {
+				m[e[:i]] = e[i+1:]
+			}
+		}
+	}
+	return m
 }

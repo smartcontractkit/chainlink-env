@@ -32,9 +32,10 @@ import (
 )
 
 const (
-	TempDebugManifest          = "tmp-manifest-%s.yaml"
-	ContainerStatePollInterval = 3 * time.Second
-	AppLabel                   = "app"
+	TempDebugManifest    = "tmp-manifest-%s.yaml"
+	K8sStatePollInterval = 2 * time.Second
+	JobFinalizedTimeout  = 1 * time.Minute
+	AppLabel             = "app"
 )
 
 // K8sClient high level k8s client
@@ -163,7 +164,7 @@ func (m *K8sClient) UniqueLabels(namespace string, selector string) ([]string, e
 // Poll up to timeout seconds for pod to enter running state.
 // Returns an error if the pod never enters the running state.
 func waitForPodRunning(c kubernetes.Interface, namespace, podName string, timeout time.Duration) error {
-	return wait.PollImmediate(2*time.Second, timeout, isPodRunning(c, podName, namespace))
+	return wait.PollImmediate(K8sStatePollInterval, timeout, isPodRunning(c, podName, namespace))
 }
 
 // return a condition function that indicates whether the given pod is
@@ -251,7 +252,7 @@ func (m *K8sClient) WaitContainersReady(ns string, rcd *ReadyCheckData) error {
 			if allReady {
 				return nil
 			}
-			time.Sleep(ContainerStatePollInterval)
+			time.Sleep(K8sStatePollInterval)
 		}
 	}
 }
@@ -305,6 +306,33 @@ func (m *K8sClient) CheckReady(namespace string, c *ReadyCheckData) error {
 		return err
 	}
 	return m.WaitContainersReady(namespace, c)
+}
+
+// WaitForJob wait for job execution, follow logs and returns an error if job failed
+func (m *K8sClient) WaitForJob(namespaceName string, jobName string) error {
+	log.Info().Str("Job", jobName).Msg("Waiting for job to complete")
+	if err := ExecCmd(fmt.Sprintf("kubectl --namespace %s logs --follow job/%s", namespaceName, jobName)); err != nil {
+		return err
+	}
+	var exitErr error
+	if err := wait.PollImmediate(K8sStatePollInterval, JobFinalizedTimeout, func() (bool, error) {
+		job, err := m.ClientSet.BatchV1().Jobs(namespaceName).Get(context.Background(), jobName, metaV1.GetOptions{})
+		if err != nil {
+			exitErr = err
+		}
+		if int(job.Status.Failed) > 0 {
+			exitErr = errors.New("job failed")
+			return true, nil
+		}
+		if int(job.Status.Succeeded) > 0 {
+			exitErr = nil
+			return true, nil
+		}
+		return false, nil
+	}); err != nil {
+		return err
+	}
+	return exitErr
 }
 
 // Apply applying a manifest to a currently connected k8s context
