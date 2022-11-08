@@ -90,7 +90,7 @@ func defaultProps() map[string]interface{} {
 	return map[string]interface{}{
 		"replicas": "1",
 		"env": map[string]interface{}{
-			"DATABASE_URL": "postgresql://postgres:node@0.0.0.0/chainlink?sslmode=disable",
+			"CL_DATABASE_URL": "postgresql://postgres:verylongdatabasepassword@0.0.0.0/chainlink?sslmode=disable",
 		},
 		"chainlink": map[string]interface{}{
 			"image": map[string]interface{}{
@@ -134,7 +134,7 @@ func New(index int, props map[string]interface{}) environment.ConnectedChart {
 	return Chart{
 		Index:  index,
 		Name:   fmt.Sprintf("%s-%d", AppName, index),
-		Path:   "chainlink-qa/chainlink",
+		Path:   "/Users/adamhamrick/Projects/qa-charts/charts/chainlink",
 		Values: &dp,
 	}
 }
