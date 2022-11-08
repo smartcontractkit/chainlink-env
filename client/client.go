@@ -34,7 +34,7 @@ import (
 const (
 	TempDebugManifest    = "tmp-manifest-%s.yaml"
 	K8sStatePollInterval = 2 * time.Second
-	JobFinalizedTimeout  = 1 * time.Minute
+	JobFinalizedTimeout  = 2 * time.Minute
 	AppLabel             = "app"
 )
 
