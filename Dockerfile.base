@@ -1,5 +1,5 @@
 # base test for all k8s test runs
-FROM node:16.15.1-alpine
+FROM golang:1.19-buster
 
 ARG BASE_URL
 ARG HELM_VERSION
@@ -11,15 +11,13 @@ ENV BASE_URL="https://get.helm.sh"
 ENV HELM_VERSION="3.9.4"
 ENV KUBE_VERSION="v1.25.0"
 
-RUN apk update && apk add bash
+RUN curl -sL https://deb.nodesource.com/setup_16.x  | bash - && \
+    apt-get update && apt-get install -y nodejs && \
+    apt-get clean all
 
-RUN apk add --update ca-certificates \
- && apk add -t deps \
- && apk add --update curl \
- && export ARCH="$(uname -m)" && if [[ ${ARCH} == "x86_64" ]]; then export ARCH="amd64"; elif [[ ${ARCH} == "aarch64" ]]; then export ARCH="arm64"; fi && curl -L https://dl.k8s.io/release/${KUBE_VERSION}/bin/linux/${ARCH}/kubectl -o /usr/local/bin/kubectl \
- && chmod +x /usr/local/bin/kubectl \
- && apk del --purge deps \
- && rm /var/cache/apk/*
+RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && \
+     chmod +x ./kubectl && \
+     mv ./kubectl /usr/local/bin
 
 RUN case `uname -m` in \
         x86_64) ARCH=amd64; ;; \
@@ -29,23 +27,15 @@ RUN case `uname -m` in \
         s390x) ARCH=s390x; ;; \
         *) echo "un-supported arch, exit ..."; exit 1; ;; \
     esac && \
-    apk add --update --no-cache wget git curl && \
+    apt-get update && apt-get install -y wget curl git gnupg && \
     wget ${BASE_URL}/helm-v${HELM_VERSION}-linux-${ARCH}.tar.gz -O - | tar -xz && \
     mv linux-${ARCH}/helm /usr/bin/helm && \
     chmod +x /usr/bin/helm && \
     rm -rf linux-${ARCH} && \
-    chmod +x /usr/bin/helm
+    npm install -g yarn && \
+    apt-get clean all
 
 RUN helm repo add chainlink-qa https://raw.githubusercontent.com/smartcontractkit/qa-charts/gh-pages/ && \
     helm repo update
-
-RUN apk add --no-cache git make musl-dev go
-
-# Configure Go
-ENV GOROOT /usr/lib/go
-ENV GOPATH /go
-ENV PATH /go/bin:$PATH
-
-RUN mkdir -p ${GOPATH}/src ${GOPATH}/bin
 
 ENTRYPOINT ["sh"]
