@@ -134,7 +134,7 @@ func New(index int, props map[string]interface{}) environment.ConnectedChart {
 	return Chart{
 		Index:  index,
 		Name:   fmt.Sprintf("%s-%d", AppName, index),
-		Path:   "chainlink-qa/chainlink",
+		Path:   "/Users/adamhamrick/Projects/qa-charts/charts/chainlink",
 		Values: &dp,
 	}
 }
