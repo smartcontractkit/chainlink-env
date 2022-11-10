@@ -17,9 +17,10 @@ type Props struct {
 }
 
 type HelmProps struct {
-	Name   string
-	Path   string
-	Values *map[string]interface{}
+	Name    string
+	Path    string
+	Version string
+	Values  *map[string]interface{}
 }
 
 type Chart struct {
@@ -41,6 +42,10 @@ func (m Chart) GetName() string {
 
 func (m Chart) GetPath() string {
 	return m.HelmProps.Path
+}
+
+func (m Chart) GetVersion() string {
+	return m.HelmProps.Version
 }
 
 func (m Chart) GetValues() *map[string]interface{} {
@@ -111,6 +116,11 @@ func defaultProps() *Props {
 }
 
 func New(props *Props) environment.ConnectedChart {
+	return NewVersioned("", props)
+}
+
+// NewVersioned enables choosing a specific helm chart version
+func NewVersioned(helmVersion string, props *Props) environment.ConnectedChart {
 	targetProps := defaultProps()
 	if props == nil {
 		props = targetProps
@@ -130,5 +140,8 @@ func New(props *Props) environment.ConnectedChart {
 	}
 	return Chart{
 		Props: targetProps,
+		HelmProps: &HelmProps{
+			Version: helmVersion,
+		},
 	}
 }

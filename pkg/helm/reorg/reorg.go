@@ -23,10 +23,11 @@ type Props struct {
 }
 
 type Chart struct {
-	Name   string
-	Path   string
-	Props  *Props
-	Values *map[string]interface{}
+	Name    string
+	Path    string
+	Version string
+	Props   *Props
+	Values  *map[string]interface{}
 }
 
 func (m Chart) IsDeploymentNeeded() bool {
@@ -43,6 +44,10 @@ func (m Chart) GetProps() interface{} {
 
 func (m Chart) GetPath() string {
 	return m.Path
+}
+
+func (m Chart) GetVersion() string {
+	return m.Version
 }
 
 func (m Chart) GetValues() *map[string]interface{} {
@@ -128,13 +133,19 @@ func defaultProps() *Props {
 }
 
 func New(props *Props) environment.ConnectedChart {
+	return NewVersioned("", props)
+}
+
+// NewVersioned enables choosing a specific helm chart version
+func NewVersioned(helmVersion string, props *Props) environment.ConnectedChart {
 	targetProps := defaultProps()
 	config.MustMerge(targetProps, props)
 	config.MustMerge(&targetProps.Values, props.Values)
 	return Chart{
-		Name:   targetProps.NetworkName,
-		Path:   "chainlink-qa/ethereum",
-		Values: &targetProps.Values,
-		Props:  targetProps,
+		Name:    targetProps.NetworkName,
+		Path:    "chainlink-qa/ethereum",
+		Values:  &targetProps.Values,
+		Props:   targetProps,
+		Version: helmVersion,
 	}
 }

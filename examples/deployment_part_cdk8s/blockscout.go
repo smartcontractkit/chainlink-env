@@ -2,6 +2,7 @@ package deployment_part_cdk8s
 
 import (
 	"fmt"
+
 	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
@@ -33,6 +34,10 @@ func (m Chart) GetProps() interface{} {
 }
 
 func (m Chart) GetPath() string {
+	return ""
+}
+
+func (m Chart) GetVersion() string {
 	return ""
 }
 
