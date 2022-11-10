@@ -14,9 +14,10 @@ type Props struct {
 }
 
 type HelmProps struct {
-	Name   string
-	Path   string
-	Values *map[string]interface{}
+	Name    string
+	Path    string
+	Version string
+	Values  *map[string]interface{}
 }
 
 type Chart struct {
@@ -38,6 +39,10 @@ func (m Chart) GetName() string {
 
 func (m Chart) GetPath() string {
 	return m.HelmProps.Path
+}
+
+func (m Chart) GetVersion() string {
+	return m.HelmProps.Version
 }
 
 func (m Chart) GetValues() *map[string]interface{} {
@@ -87,14 +92,19 @@ func defaultProps() *Props {
 }
 
 func New(props *Props) environment.ConnectedChart {
+	return NewVersioned("", props)
+}
+
+func NewVersioned(helmVersion string, props *Props) environment.ConnectedChart {
 	if props == nil {
 		props = defaultProps()
 	}
 	return Chart{
 		HelmProps: &HelmProps{
-			Name:   "starknet-dev",
-			Path:   "chainlink-qa/starknet",
-			Values: &props.Values,
+			Name:    "starknet-dev",
+			Path:    "chainlink-qa/starknet",
+			Values:  &props.Values,
+			Version: helmVersion,
 		},
 		Props: props,
 	}
