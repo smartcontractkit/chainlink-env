@@ -257,26 +257,6 @@ func (m *K8sClient) WaitContainersReady(ns string, rcd *ReadyCheckData) error {
 	}
 }
 
-// WaitForPodBySelectorRunning Wait up to timeout seconds for all pods in 'namespace' with given 'selector' to enter running state.
-// Returns an error if no pods are found or not all discovered pods enter running state.
-func (m *K8sClient) WaitForPodBySelectorRunning(ns string, rcd *ReadyCheckData) error {
-	podList, err := m.ListPods(ns, rcd.ReadinessProbeCheckSelector)
-	if err != nil {
-		return err
-	}
-	if len(podList.Items) == 0 {
-		return fmt.Errorf("waitforpodbyselectorrunning, no pods in %s with selector %s after timeout %s", ns, rcd.ReadinessProbeCheckSelector, rcd.Timeout)
-	}
-
-	log.Info().Interface("Pods", podNames(podList)).Msg("Waiting for pods in state Running")
-	for _, pod := range podList.Items {
-		if err := waitForPodRunning(m.ClientSet, ns, pod.Name, rcd.Timeout); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // NamespaceExists check if namespace exists
 func (m *K8sClient) NamespaceExists(namespace string) bool {
 	if _, err := m.ClientSet.CoreV1().Namespaces().Get(context.Background(), namespace, metaV1.GetOptions{}); err != nil {
@@ -302,9 +282,6 @@ type ReadyCheckData struct {
 
 // CheckReady application heath check using ManifestOutputData params
 func (m *K8sClient) CheckReady(namespace string, c *ReadyCheckData) error {
-	if err := m.WaitForPodBySelectorRunning(namespace, c); err != nil {
-		return err
-	}
 	return m.WaitContainersReady(namespace, c)
 }
 

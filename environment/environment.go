@@ -35,6 +35,8 @@ type ConnectedChart interface {
 	GetName() string
 	// GetPath get Helm chart path, repo or local path
 	GetPath() string
+	// GetVersion gets the chart's version, empty string if none is specified
+	GetVersion() string
 	// GetProps get code props if it's typed environment
 	GetProps() interface{}
 	// GetValues get values.yml props as map, if it's Helm
@@ -241,12 +243,16 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 		Interface("Props", chart.GetProps()).
 		Interface("Values", values).
 		Msg("Chart deployment values")
-	cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
-		Chart: a.Str(chart.GetPath()),
-		HelmFlags: &[]*string{
+		helmFlags := []*string{
 			a.Str("--namespace"),
 			a.Str(m.Cfg.Namespace),
-		},
+		}
+		if chart.GetVersion() != "" {
+			helmFlags = append(helmFlags, a.Str("--version"), a.Str(chart.GetVersion()))
+		}
+		cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
+			Chart:       a.Str(chart.GetPath()),
+			HelmFlags:   &helmFlags,
 		ReleaseName: a.Str(chart.GetName()),
 		Values:      values,
 	})

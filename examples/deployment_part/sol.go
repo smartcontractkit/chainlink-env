@@ -15,9 +15,10 @@ type Props struct {
 }
 
 type HelmProps struct {
-	Name   string
-	Path   string
-	Values *map[string]interface{}
+	Name    string
+	Path    string
+	Version string
+	Values  *map[string]interface{}
 }
 
 type Chart struct {
@@ -39,6 +40,10 @@ func (m Chart) GetName() string {
 
 func (m Chart) GetPath() string {
 	return m.HelmProps.Path
+}
+
+func (m Chart) GetVersion() string {
+	return m.HelmProps.Version
 }
 
 func (m Chart) GetValues() *map[string]interface{} {
