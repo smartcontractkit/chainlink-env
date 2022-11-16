@@ -50,8 +50,8 @@ jobs:
       - name: build test runner
         uses: smartcontractkit/chainlink-github-actions/docker/build-push@v2.0.27 # v2.0.26
         with:
-          push-tag: ${{ env.ENV_JOB_IMAGE }}
-          dockerfile-path: Dockerfile
+          tags: ${{ env.ENV_JOB_IMAGE }}
+          file: Dockerfile
           AWS_REGION: ${{ secrets.QA_AWS_REGION }}
           AWS_ROLE_TO_ASSUME: ${{ secrets.QA_AWS_ROLE_TO_ASSUME }}
       - name: run tests action

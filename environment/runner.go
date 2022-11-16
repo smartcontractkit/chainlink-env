@@ -28,6 +28,10 @@ func (m Chart) GetPath() string {
 	return ""
 }
 
+func (m Chart) GetVersion() string {
+	return ""
+}
+
 func (m Chart) GetValues() *map[string]interface{} {
 	return nil
 }
