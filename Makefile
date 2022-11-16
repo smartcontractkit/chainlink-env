@@ -28,12 +28,6 @@ install_deps:
 	helm repo add grafana https://grafana.github.io/helm-charts
 	helm repo update
 
-.PHONY: install_deps_ci
-install_deps_ci:
-	yarn global add cdk8s-cli@$(CDK8S_CLI_VERSION)
-	helm repo add grafana https://grafana.github.io/helm-charts
-	helm repo update
-
 .PHONY: create_cluster
 create_cluster:
 	k3d cluster create local --config k3d.yaml

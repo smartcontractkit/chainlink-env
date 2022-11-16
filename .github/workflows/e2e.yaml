@@ -4,6 +4,7 @@ on:
 concurrency:
   group: e2e-tests-chainlink-env-${{ github.ref }}
   cancel-in-progress: true
+
 jobs:
   e2e_tests:
     runs-on: ubuntu-latest
@@ -17,59 +18,30 @@ jobs:
       CHAINLINK_ENV_USER: ${{ github.actor }}
       TEST_TRIGGERED_BY: chainlink-env-ci
       TEST_LOG_LEVEL: debug
-      ENV_JOB_IMAGE: ${{ secrets.QA_AWS_ACCOUNT_NUMBER }}.dkr.ecr.${{ secrets.QA_AWS_REGION }}.amazonaws.com/chainlink-tests:ci.${{ github.sha }}
+      ENV_JOB_IMAGE: ${{ secrets.QA_AWS_ACCOUNT_NUMBER }}.dkr.ecr.${{ secrets.QA_AWS_REGION }}.amazonaws.com/chainlink-env-tests:ci.${{ github.sha }}
     steps:
       - uses: actions/checkout@v3
-      # - name: Set up Go
-      #   uses: actions/setup-go@v3
-      #   with:
-      #     go-version-file: "go.mod"
-      #     check-latest: true
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-region: ${{ secrets.QA_AWS_REGION }}
-      #     role-to-assume: ${{ secrets.QA_AWS_ROLE_TO_ASSUME }}
-      #     role-duration-seconds: 3600
-      # - name: Set Kubernetes Context
-      #   uses: azure/k8s-set-context@v3
-      #   with:
-      #     method: kubeconfig
-      #     kubeconfig: ${{ secrets.QA_KUBECONFIG }}
-      # - name: Install deps
-      #   run: make install_deps_ci
-      # - name: Test deployments
-      #   env:
-      #     CHAINLINK_COMMIT_SHA: ${{ github.sha }}
-      #     CHAINLINK_ENV_USER: ${{ github.actor }}
-      #     NETWORKS_CONFIG_FILE: ${{ secrets.NETWORKS_CONFIG_FILE }}
-      #   run: |
-      #     export TEST_TRIGGERED_BY=${{ env.TEST_TRIGGERED_BY }}-${{ github.event.pull_request.number || github.run_id }}
-      #     make test_e2e
-      #       - name: Run Tests
-      - name: build test runner
-        uses: smartcontractkit/chainlink-github-actions/docker/build-push@v2.0.27 # v2.0.26
+      - name: Build Test Runner
+        uses: smartcontractkit/chainlink-github-actions/docker/build-push@8fa03d02c08818f172931abdb14a4a3de1c89064 # v2.0.28
         with:
           tags: ${{ env.ENV_JOB_IMAGE }}
           file: Dockerfile
           AWS_REGION: ${{ secrets.QA_AWS_REGION }}
           AWS_ROLE_TO_ASSUME: ${{ secrets.QA_AWS_ROLE_TO_ASSUME }}
-      - name: run tests action
-        uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/run-tests@5ca2b0a07d534f216fb97ab54e69d3fdcf03de11 # v2.0.25
+      - name: Run Tests
+        uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/run-tests@8fa03d02c08818f172931abdb14a4a3de1c89064 # v2.0.28
         with:
           test_command_to_run: make test_e2e
           test_download_vendor_packages_command: go mod download
-          test_download_ginkgo_command: echo "not needed"
-          # cl_repo: ${{ secrets.QA_AWS_ACCOUNT_NUMBER }}.dkr.ecr.${{ secrets.QA_AWS_REGION }}.amazonaws.com/chainlink
-          # cl_image_tag: latest.${{ github.sha }}
           artifacts_location: ./e2e/logs
           publish_check_name: E2E Test Results
           triggered_by: ${{ env.TEST_TRIGGERED_BY }}
+          go_mod_path: go.mod
           QA_AWS_REGION: ${{ secrets.QA_AWS_REGION }}
           QA_AWS_ROLE_TO_ASSUME: ${{ secrets.QA_AWS_ROLE_TO_ASSUME }}
           QA_KUBECONFIG: ${{ secrets.QA_KUBECONFIG }}
       - name: cleanup
         if: always()
-        uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/cleanup@v2.0.27
+        uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/cleanup@8fa03d02c08818f172931abdb14a4a3de1c89064 # v2.0.28
         with:
           triggered_by: ${{ env.TEST_TRIGGERED_BY }}

@@ -146,7 +146,7 @@ func container(props *Props) *k8s.Container {
 		Image:           a.Str(props.Image),
 		ImagePullPolicy: a.Str("IfNotPresent"),
 		Env:             jobEnvVars(props),
-		Resources:       a.ContainerResources("1000m", "1024Mi", "1000m", "1024Mi"),
+		Resources:       a.ContainerResources("2000m", "1536Mi", "2000m", "1536Mi"),
 	}
 }
 
