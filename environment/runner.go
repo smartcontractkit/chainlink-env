@@ -88,6 +88,7 @@ func role(chart cdk8s.Chart, props *Props) {
 						a.Str("list"),
 						a.Str("create"),
 						a.Str("patch"),
+						a.Str("delete"),
 					},
 				},
 			},
