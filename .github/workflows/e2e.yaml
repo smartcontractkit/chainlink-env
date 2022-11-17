@@ -18,18 +18,27 @@ jobs:
       CHAINLINK_ENV_USER: ${{ github.actor }}
       TEST_TRIGGERED_BY: chainlink-env-ci
       TEST_LOG_LEVEL: debug
+      BASE_IMAGE_NAME: ${{ secrets.QA_AWS_ACCOUNT_NUMBER }}.dkr.ecr.${{ secrets.QA_AWS_REGION }}.amazonaws.com/test-base-image:ci.${{ github.sha }}
       ENV_JOB_IMAGE: ${{ secrets.QA_AWS_ACCOUNT_NUMBER }}.dkr.ecr.${{ secrets.QA_AWS_REGION }}.amazonaws.com/chainlink-env-tests:ci.${{ github.sha }}
     steps:
       - uses: actions/checkout@v3
+      - name: Build Base Image
+        uses: smartcontractkit/chainlink-github-actions/docker/build-push@cb4a8f51d77cbf77ea6a765bd1f437ffc7a18730 # v2.0.28
+        with:
+          tags: ${{ env.BASE_IMAGE_NAME }}
+          file: Dockerfile.base
+          AWS_REGION: ${{ secrets.QA_AWS_REGION }}
+          AWS_ROLE_TO_ASSUME: ${{ secrets.QA_AWS_ROLE_TO_ASSUME }}
       - name: Build Test Runner
-        uses: smartcontractkit/chainlink-github-actions/docker/build-push@d6e7e565a9020d8c48fb87f9562c0fd4105efe89 # v2.0.28
+        uses: smartcontractkit/chainlink-github-actions/docker/build-push@cb4a8f51d77cbf77ea6a765bd1f437ffc7a18730 # v2.0.28
         with:
           tags: ${{ env.ENV_JOB_IMAGE }}
           file: Dockerfile
+          build-args: BASE_IMAGE=${{ env.BASE_IMAGE_NAME }}
           AWS_REGION: ${{ secrets.QA_AWS_REGION }}
           AWS_ROLE_TO_ASSUME: ${{ secrets.QA_AWS_ROLE_TO_ASSUME }}
       - name: Run Tests
-        uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/run-tests@d6e7e565a9020d8c48fb87f9562c0fd4105efe89 # v2.0.28
+        uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/run-tests@cb4a8f51d77cbf77ea6a765bd1f437ffc7a18730 # v2.0.28
         with:
           test_command_to_run: make test_e2e
           test_download_vendor_packages_command: go mod download
@@ -42,6 +51,6 @@ jobs:
           QA_KUBECONFIG: ${{ secrets.QA_KUBECONFIG }}
       - name: cleanup
         if: always()
-        uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/cleanup@d6e7e565a9020d8c48fb87f9562c0fd4105efe89 # v2.0.28
+        uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/cleanup@cb4a8f51d77cbf77ea6a765bd1f437ffc7a18730 # v2.0.28
         with:
           triggered_by: ${{ env.TEST_TRIGGERED_BY }}
