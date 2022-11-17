@@ -164,7 +164,7 @@ func (m *K8sClient) UniqueLabels(namespace string, selector string) ([]string, e
 // Poll up to timeout seconds for pod to enter running state.
 // Returns an error if the pod never enters the running state.
 // func waitForPodRunning(c kubernetes.Interface, namespace, podName string, timeout time.Duration) error {
-	return wait.PollImmediate(2*time.Second, timeout, isPodRunning(c, podName, namespace))
+// 	return wait.PollImmediate(2*time.Second, timeout, isPodRunning(c, podName, namespace))
 // }
 
 // return a condition function that indicates whether the given pod is
