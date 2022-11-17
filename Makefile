@@ -23,6 +23,16 @@ install_deps:
 	asdf plugin-add golangci-lint || true
 	asdf install
 	mkdir /tmp/k3dvolume/ || true
+	yarn global add cdk8s-cli@2.0.103
+	brew install kubectl
+	curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+	helm repo add chainlink-qa https://raw.githubusercontent.com/smartcontractkit/qa-charts/gh-pages/
+	helm repo add grafana https://grafana.github.io/helm-charts
+	helm repo update
+
+.PHONY: install_deps_ci
+install_deps_ci: golangci
+	mkdir /tmp/k3dvolume/ || true
 	yarn global add cdk8s-cli@$(CDK8S_CLI_VERSION)
 	helm repo add chainlink-qa https://raw.githubusercontent.com/smartcontractkit/qa-charts/gh-pages/
 	helm repo add grafana https://grafana.github.io/helm-charts
