@@ -22,14 +22,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build Test Runner
-        uses: smartcontractkit/chainlink-github-actions/docker/build-push@8fa03d02c08818f172931abdb14a4a3de1c89064 # v2.0.28
+        uses: smartcontractkit/chainlink-github-actions/docker/build-push@d6e7e565a9020d8c48fb87f9562c0fd4105efe89 # v2.0.28
         with:
           tags: ${{ env.ENV_JOB_IMAGE }}
           file: Dockerfile
           AWS_REGION: ${{ secrets.QA_AWS_REGION }}
           AWS_ROLE_TO_ASSUME: ${{ secrets.QA_AWS_ROLE_TO_ASSUME }}
       - name: Run Tests
-        uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/run-tests@8fa03d02c08818f172931abdb14a4a3de1c89064 # v2.0.28
+        uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/run-tests@d6e7e565a9020d8c48fb87f9562c0fd4105efe89 # v2.0.28
         with:
           test_command_to_run: make test_e2e
           test_download_vendor_packages_command: go mod download
@@ -42,6 +42,6 @@ jobs:
           QA_KUBECONFIG: ${{ secrets.QA_KUBECONFIG }}
       - name: cleanup
         if: always()
-        uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/cleanup@8fa03d02c08818f172931abdb14a4a3de1c89064 # v2.0.28
+        uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/cleanup@d6e7e565a9020d8c48fb87f9562c0fd4105efe89 # v2.0.28
         with:
           triggered_by: ${{ env.TEST_TRIGGERED_BY }}

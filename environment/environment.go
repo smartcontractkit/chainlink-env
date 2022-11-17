@@ -244,16 +244,16 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 		Interface("Props", chart.GetProps()).
 		Interface("Values", values).
 		Msg("Chart deployment values")
-		helmFlags := []*string{
-			a.Str("--namespace"),
-			a.Str(m.Cfg.Namespace),
-		}
-		if chart.GetVersion() != "" {
-			helmFlags = append(helmFlags, a.Str("--version"), a.Str(chart.GetVersion()))
-		}
-		cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
-			Chart:       a.Str(chart.GetPath()),
-			HelmFlags:   &helmFlags,
+	helmFlags := []*string{
+		a.Str("--namespace"),
+		a.Str(m.Cfg.Namespace),
+	}
+	if chart.GetVersion() != "" {
+		helmFlags = append(helmFlags, a.Str("--version"), a.Str(chart.GetVersion()))
+	}
+	cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
+		Chart:       a.Str(chart.GetPath()),
+		HelmFlags:   &helmFlags,
 		ReleaseName: a.Str(chart.GetName()),
 		Values:      values,
 	})
@@ -330,7 +330,8 @@ func (m *Environment) Run() error {
 			EnvVars:         getEnvVarsMap(config.EnvVarPrefix),
 		}))
 	}
-		if err := m.Deploy(m.CurrentManifest); err != nil {
+	m.CurrentManifest = m.App.SynthYaml().(string)
+	if err := m.Deploy(m.CurrentManifest); err != nil {
 		log.Error().Err(err).Msg("Error deploying environment")
 		_ = m.Shutdown()
 		return err
