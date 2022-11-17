@@ -12,10 +12,6 @@ type Chart struct {
 	Props *Props
 }
 
-func (m Chart) GetVersion() string {
-	return "1.0"
-}
-
 func (m Chart) IsDeploymentNeeded() bool {
 	return true
 }
@@ -29,6 +25,10 @@ func (m Chart) GetProps() interface{} {
 }
 
 func (m Chart) GetPath() string {
+	return ""
+}
+
+func (m Chart) GetVersion() string {
 	return ""
 }
 
@@ -146,7 +146,7 @@ func container(props *Props) *k8s.Container {
 		Image:           a.Str(props.Image),
 		ImagePullPolicy: a.Str("IfNotPresent"),
 		Env:             jobEnvVars(props),
-		Resources:       a.ContainerResources("1000m", "1024Mi", "1000m", "1024Mi"),
+		Resources:       a.ContainerResources("2000m", "1536Mi", "2000m", "1536Mi"),
 	}
 }
 

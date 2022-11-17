@@ -161,32 +161,6 @@ func (m *K8sClient) UniqueLabels(namespace string, selector string) ([]string, e
 	return uniqueLabels, nil
 }
 
-// Poll up to timeout seconds for pod to enter running state.
-// Returns an error if the pod never enters the running state.
-func waitForPodRunning(c kubernetes.Interface, namespace, podName string, timeout time.Duration) error {
-	return wait.PollImmediate(K8sStatePollInterval, timeout, isPodRunning(c, podName, namespace))
-}
-
-// return a condition function that indicates whether the given pod is
-// currently running
-func isPodRunning(c kubernetes.Interface, podName, namespace string) wait.ConditionFunc {
-	return func() (bool, error) {
-		pod, err := c.CoreV1().Pods(namespace).Get(context.Background(), podName, metaV1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-		switch pod.Status.Phase {
-		case v1.PodRunning:
-			fallthrough
-		case v1.PodSucceeded:
-			return true, nil
-		case v1.PodFailed:
-			return false, errors.New("pod failed")
-		}
-		return false, nil
-	}
-}
-
 // AddLabelByPod adds a label to a pod
 func (m *K8sClient) AddLabelByPod(namespace string, pod v1.Pod, key, value string) error {
 	labelPatch := fmt.Sprintf(`[{"op":"add","path":"/metadata/labels/%s","value":"%s" }]`, key, value)

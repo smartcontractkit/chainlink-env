@@ -252,11 +252,8 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 		helmFlags = append(helmFlags, a.Str("--version"), a.Str(chart.GetVersion()))
 	}
 	cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
-		Chart: a.Str(chart.GetPath()),
-		HelmFlags: &[]*string{
-			a.Str("--namespace"),
-			a.Str(m.Cfg.Namespace),
-		},
+		Chart:       a.Str(chart.GetPath()),
+		HelmFlags:   &helmFlags,
 		ReleaseName: a.Str(chart.GetName()),
 		Values:      values,
 	})

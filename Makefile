@@ -1,14 +1,11 @@
 BIN_DIR = bin
 export GOPATH ?= $(shell go env GOPATH)
 export GO111MODULE ?= on
+CDK8S_CLI_VERSION=2.1.48
 
 .PHONY: lint
 lint:
-	${BIN_DIR}/golangci-lint --color=always run -v
-
-.PHONY: golangci
-golangci:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${BIN_DIR} v1.46.2
+	golangci-lint --color=always run -v
 
 .PHONY: docker_prune
 docker_prune:
@@ -16,22 +13,17 @@ docker_prune:
 	docker volume prune -f
 
 .PHONY: install_deps
-install_deps: golangci
+install_deps:
+	asdf plugin-add nodejs || true
+	asdf plugin-add yarn || true
+	asdf plugin-add golang || true
+	asdf plugin-add k3d || true
+	asdf plugin-add helm || true
+	asdf plugin-add kubectl || true
+	asdf plugin-add golangci-lint || true
+	asdf install
 	mkdir /tmp/k3dvolume/ || true
-	yarn global add cdk8s-cli@2.0.103
-	brew install kubectl
-	curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-	helm repo add chainlink-qa https://raw.githubusercontent.com/smartcontractkit/qa-charts/gh-pages/
-	helm repo add grafana https://grafana.github.io/helm-charts
-	helm repo update
-
-.PHONY: install_deps_ci
-install_deps_ci: golangci
-	mkdir /tmp/k3dvolume/ || true
-	yarn global add cdk8s-cli@2.0.103
-	curl -LO https://dl.k8s.io/release/v1.24.0/bin/darwin/amd64/kubectl
-	chmod +x ./kubectl
-	mv kubectl ./bin
+	yarn global add cdk8s-cli@$(CDK8S_CLI_VERSION)
 	curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 	helm repo add chainlink-qa https://raw.githubusercontent.com/smartcontractkit/qa-charts/gh-pages/
 	helm repo add grafana https://grafana.github.io/helm-charts
