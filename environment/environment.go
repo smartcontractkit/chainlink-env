@@ -94,15 +94,16 @@ func defaultEnvConfig() *Config {
 
 // Environment describes a launched test environment
 type Environment struct {
-	App       cdk8s.App
-	root      cdk8s.Chart
-	Charts    []ConnectedChart  // All connected charts in the
-	Cfg       *Config           // The environment specific config
-	Client    *client.K8sClient // Client connecting to the K8s cluster
-	Fwd       *client.Forwarder // Used to forward ports from local machine to the K8s cluster
-	Artifacts *Artifacts
-	Chaos     *client.Chaos
-	URLs      map[string][]string // General URLs of launched resources. Uses '_local' to delineate forwarded ports
+	App             cdk8s.App
+	CurrentManifest string
+	root            cdk8s.Chart
+	Charts          []ConnectedChart  // All connected charts in the
+	Cfg             *Config           // The environment specific config
+	Client          *client.K8sClient // Client connecting to the K8s cluster
+	Fwd             *client.Forwarder // Used to forward ports from local machine to the K8s cluster
+	Artifacts       *Artifacts
+	Chaos           *client.Chaos
+	URLs            map[string][]string // General URLs of launched resources. Uses '_local' to delineate forwarded ports
 }
 
 // New creates new environment
@@ -314,6 +315,10 @@ func (m *Environment) ClearCharts() {
 	m.initApp()
 }
 
+func (m *Environment) Manifest() string {
+	return m.CurrentManifest
+}
+
 // Run deploys or connects to already created environment
 func (m *Environment) Run() error {
 	if m.Cfg.JobImage != "" {
@@ -325,8 +330,7 @@ func (m *Environment) Run() error {
 			EnvVars:         getEnvVarsMap(config.EnvVarPrefix),
 		}))
 	}
-	manifest := m.App.SynthYaml().(string)
-	if err := m.Deploy(manifest); err != nil {
+		if err := m.Deploy(m.CurrentManifest); err != nil {
 		log.Error().Err(err).Msg("Error deploying environment")
 		_ = m.Shutdown()
 		return err

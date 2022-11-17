@@ -238,15 +238,8 @@ func (m *K8sClient) WaitContainersReady(ns string, rcd *ReadyCheckData) error {
 				if pod.Status.Phase == "Succeeded" {
 					continue
 				}
-				for _, c := range pod.Status.ContainerStatuses {
-					if !c.Ready {
-						log.Debug().
-							Str("Pod", pod.Name).
-							Str("Container", c.Name).
-							Interface("Ready", c.Ready).
-							Msg("Container readiness")
-						allReady = false
-					}
+				if pod.Status.Phase != v1.PodRunning {
+					allReady = false
 				}
 			}
 			if allReady {
