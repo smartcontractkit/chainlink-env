@@ -12,10 +12,6 @@ type Chart struct {
 	Props *Props
 }
 
-func (m Chart) GetVersion() string {
-	return "1.0"
-}
-
 func (m Chart) IsDeploymentNeeded() bool {
 	return true
 }
