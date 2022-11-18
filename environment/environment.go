@@ -109,6 +109,7 @@ type Environment struct {
 // New creates new environment
 func New(cfg *Config) *Environment {
 	logging.Init()
+	log.Debug().Interface("Environ", os.Environ()).Msg("Environment vars")
 	if cfg == nil {
 		cfg = &Config{}
 	}
@@ -415,10 +416,12 @@ func (m *Environment) Shutdown() error {
 
 func getEnvVarsMap(prefix string) map[string]string {
 	m := make(map[string]string)
+	log.Warn().Interface("Environ", os.Environ()).Msg("Environment vars")
 	for _, e := range os.Environ() {
 		if i := strings.Index(e, "="); i >= 0 {
 			if strings.HasPrefix(e[:i], prefix) {
-				m[e[:i]] = e[i+1:]
+				withoutPrefix := strings.Replace(e[:i], "TEST_", "", -1)
+				m[withoutPrefix] = e[i+1:]
 			}
 		}
 	}

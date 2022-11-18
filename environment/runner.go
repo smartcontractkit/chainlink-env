@@ -145,7 +145,7 @@ func container(props *Props) *k8s.Container {
 	return &k8s.Container{
 		Name:            a.Str(fmt.Sprintf("%s-node", props.BaseName)),
 		Image:           a.Str(props.Image),
-		ImagePullPolicy: a.Str("IfNotPresent"),
+		ImagePullPolicy: a.Str("Always"),
 		Env:             jobEnvVars(props),
 		Resources:       a.ContainerResources("2000m", "1536Mi", "2000m", "1536Mi"),
 	}
