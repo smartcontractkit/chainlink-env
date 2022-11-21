@@ -1,9 +1,21 @@
 name: Deployments tests (E2E)
 on:
   pull_request:
+
 concurrency:
   group: e2e-tests-chainlink-env-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  ENV_JOB_IMAGE: ${{ secrets.QA_AWS_ACCOUNT_NUMBER }}.dkr.ecr.${{ secrets.QA_AWS_REGION }}.amazonaws.com/chainlink-env-tests:ci.${{ github.sha }}
+  BASE_IMAGE_NAME: ${{ secrets.QA_AWS_ACCOUNT_NUMBER }}.dkr.ecr.${{ secrets.QA_AWS_REGION }}.amazonaws.com/test-base-image:ci.${{ github.sha }}
+  TEST_CHAINLINK_IMAGE: ${{ secrets.QA_AWS_ACCOUNT_NUMBER }}.dkr.ecr.${{ secrets.QA_AWS_REGION }}.amazonaws.com/chainlink
+  TEST_CHAINLINK_VERSION: develop
+  SELECTED_NETWORKS: SIMULATED
+  CHAINLINK_COMMIT_SHA: ${{ github.sha }}
+  CHAINLINK_ENV_USER: ${{ github.actor }}
+  TEST_TRIGGERED_BY: chainlink-env-ci
+  TEST_LOG_LEVEL: debug
 
 jobs:
   e2e_tests:
@@ -12,14 +24,6 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    env:
-      SELECTED_NETWORKS: SIMULATED
-      CHAINLINK_COMMIT_SHA: ${{ github.sha }}
-      CHAINLINK_ENV_USER: ${{ github.actor }}
-      TEST_TRIGGERED_BY: chainlink-env-ci
-      TEST_LOG_LEVEL: debug
-      BASE_IMAGE_NAME: ${{ secrets.QA_AWS_ACCOUNT_NUMBER }}.dkr.ecr.${{ secrets.QA_AWS_REGION }}.amazonaws.com/test-base-image:ci.${{ github.sha }}
-      ENV_JOB_IMAGE: ${{ secrets.QA_AWS_ACCOUNT_NUMBER }}.dkr.ecr.${{ secrets.QA_AWS_REGION }}.amazonaws.com/chainlink-env-tests:ci.${{ github.sha }}
     steps:
       - uses: actions/checkout@v3
       - name: Build Base Image
