@@ -45,3 +45,5 @@ If you have [chaosmesh]() installed in your cluster you can pull and generated C
 ```
 make chaosmesh
 ```
+
+If you need to check your system tests coverage, use [that](TUTORIAL.md#coverage)

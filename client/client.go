@@ -24,7 +24,6 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -158,32 +157,6 @@ func (m *K8sClient) UniqueLabels(namespace string, selector string) ([]string, e
 		Interface("Apps", uniqueLabels).
 		Msg("Apps found")
 	return uniqueLabels, nil
-}
-
-// Poll up to timeout seconds for pod to enter running state.
-// Returns an error if the pod never enters the running state.
-func waitForPodRunning(c kubernetes.Interface, namespace, podName string, timeout time.Duration) error {
-	return wait.PollImmediate(2*time.Second, timeout, isPodRunning(c, podName, namespace))
-}
-
-// return a condition function that indicates whether the given pod is
-// currently running
-func isPodRunning(c kubernetes.Interface, podName, namespace string) wait.ConditionFunc {
-	return func() (bool, error) {
-		pod, err := c.CoreV1().Pods(namespace).Get(context.Background(), podName, metaV1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-		switch pod.Status.Phase {
-		case v1.PodRunning:
-			fallthrough
-		case v1.PodSucceeded:
-			return true, nil
-		case v1.PodFailed:
-			return false, errors.New("pod failed")
-		}
-		return false, nil
-	}
 }
 
 // AddLabelByPod adds a label to a pod

@@ -7,10 +7,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pkg/errors"
-
 	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
+	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
@@ -18,6 +18,10 @@ import (
 	"github.com/smartcontractkit/chainlink-env/logging"
 	"github.com/smartcontractkit/chainlink-env/pkg"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
+)
+
+const (
+	COVERAGE_DIR = "cover"
 )
 
 var (
@@ -100,6 +104,7 @@ type Environment struct {
 	Fwd             *client.Forwarder // Used to forward ports from local machine to the K8s cluster
 	Artifacts       *Artifacts
 	Chaos           *client.Chaos
+	httpClient      *resty.Client
 	URLs            map[string][]string // General URLs of launched resources. Uses '_local' to delineate forwarded ports
 }
 
@@ -335,6 +340,9 @@ func (m *Environment) Run() error {
 		log.Fatal().Err(err).Msg("failed to create artifacts client")
 	}
 	m.Artifacts = arts
+	if len(m.URLs["goc"]) != 0 {
+		m.httpClient = resty.New().SetBaseURL(m.URLs["goc"][0])
+	}
 	if m.Cfg.KeepConnection {
 		log.Info().Msg("Keeping forwarder connections, press Ctrl+C to interrupt")
 		if m.Cfg.RemoveOnInterrupt {
@@ -383,6 +391,75 @@ func (m *Environment) Deploy(manifest string) error {
 		return err
 	}
 	return m.enumerateApps()
+}
+
+type CoverageProfileParams struct {
+	Force             bool     `form:"force" json:"force"`
+	Service           []string `form:"service" json:"service"`
+	Address           []string `form:"address" json:"address"`
+	CoverFilePatterns []string `form:"coverfile" json:"coverfile"`
+	SkipFilePatterns  []string `form:"skipfile" json:"skipfile"`
+}
+
+func (m *Environment) getCoverageList() (map[string]interface{}, error) {
+	var servicesMap map[string]interface{}
+	resp, err := m.httpClient.R().
+		SetResult(&servicesMap).
+		Get("v1/cover/list")
+	if err != nil {
+		return nil, err
+	}
+	if resp.Status() != "200 OK" {
+		return nil, errors.New("coverage service list request is not 200")
+	}
+	return servicesMap, nil
+}
+
+func (m *Environment) ClearCoverage() error {
+	servicesMap, err := m.getCoverageList()
+	if err != nil {
+		return err
+	}
+	for serviceName := range servicesMap {
+		r, err := m.httpClient.R().
+			SetBody(CoverageProfileParams{Service: []string{serviceName}}).
+			Post("v1/cover/clear")
+		if err != nil {
+			return err
+		}
+		if r.Status() != "200 OK" {
+			return errors.New("coverage service list request is not 200")
+		}
+		log.Debug().Str("Service", serviceName).Msg("Coverage cleared")
+	}
+	return nil
+}
+
+func (m *Environment) SaveCoverage() error {
+	if err := MkdirIfNotExists(COVERAGE_DIR); err != nil {
+		return err
+	}
+	servicesMap, err := m.getCoverageList()
+	if err != nil {
+		return err
+	}
+	log.Debug().Interface("Services", servicesMap).Msg("Services eligible for coverage")
+	for serviceName := range servicesMap {
+		r, err := m.httpClient.R().
+			SetBody(CoverageProfileParams{Service: []string{serviceName}}).
+			Post("v1/cover/profile")
+		if err != nil {
+			return err
+		}
+		if r.Status() != "200 OK" {
+			return errors.New("coverage service list request is not 200")
+		}
+		log.Debug().Str("Service", serviceName).Msg("Coverage received")
+		if err := os.WriteFile(fmt.Sprintf("%s/%s.cov", COVERAGE_DIR, serviceName), r.Body(), os.ModePerm); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Shutdown environment, remove namespace
