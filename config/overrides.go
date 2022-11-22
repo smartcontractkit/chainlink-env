@@ -8,8 +8,6 @@ import (
 )
 
 const (
-	EnvVarPrefix = "TEST_"
-	
 	EnvVarNamespace            = "ENV_NAMESPACE"
 	EnvVarNamespaceDescription = "Namespace name to connect to"
 	EnvVarNamespaceExample     = "chainlink-test-epic"
