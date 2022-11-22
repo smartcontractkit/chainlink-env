@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
+	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
 )
@@ -153,8 +154,8 @@ func container(props *Props) *k8s.Container {
 
 func jobEnvVars(props *Props) *[]*k8s.EnvVar {
 	cdk8sVars := make([]*k8s.EnvVar, 0)
-	cdk8sVars = append(cdk8sVars, a.EnvVarStr("ENV_NAMESPACE", props.TargetNamespace))
-	cdk8sVars = append(cdk8sVars, a.EnvVarStr("ENV_INSIDE_K8S", "true"))
+	cdk8sVars = append(cdk8sVars, a.EnvVarStr(config.EnvVarNamespace, props.TargetNamespace))
+	cdk8sVars = append(cdk8sVars, a.EnvVarStr(config.EnvVarInsideK8s, "true"))
 	for k, v := range props.EnvVars {
 		cdk8sVars = append(cdk8sVars, a.EnvVarStr(k, v))
 	}

@@ -9,7 +9,7 @@ import (
 
 const (
 	EnvVarPrefix = "TEST_"
-	
+
 	EnvVarNamespace            = "ENV_NAMESPACE"
 	EnvVarNamespaceDescription = "Namespace name to connect to"
 	EnvVarNamespaceExample     = "chainlink-test-epic"
@@ -45,6 +45,10 @@ const (
 	EnvVarLogLevel            = "TEST_LOG_LEVEL"
 	EnvVarLogLevelDescription = "Environment logging level"
 	EnvVarLogLevelExample     = "info | debug | trace"
+
+	EnvVarSelectedNetworks            = "SELECTED_NETWORKS"
+	EnvVarSelectedNetworksDescription = "Networks to select for testing"
+	EnvVarSelectedNetworksExample     = "SIMULATED"
 
 	EnvVarSlackKey            = "SLACK_API_KEY"
 	EnvVarSlackKeyDescription = "The OAuth Slack API key to report tests results with"

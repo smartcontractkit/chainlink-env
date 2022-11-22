@@ -425,5 +425,27 @@ func getEnvVarsMap(prefix string) map[string]string {
 			}
 		}
 	}
+	// add important variables
+	lookups := []string{
+		config.EnvVarCLImage,
+		config.EnvVarCLTag,
+		config.EnvVarCLCommitSha,
+		config.EnvVarLogLevel,
+		config.EnvVarTestTrigger,
+		config.EnvVarToleration,
+		config.EnvVarSlackChannel,
+		config.EnvVarSlackKey,
+		config.EnvVarSlackUser,
+		config.EnvVarUser,
+		config.EnvVarNodeSelector,
+		config.EnvVarSelectedNetworks,
+	}
+	for _, k := range lookups {
+		v, success := os.LookupEnv(k)
+		if success && len(v) > 0 {
+			log.Debug().Str(k, v).Msg("Forwarding Env Var")
+			m[k] = v
+		}
+	}
 	return m
 }
