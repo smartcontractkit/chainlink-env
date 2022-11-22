@@ -328,7 +328,7 @@ func (m *Environment) Run() error {
 			TargetNamespace: m.Cfg.Namespace,
 			Labels:          nil,
 			Image:           m.Cfg.JobImage,
-			EnvVars:         getEnvVarsMap(),
+			EnvVars:         getEnvVarsMap(config.EnvVarPrefix),
 		}))
 	}
 	m.CurrentManifest = m.App.SynthYaml().(string)
@@ -414,13 +414,15 @@ func (m *Environment) Shutdown() error {
 	return m.Client.RemoveNamespace(m.Cfg.Namespace)
 }
 
-func getEnvVarsMap() map[string]string {
+func getEnvVarsMap(prefix string) map[string]string {
 	m := make(map[string]string)
 	log.Warn().Interface("Environ", os.Environ()).Msg("Environment vars")
 	for _, e := range os.Environ() {
-		varArray := strings.SplitN(e, "=", 2)
-		if len(varArray) == 2 {
-			m[varArray[0]] = varArray[1]
+		if i := strings.Index(e, "="); i >= 0 {
+			if strings.HasPrefix(e[:i], prefix) {
+				withoutPrefix := strings.Replace(e[:i], "TEST_", "", -1)
+				m[withoutPrefix] = e[i+1:]
+			}
 		}
 	}
 	return m
