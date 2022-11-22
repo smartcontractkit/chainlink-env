@@ -423,7 +423,5 @@ func getEnvVarsMap() map[string]string {
 			m[k] = v
 		}
 	}
-	// unset job image
-	m[config.EnvVarJobImage] = ""
 	return m
 }
