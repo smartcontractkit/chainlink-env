@@ -418,9 +418,9 @@ func getEnvVarsMap() map[string]string {
 	m := make(map[string]string)
 	log.Warn().Interface("Environ", os.Environ()).Msg("Environment vars")
 	for _, e := range os.Environ() {
-		k, v, success := strings.Cut(e, "=")
-		if success {
-			m[k] = v
+		varArray := strings.SplitN(e, "=", 2)
+		if len(varArray) == 2 {
+			m[varArray[0]] = varArray[1]
 		}
 	}
 	return m
