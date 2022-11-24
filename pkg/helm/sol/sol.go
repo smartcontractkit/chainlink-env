@@ -60,8 +60,10 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		return err
 	}
 	netInternal, err := e.Fwd.FindPort("sol:0", "sol-val", "http-rpc").As(client.RemoteConnection, client.HTTP)
+	if err != nil {
+		return err
+	}
 	netInternalWS, err := e.Fwd.FindPort("sol:0", "sol-val", "ws-rpc").As(client.RemoteConnection, client.WS)
-
 	if err != nil {
 		return err
 	}
