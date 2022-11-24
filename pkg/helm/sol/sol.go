@@ -63,9 +63,13 @@ func (m Chart) ExportData(e *environment.Environment) error {
 	if err != nil {
 		return err
 	}
+	netInternalWS, err := e.Fwd.FindPort("sol:0", "sol-val", "ws-rpc").As(client.RemoteConnection, client.WS)
+	if err != nil {
+		return err
+	}
 	e.URLs[m.Props.NetworkName] = []string{netLocal, netLocalWS}
 	if e.Cfg.InsideK8s {
-		e.URLs[m.Props.NetworkName] = []string{netInternal}
+		e.URLs[m.Props.NetworkName] = []string{netInternal, netInternalWS}
 	}
 	log.Info().Str("Name", m.Props.NetworkName).Str("URLs", netLocal).Msg("Solana network")
 	return nil
