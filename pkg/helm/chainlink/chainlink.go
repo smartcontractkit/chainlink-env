@@ -100,7 +100,7 @@ func defaultProps() map[string]interface{} {
 		"chainlink": map[string]interface{}{
 			"image": map[string]interface{}{
 				"image":   "public.ecr.aws/chainlink/chainlink",
-				"version": "1.9.0",
+				"version": "1.10.0",
 			},
 			"web_port": "6688",
 			"p2p_port": "8090",
