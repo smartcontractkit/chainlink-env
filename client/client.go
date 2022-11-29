@@ -184,8 +184,8 @@ func (m *K8sClient) EnumerateInstances(namespace string, selector string) error 
 	return nil
 }
 
-// WaitContainersReady waits until all containers ReadinessChecks are passed
-func (m *K8sClient) WaitContainersReady(ns string, rcd *ReadyCheckData) error {
+// WaitPodsReady waits until all pods are ready
+func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData) error {
 	timeout := time.NewTimer(rcd.Timeout)
 	defer timeout.Stop()
 	for {
@@ -210,8 +210,11 @@ func (m *K8sClient) WaitContainersReady(ns string, rcd *ReadyCheckData) error {
 				if pod.Status.Phase == "Succeeded" {
 					continue
 				}
-				if pod.Status.Phase != v1.PodRunning {
-					allReady = false
+				for _, c := range pod.Status.Conditions {
+					if c.Type == v1.PodReady && c.Status == "False" {
+						log.Debug().Str("Text", c.Message).Msg("Pod condition message")
+						allReady = false
+					}
 				}
 			}
 			if allReady {
@@ -247,7 +250,7 @@ type ReadyCheckData struct {
 
 // CheckReady application heath check using ManifestOutputData params
 func (m *K8sClient) CheckReady(namespace string, c *ReadyCheckData) error {
-	return m.WaitContainersReady(namespace, c)
+	return m.WaitPodsReady(namespace, c)
 }
 
 // Apply applying a manifest to a currently connected k8s context
