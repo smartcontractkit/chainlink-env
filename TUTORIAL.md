@@ -17,6 +17,7 @@
   - [Collecting logs](#collecting-logs)
   - [Resources summary](#resources-summary)
 - [Chaos](#chaos)
+- [Coverage](#coverage)
 - [Remote run](./REMOTE_RUN.md)
 
 
@@ -505,3 +506,49 @@ func main() {
 
 # Chaos
 Check our [tests](https://github.com/smartcontractkit/chainlink/blob/develop/integration-tests/chaos/chaos_test.go) to see how we using Chaosmesh
+
+# Coverage
+Build your target image with those 2 steps to allow automatic coverage discovery
+```Dockerfile
+FROM ...
+
+# add those 2 steps to instrument the code
+RUN curl -s https://api.github.com/repos/qiniu/goc/releases/latest | grep "browser_download_url.*-linux-amd64.tar.gz" | cut -d : -f 2,3 | tr -d \" | xargs -n 1 curl -L | tar -zx && chmod +x goc && mv goc /usr/local/bin
+# -o my_service means service will be called "my_service" in goc coverage service
+# --center http://goc:7777 means that on deploy, your instrumented service will automatically register to a local goc node inside your deployment (namespace)
+RUN goc build -o my_service . --center http://goc:7777
+
+CMD ["./my_service"]
+```
+Add `goc` to your deployment, check example with `dummy` service deployment:
+```golang
+package main
+
+import (
+  "time"
+
+  "github.com/smartcontractkit/chainlink-env/environment"
+  goc "github.com/smartcontractkit/chainlink-env/pkg/cdk8s/goc"
+  dummy "github.com/smartcontractkit/chainlink-env/pkg/cdk8s/http_dummy"
+)
+
+func main() {
+  e := environment.New(nil).
+    AddChart(goc.New()).
+    AddChart(dummy.New())
+  if err := e.Run(); err != nil {
+    panic(err)
+  }
+  // run your test logic here
+  time.Sleep(1 * time.Minute)
+  if err := e.SaveCoverage(); err != nil {
+    panic(err)
+  }
+  // clear the coverage, rerun the tests again if needed
+  if err := e.ClearCoverage(); err != nil {
+    panic(err)
+  }
+}
+
+```
+After tests are finished, coverage is collected for every service, check `cover` directory

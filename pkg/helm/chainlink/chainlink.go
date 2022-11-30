@@ -99,8 +99,8 @@ func defaultProps() map[string]interface{} {
 		},
 		"chainlink": map[string]interface{}{
 			"image": map[string]interface{}{
-				"image":   "public.ecr.aws/chainlink/chainlink",
-				"version": "1.9.0",
+				"image":   "795953128386.dkr.ecr.us-west-2.amazonaws.com/chainlink",
+				"version": "develop",
 			},
 			"web_port": "6688",
 			"p2p_port": "8090",

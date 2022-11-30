@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/smartcontractkit/chainlink-env/client"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/smartcontractkit/chainlink-env/client"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -39,7 +40,7 @@ func NewArtifacts(client *client.K8sClient, namespace string) (*Artifacts, error
 // DumpTestResult dumps all pods logs and db dump in a separate test dir
 func (a *Artifacts) DumpTestResult(testDir string, dbName string) error {
 	a.DBName = dbName
-	if err := mkdirIfNotExists(testDir); err != nil {
+	if err := MkdirIfNotExists(testDir); err != nil {
 		return err
 	}
 	if err := a.writePodArtifacts(testDir); err != nil {
@@ -66,7 +67,7 @@ func (a *Artifacts) writePodArtifacts(testDir string) error {
 		appName := pod.Labels["app"]
 		instance := pod.Labels["instance"]
 		appDir := filepath.Join(testDir, fmt.Sprintf("%s_%s", appName, instance))
-		if err := mkdirIfNotExists(appDir); err != nil {
+		if err := MkdirIfNotExists(appDir); err != nil {
 			return err
 		}
 		err = a.writePodLogs(pod, appDir)
@@ -176,7 +177,7 @@ func (a *Artifacts) writePodLogs(pod coreV1.Pod, appDir string) error {
 	return nil
 }
 
-func mkdirIfNotExists(dirName string) error {
+func MkdirIfNotExists(dirName string) error {
 	if _, err := os.Stat(dirName); os.IsNotExist(err) {
 		if err = os.MkdirAll(dirName, os.ModePerm); err != nil {
 			return errors.Wrapf(err, "failed to create directory: %s", dirName)
