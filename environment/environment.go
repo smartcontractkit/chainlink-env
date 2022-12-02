@@ -159,11 +159,11 @@ func (m *Environment) initApp() {
 	if os.Getenv(config.EnvVarCLCommitSha) != "" {
 		m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("commit=%s", os.Getenv(config.EnvVarCLCommitSha)))
 	}
-	if os.Getenv(config.EnvVarTestTrigger) != "" {
-		m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("triggered-by=%s", os.Getenv(config.EnvVarTestTrigger)))
-	} else { // Assume default is manual launch
-		m.Cfg.Labels = append(m.Cfg.Labels, "triggered-by=manual")
+	testTrigger := os.Getenv(config.EnvVarTestTrigger)
+	if testTrigger == "" {
+		testTrigger = "manual"
 	}
+	m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("triggered-by=%s", testTrigger))
 
 	if tolerationRole := os.Getenv(config.EnvVarToleration); tolerationRole != "" {
 		m.Cfg.Tolerations = []map[string]string{{
@@ -185,7 +185,7 @@ func (m *Environment) initApp() {
 		log.Fatal().Err(err).Send()
 	}
 	defaultAnnotations[pkg.TTLLabelKey] = a.ShortDur(m.Cfg.TTL)
-	m.root = cdk8s.NewChart(m.App, a.Str("root-chart"), &cdk8s.ChartProps{
+	m.root = cdk8s.NewChart(m.App, a.Str(fmt.Sprintf("root-chart-%s", m.Cfg.Namespace)), &cdk8s.ChartProps{
 		Labels:    m.Cfg.nsLabels,
 		Namespace: a.Str(m.Cfg.Namespace),
 	})
