@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/aws/constructs-go/constructs/v10 v10.1.173
 	github.com/aws/jsii-runtime-go v1.71.0
-	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.5.58
+	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.5.62
 	github.com/chaos-mesh/chaos-mesh/api/v1alpha1 v0.0.0-20220226050744-799408773657
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/google/uuid v1.3.0
