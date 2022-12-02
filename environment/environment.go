@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -25,6 +26,7 @@ const (
 )
 
 var (
+	jsiiGlobalMu       = &sync.Mutex{}
 	defaultAnnotations = map[string]*string{"prometheus.io/scrape": a.Str("true")}
 )
 
@@ -131,6 +133,9 @@ func New(cfg *Config) *Environment {
 	} else {
 		e.Cfg.Namespace = fmt.Sprintf("%s-%s", e.Cfg.NamespacePrefix, uuid.NewString()[0:5])
 	}
+
+	jsiiGlobalMu.Lock()
+	defer jsiiGlobalMu.Unlock()
 	e.initApp()
 	k8s.NewKubeNamespace(e.root, a.Str("namespace"), &k8s.KubeNamespaceProps{
 		Metadata: &k8s.ObjectMeta{
@@ -188,6 +193,8 @@ func (m *Environment) initApp() {
 
 // AddChart adds a chart to the deployment
 func (m *Environment) AddChart(f func(root cdk8s.Chart) ConnectedChart) *Environment {
+	jsiiGlobalMu.Lock()
+	defer jsiiGlobalMu.Unlock()
 	m.Charts = append(m.Charts, f(m.root))
 	return m
 }
@@ -203,6 +210,8 @@ func (m *Environment) removeChart(name string) {
 
 // ModifyHelm modifies helm chart in deployment
 func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment {
+	jsiiGlobalMu.Lock()
+	defer jsiiGlobalMu.Unlock()
 	m.removeChart(name)
 	if chart.IsDeploymentNeeded() {
 		log.Trace().
@@ -226,6 +235,8 @@ func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment
 }
 
 func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
+	jsiiGlobalMu.Lock()
+	defer jsiiGlobalMu.Unlock()
 	if chart.IsDeploymentNeeded() {
 		values := &map[string]interface{}{
 			"tolerations":  m.Cfg.Tolerations,
@@ -316,7 +327,9 @@ func (m *Environment) Manifest() string {
 
 // Run deploys or connects to already created environment
 func (m *Environment) Run() error {
+	jsiiGlobalMu.Lock()
 	m.CurrentManifest = m.App.SynthYaml().(string)
+	jsiiGlobalMu.Unlock()
 	if !m.Cfg.InsideK8s {
 		if err := m.Deploy(m.CurrentManifest); err != nil {
 			log.Error().Err(err).Msg("Error deploying environment")
