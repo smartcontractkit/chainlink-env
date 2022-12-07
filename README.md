@@ -10,6 +10,7 @@ You can also use this library to spin up standalone environments
 Read [here](KUBERNETES.md) about how to spin up a local cluster
 
 #### Install
+If you have nix you can open a shell with all the dependencies setup by running `nix develop`, if you need out of the nix shell you can run `exit`. Otherwise you can follow below to setup without nix.
 Set up deps, you need to have `node 14.x.x`, [helm](https://helm.sh/docs/intro/install/) and [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable)
 
 Then use

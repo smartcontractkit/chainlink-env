@@ -6,6 +6,10 @@ export GO111MODULE ?= on
 lint:
 	${BIN_DIR}/golangci-lint --color=always run -v
 
+.PHONY: golist
+golist:
+	go list -json -deps ./... > go.list
+
 .PHONY: golangci
 golangci:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${BIN_DIR} v1.46.2

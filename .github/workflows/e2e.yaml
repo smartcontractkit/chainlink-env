@@ -15,11 +15,10 @@ jobs:
       TEST_TRIGGERED_BY: chainlink-env-ci
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Go
-        uses: actions/setup-go@v3
+      - name: Install Nix
+        uses: cachix/install-nix-action@daddc62a2e67d1decb56e028c9fa68344b9b7c2a # v18
         with:
-          go-version-file: "go.mod"
-          check-latest: true
+          nix_path: nixpkgs=channel:nixos-unstable
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -31,8 +30,6 @@ jobs:
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.QA_KUBECONFIG }}
-      - name: Install deps
-        run: make install_deps
       - name: Test deployments
         env:
           CHAINLINK_COMMIT_SHA: ${{ github.sha }}
@@ -40,7 +37,7 @@ jobs:
           NETWORKS_CONFIG_FILE: ${{ secrets.NETWORKS_CONFIG_FILE }}
         run: |
           export TEST_TRIGGERED_BY=${{ env.TEST_TRIGGERED_BY }}-${{ github.event.pull_request.number || github.run_id }}
-          make test_e2e
+          nix develop -c make test_e2e
       - name: cleanup
         if: always()
         uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/cleanup@v2.0.28

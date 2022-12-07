@@ -2,46 +2,40 @@ name: Linting
 on:
   pull_request:
 jobs:
-  tools:
-    name: Get Tool tool-versions
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out Code
-        uses: actions/checkout@v3
-      - uses: smartcontractkit/tool-versions-to-env-action@v1.0.8
-        id: tool-versions
-    outputs:
-      golangci-lint-version: ${{ steps.tool-versions.outputs.golangci-lint_version }}
   golangci:
     name: Linting
     runs-on: ubuntu-latest
-    needs: [tools]
     steps:
       - name: Check out Code
         uses: actions/checkout@v3
-      - name: Install Go
-        uses: actions/setup-go@v3
+      - name: Install Nix
+        uses: cachix/install-nix-action@daddc62a2e67d1decb56e028c9fa68344b9b7c2a # v18
         with:
-          go-version-file: "go.mod"
-          check-latest: true
+          nix_path: nixpkgs=channel:nixos-unstable
+      - name: Parse version
+        id: parse
+        run: |
+          long=$(nix develop -c golangci-lint version | grep "golangci-lint has version")
+          stringArray=($long)
+          version=$(echo "${stringArray[3]}")
+          echo "version found: ${version}"
+          echo "version=${version}" >>$GITHUB_OUTPUT
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v${{ needs.tools.outputs.golangci-lint-version }}
+          version: v${{ steps.parse.outputs.version }}
 
   vulnerabilities-check:
     name: Check for Vulnerabilities
     runs-on: ubuntu-latest
-    needs: [tools]
     steps:
       - name: Check out Code
         uses: actions/checkout@v3
-      - name: Install Go
-        uses: actions/setup-go@v3
+      - name: Install Nix
+        uses: cachix/install-nix-action@daddc62a2e67d1decb56e028c9fa68344b9b7c2a # v18
         with:
-          go-version-file: "go.mod"
-          check-latest: true
+          nix_path: nixpkgs=channel:nixos-unstable
       - name: Write Go List
-        run: go list -json -deps ./... > go.list
+        run: nix develop -c make golist
       - name: Nancy
         uses: sonatype-nexus-community/nancy-github-action@main

@@ -6,10 +6,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Go
-        uses: actions/setup-go@v3
+      - name: Install Nix
+        uses: cachix/install-nix-action@daddc62a2e67d1decb56e028c9fa68344b9b7c2a # v18
         with:
-          go-version-file: "go.mod"
-          check-latest: true
+          nix_path: nixpkgs=channel:nixos-unstable
       - name: Test
-        run: make test
+        run: nix develop -c make test
