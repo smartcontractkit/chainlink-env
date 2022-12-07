@@ -51,34 +51,44 @@ func (m *Forwarder) forwardPodPorts(pod v1.Pod, namespaceName string) error {
 
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: roundTripper}, http.MethodPost, &serverURL)
 
-	stopChan, readyChan := make(chan struct{}, 1), make(chan struct{}, 1)
-	out, errOut := new(bytes.Buffer), new(bytes.Buffer)
-
-	log.Debug().
-		Str("Pod", pod.Name).
-		Msg("Attempting to forward ports")
-
 	portRules := m.portRulesForPod(pod)
 	if len(portRules) == 0 {
 		return nil
 	}
-	forwarder, err := portforward.New(dialer, portRules, stopChan, readyChan, out, errOut)
-	if err != nil {
-		return err
-	}
-	go func() {
-		if err := forwarder.ForwardPorts(); err != nil {
-			log.Error().Str("Pod", pod.Name).Err(err)
-		}
-	}()
 
-	<-readyChan
-	if len(errOut.String()) > 0 {
-		return fmt.Errorf("error on forwarding k8s port: %v", errOut.String())
-	}
-	forwardedPorts, err := forwarder.GetPorts()
-	if err != nil {
-		return err
+	// porforward is not thread safe for using multiple rules in the same forwarder,
+	// at least not until this pr is merged: https://github.com/kubernetes/kubernetes/pull/114342
+	forwardedPorts := []portforward.ForwardedPort{}
+	for _, portRule := range portRules {
+		stopChan, readyChan := make(chan struct{}, 1), make(chan struct{}, 1)
+		out, errOut := new(bytes.Buffer), new(bytes.Buffer)
+
+		log.Debug().
+			Str("Pod", pod.Name).
+			Msg("Attempting to forward ports")
+
+		forwarder, err := portforward.New(dialer, []string{portRule}, stopChan, readyChan, out, errOut)
+		if err != nil {
+			return err
+		}
+		go func() {
+			if err := forwarder.ForwardPorts(); err != nil {
+				log.Error().Str("Pod", pod.Name).Err(err)
+			}
+		}()
+
+		<-readyChan
+		if len(errOut.String()) > 0 {
+			return fmt.Errorf("error on forwarding k8s port: %v", errOut.String())
+		}
+		if len(out.String()) > 0 {
+			log.Debug().Str("Out", out.String()).Msg("Port Forward Output")
+		}
+		fP, err := forwarder.GetPorts()
+		if err != nil {
+			return err
+		}
+		forwardedPorts = append(forwardedPorts, fP...)
 	}
 	namedPorts := m.podPortsByName(pod, forwardedPorts)
 	m.mu.Lock()
