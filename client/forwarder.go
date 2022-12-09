@@ -38,7 +38,7 @@ func NewForwarder(client *K8sClient, keepConnection bool) *Forwarder {
 
 func (m *Forwarder) forwardPodPorts(pod v1.Pod, namespaceName string) error {
 	if pod.Status.Phase != v1.PodRunning {
-		log.Debug().Str("Pod", pod.Name).Interface("Phase", pod.Status.Phase).Msg("Skipping pod")
+		log.Debug().Str("Pod", pod.Name).Interface("Phase", pod.Status.Phase).Msg("Skipping pod for port forwarding")
 		return nil
 	}
 	roundTripper, upgrader, err := spdy.RoundTripperFor(m.Client.RESTConfig)
@@ -81,18 +81,15 @@ func (m *Forwarder) forwardPodPorts(pod v1.Pod, namespaceName string) error {
 		if len(errOut.String()) > 0 {
 			return fmt.Errorf("error on forwarding k8s port: %v", errOut.String())
 		}
-		if len(out.String()) > 0 {
-			log.Debug().Str("Out", out.String()).Msg("Port Forward Output")
-		}
 		fP, err := forwarder.GetPorts()
 		if err != nil {
 			return err
 		}
 		forwardedPorts = append(forwardedPorts, fP...)
 	}
-	namedPorts := m.podPortsByName(pod, forwardedPorts)
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	namedPorts := m.podPortsByName(pod, forwardedPorts)
 	m.Info[fmt.Sprintf("%s:%s", pod.Labels["app"], pod.Labels["instance"])] = namedPorts
 	return nil
 }
@@ -178,7 +175,7 @@ func lookupMap(m map[string]interface{}, ks ...string) (rval interface{}, err er
 		return nil, fmt.Errorf("select port path like $app_name:$instance $container_name $port_name")
 	}
 	if rval, ok = m[ks[0]]; !ok {
-		return ConnectionInfo{}, fmt.Errorf("key not found: %s remaining keys: %s", ks[0], ks)
+		return ConnectionInfo{}, fmt.Errorf("key not found: '%s' remaining keys: %s", ks[0], ks)
 	} else if len(ks) == 1 {
 		return rval, nil
 	} else {

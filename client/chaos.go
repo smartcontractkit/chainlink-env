@@ -33,7 +33,7 @@ func NewChaos(client *K8sClient, namespace string) *Chaos {
 	}
 }
 
-// Run runs experiment and saves it's ID
+// Run runs experiment and saves its ID
 func (c *Chaos) Run(app cdk8s.App, id string, resource string) (string, error) {
 	log.Info().Msg("Applying chaos experiment")
 	manifest := app.SynthYaml().(string)
