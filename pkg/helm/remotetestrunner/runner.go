@@ -91,7 +91,7 @@ func NewVersioned(helmVersion string, props map[string]interface{}) environment.
 	config.MustMerge(&dp, props)
 	return Chart{
 		Name:    "remote-test-runner",
-		Path:    "/Users/adamhamrick/Projects/qa-charts/charts/remote-test-runner",
+		Path:    "chainlink-qa/remote-test-runner",
 		Values:  &dp,
 		Version: helmVersion,
 	}
