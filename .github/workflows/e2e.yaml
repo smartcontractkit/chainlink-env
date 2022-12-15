@@ -43,6 +43,6 @@ jobs:
           make test_e2e
       - name: cleanup
         if: always()
-        uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/cleanup@v2.0.28
+        uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/cleanup@v2.1.1
         with:
           triggered_by: ${{ env.TEST_TRIGGERED_BY }}
