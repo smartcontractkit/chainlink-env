@@ -1,4 +1,4 @@
-golang 1.19.3
+golang 1.19.4
 helm 3.9.4
 golangci-lint 1.50.1
 kubectl 1.25.3

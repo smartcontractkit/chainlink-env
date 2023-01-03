@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"sync"
 	"strings"
 	"syscall"
 	"time"
@@ -27,6 +28,7 @@ const (
 )
 
 var (
+	jsiiGlobalMu       = &sync.Mutex{}
 	defaultAnnotations = map[string]*string{"prometheus.io/scrape": a.Str("true")}
 )
 
@@ -141,6 +143,9 @@ func New(cfg *Config) *Environment {
 		Cfg:    targetCfg,
 		Fwd:    client.NewForwarder(c, targetCfg.KeepConnection),
 	}
+
+	jsiiGlobalMu.Lock()
+	defer jsiiGlobalMu.Unlock()
 	e.initApp()
 	e.Chaos = client.NewChaos(c, e.Cfg.Namespace)
 	return e
@@ -157,11 +162,11 @@ func (m *Environment) initApp() {
 	if os.Getenv(config.EnvVarCLCommitSha) != "" {
 		m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("commit=%s", os.Getenv(config.EnvVarCLCommitSha)))
 	}
-	if os.Getenv(config.EnvVarTestTrigger) != "" {
-		m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("triggered-by=%s", os.Getenv(config.EnvVarTestTrigger)))
-	} else { // Assume default is manual launch
-		m.Cfg.Labels = append(m.Cfg.Labels, "triggered-by=manual")
+	testTrigger := os.Getenv(config.EnvVarTestTrigger)
+	if testTrigger == "" {
+		testTrigger = "manual"
 	}
+	m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("triggered-by=%s", testTrigger))
 
 	if tolerationRole := os.Getenv(config.EnvVarToleration); tolerationRole != "" {
 		m.Cfg.Tolerations = []map[string]string{{
@@ -183,7 +188,7 @@ func (m *Environment) initApp() {
 		log.Fatal().Err(err).Send()
 	}
 	defaultAnnotations[pkg.TTLLabelKey] = a.ShortDur(m.Cfg.TTL)
-	m.root = cdk8s.NewChart(m.App, a.Str("root-chart"), &cdk8s.ChartProps{
+	m.root = cdk8s.NewChart(m.App, a.Str(fmt.Sprintf("root-chart-%s", m.Cfg.Namespace)), &cdk8s.ChartProps{
 		Labels:    m.Cfg.nsLabels,
 		Namespace: a.Str(m.Cfg.Namespace),
 	})
@@ -198,6 +203,8 @@ func (m *Environment) initApp() {
 
 // AddChart adds a chart to the deployment
 func (m *Environment) AddChart(f func(root cdk8s.Chart) ConnectedChart) *Environment {
+	jsiiGlobalMu.Lock()
+	defer jsiiGlobalMu.Unlock()
 	m.Charts = append(m.Charts, f(m.root))
 	return m
 }
@@ -213,6 +220,8 @@ func (m *Environment) removeChart(name string) {
 
 // ModifyHelm modifies helm chart in deployment
 func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment {
+	jsiiGlobalMu.Lock()
+	defer jsiiGlobalMu.Unlock()
 	m.removeChart(name)
 	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
 		return m
@@ -239,6 +248,8 @@ func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment
 func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
 		return m
+	jsiiGlobalMu.Lock()
+	defer jsiiGlobalMu.Unlock()
 	}
 	values := &map[string]interface{}{
 		"tolerations":  m.Cfg.Tolerations,
@@ -328,6 +339,7 @@ func (m *Environment) Manifest() string {
 
 // Run deploys or connects to already created environment
 func (m *Environment) Run() error {
+	jsiiGlobalMu.Lock()
 	if m.Cfg.JobImage != "" {
 		m.AddChart(NewRunner(&Props{
 			BaseName:        "remote-test-runner",
@@ -338,6 +350,7 @@ func (m *Environment) Run() error {
 		}))
 	}
 	m.CurrentManifest = m.App.SynthYaml().(string)
+	jsiiGlobalMu.Unlock()
 	if err := m.Deploy(m.CurrentManifest); err != nil {
 		log.Error().Err(err).Msg("Error deploying environment")
 		_ = m.Shutdown()
