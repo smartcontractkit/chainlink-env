@@ -256,13 +256,35 @@ type ReadyCheckData struct {
 
 // CheckReady application heath check using ManifestOutputData params
 func (m *K8sClient) CheckReady(namespace string, c *ReadyCheckData) error {
+	// wait for the number of enumerated apps to be at least 1
+	// before checking for ready
+	var exitErr error
+	if err := wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+		apps, err2 := m.UniqueLabels(namespace, "app")
+		if err2 != nil {
+			exitErr = err2
+			return false, nil
+		}
+		log.Debug().Interface("Apps", apps).Int("Count", len(apps)).Msg("Found apps")
+		if len(apps) > 0 {
+			exitErr = nil
+			return true, nil
+		}
+		return false, nil
+	}); err != nil {
+		return err
+	}
+	if exitErr != nil {
+		return exitErr
+	}
 	return m.WaitPodsReady(namespace, c)
 }
 
 // WaitForJob wait for job execution, follow logs and returns an error if job failed
 func (m *K8sClient) WaitForJob(namespaceName string, jobName string) error {
-	log.Info().Str("Job", jobName).Msg("Waiting for job to complete")
-	if err := ExecCmd(fmt.Sprintf("kubectl --namespace %s logs --follow job/%s", namespaceName, jobName)); err != nil {
+	cmd := fmt.Sprintf("kubectl --namespace %s logs --follow job/%s", namespaceName, jobName)
+	log.Info().Str("Job", jobName).Str("cmd", cmd).Msg("Waiting for job to complete")
+	if err := ExecCmd(cmd); err != nil {
 		return err
 	}
 	var exitErr error
@@ -346,7 +368,7 @@ func (m *K8sClient) CopyToPod(namespace, src, destination, containername string)
 
 	formatted, err := regexp.MatchString(".*?\\/.*?\\:.*", destination)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("Could not run copy operation: %v", err)
+		return nil, nil, nil, fmt.Errorf("could not run copy operation: %v", err)
 	}
 	if !formatted {
 		return nil, nil, nil, fmt.Errorf("destination string improperly formatted, see reference 'NAMESPACE/POD_NAME:folder/FILE_NAME'")
@@ -360,7 +382,7 @@ func (m *K8sClient) CopyToPod(namespace, src, destination, containername string)
 		Msg("Uploading file to pod")
 	err = copyOptions.Run()
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("Could not run copy operation: %v", err)
+		return nil, nil, nil, fmt.Errorf("could not run copy operation: %v", err)
 	}
 	return in, out, errOut, nil
 }

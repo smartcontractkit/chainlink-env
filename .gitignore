@@ -4,8 +4,10 @@ bin/
 tmp-manifest-*.yaml
 # remote runner binary
 remote.test
+e2e.test
 
 .vscode/
 .idea/
+.direnv/
 
 k3dvolume/

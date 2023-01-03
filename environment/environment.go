@@ -5,8 +5,8 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"sync"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -86,6 +86,10 @@ type Config struct {
 	RemoveOnInterrupt bool
 	// UpdateWaitInterval an interval to wait for deployment update started
 	UpdateWaitInterval time.Duration
+	// TestName the name of the test to run in the remote runner
+	TestName string
+	// IsRemoteTest is this env in a remote test
+	IsRemoteTest bool
 }
 
 func defaultEnvConfig() *Config {
@@ -117,7 +121,6 @@ type Environment struct {
 // New creates new environment
 func New(cfg *Config) *Environment {
 	logging.Init()
-	log.Debug().Interface("Environ", os.Environ()).Msg("Environment vars")
 	if cfg == nil {
 		cfg = &Config{}
 	}
@@ -131,9 +134,15 @@ func New(cfg *Config) *Environment {
 		targetCfg.Namespace = fmt.Sprintf("%s-%s", targetCfg.NamespacePrefix, uuid.NewString()[0:5])
 		log.Info().Str("Namespace", targetCfg.Namespace).Msg("Creating new namespace")
 	}
-	targetCfg.JobImage = os.Getenv(config.EnvVarJobImage)
-	insideK8s, _ := strconv.ParseBool(os.Getenv(config.EnvVarInsideK8s))
-	targetCfg.InsideK8s = insideK8s
+	if targetCfg.TestName != "" {
+		targetCfg.JobImage = os.Getenv(config.EnvVarJobImage)
+		insideK8s, _ := strconv.ParseBool(os.Getenv(config.EnvVarInsideK8s))
+		targetCfg.InsideK8s = insideK8s
+	}
+	irt := os.Getenv("IS_REMOTE_TEST")
+	if irt != "" {
+		targetCfg.IsRemoteTest = true
+	}
 
 	c := client.NewK8sClient()
 	e := &Environment{
@@ -248,9 +257,11 @@ func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment
 func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
 		return m
+	}
+
 	jsiiGlobalMu.Lock()
 	defer jsiiGlobalMu.Unlock()
-	}
+
 	values := &map[string]interface{}{
 		"tolerations":  m.Cfg.Tolerations,
 		"nodeSelector": m.Cfg.NodeSelector,
@@ -339,16 +350,16 @@ func (m *Environment) Manifest() string {
 
 // Run deploys or connects to already created environment
 func (m *Environment) Run() error {
-	jsiiGlobalMu.Lock()
 	if m.Cfg.JobImage != "" {
 		m.AddChart(NewRunner(&Props{
 			BaseName:        "remote-test-runner",
 			TargetNamespace: m.Cfg.Namespace,
 			Labels:          nil,
 			Image:           m.Cfg.JobImage,
-			EnvVars:         getEnvVarsMap(config.EnvVarPrefix),
+			EnvVars:         getEnvVarsMap(config.EnvVarPrefix, m.Cfg.TestName),
 		}))
 	}
+	jsiiGlobalMu.Lock()
 	m.CurrentManifest = m.App.SynthYaml().(string)
 	jsiiGlobalMu.Unlock()
 	if err := m.Deploy(m.CurrentManifest); err != nil {
@@ -377,9 +388,9 @@ func (m *Environment) Run() error {
 			log.Fatal().Err(err).Msg("failed to create artifacts client")
 		}
 		m.Artifacts = arts
-	if len(m.URLs["goc"]) != 0 {
-		m.httpClient = resty.New().SetBaseURL(m.URLs["goc"][0])
-	}
+		if len(m.URLs["goc"]) != 0 {
+			m.httpClient = resty.New().SetBaseURL(m.URLs["goc"][0])
+		}
 		if m.Cfg.KeepConnection {
 			log.Info().Msg("Keeping forwarder connections, press Ctrl+C to interrupt")
 			if m.Cfg.RemoveOnInterrupt {
@@ -505,13 +516,18 @@ func (m *Environment) Shutdown() error {
 	return m.Client.RemoveNamespace(m.Cfg.Namespace)
 }
 
-func getEnvVarsMap(prefix string) map[string]string {
+// BeforeTest sets the test name variable and determines if we need to start the remote runner
+func (m *Environment) WillUseRemoteRunner() bool {
+	_, onlyStartRunner := os.LookupEnv(config.EnvVarJobImage)
+	return onlyStartRunner && m.Cfg.TestName != ""
+}
+
+func getEnvVarsMap(prefix string, testName string) map[string]string {
 	m := make(map[string]string)
-	log.Warn().Interface("Environ", os.Environ()).Msg("Environment vars")
 	for _, e := range os.Environ() {
 		if i := strings.Index(e, "="); i >= 0 {
 			if strings.HasPrefix(e[:i], prefix) {
-				withoutPrefix := strings.Replace(e[:i], "TEST_", "", -1)
+				withoutPrefix := strings.Replace(e[:i], "TEST_", "", 1)
 				m[withoutPrefix] = e[i+1:]
 			}
 		}
@@ -538,5 +554,11 @@ func getEnvVarsMap(prefix string) map[string]string {
 			m[k] = v
 		}
 	}
+
+	// add test name
+	m["TEST_NAME"] = testName
+	// Tell the remote test it is a remote test
+	m["IS_REMOTE_TEST"] = "true"
+
 	return m
 }

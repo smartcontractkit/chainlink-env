@@ -5,21 +5,20 @@ ARG BASE_URL
 ARG HELM_VERSION
 ARG HOME
 ARG KUBE_VERSION
+ARG NODE_VERSION
 
 ENV GOOS="linux"
 ENV BASE_URL="https://get.helm.sh"
-ENV HELM_VERSION="3.9.4"
-ENV KUBE_VERSION="v1.25.0"
+ENV HELM_VERSION="3.10.3"
+ENV KUBE_VERSION="v1.25.5"
+ENV NODE_VERSION=18
 
-RUN curl -sL https://deb.nodesource.com/setup_16.x  | bash - && \
-    apt-get update && apt-get install -y nodejs && \
-    apt-get clean all
-
-RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && \
-     chmod +x ./kubectl && \
-     mv ./kubectl /usr/local/bin
-
-RUN case `uname -m` in \
+RUN curl -sL https://deb.nodesource.com/setup_${NODE_VERSION}.x  | bash - && \
+    apt-get update && apt-get install -y nodejs wget curl git gnupg && \
+    curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && \
+    chmod +x ./kubectl && \
+    mv ./kubectl /usr/local/bin && \
+    case `uname -m` in \
         x86_64) ARCH=amd64; ;; \
         armv7l) ARCH=arm; ;; \
         aarch64) ARCH=arm64; ;; \
@@ -27,15 +26,13 @@ RUN case `uname -m` in \
         s390x) ARCH=s390x; ;; \
         *) echo "un-supported arch, exit ..."; exit 1; ;; \
     esac && \
-    apt-get update && apt-get install -y wget curl git gnupg && \
     wget ${BASE_URL}/helm-v${HELM_VERSION}-linux-${ARCH}.tar.gz -O - | tar -xz && \
     mv linux-${ARCH}/helm /usr/bin/helm && \
     chmod +x /usr/bin/helm && \
     rm -rf linux-${ARCH} && \
     npm install -g yarn && \
-    apt-get clean all
-
-RUN helm repo add chainlink-qa https://raw.githubusercontent.com/smartcontractkit/qa-charts/gh-pages/ && \
+    apt-get clean all && \
+    helm repo add chainlink-qa https://raw.githubusercontent.com/smartcontractkit/qa-charts/gh-pages/ && \
     helm repo update
 
 ENTRYPOINT ["sh"]

@@ -71,7 +71,7 @@ func role(chart cdk8s.Chart, props *Props) {
 			Rules: &[]*k8s.PolicyRule{
 				{
 					ApiGroups: &[]*string{
-						a.Str(""),
+						a.Str(""), // this empty line is needed or k8s get really angry
 						a.Str("apps"),
 					},
 					Resources: &[]*string{
@@ -83,6 +83,8 @@ func role(chart cdk8s.Chart, props *Props) {
 						a.Str("pods"),
 						a.Str("pods/log"),
 						a.Str("pods/exec"),
+						a.Str("statefulsets"),
+						a.Str("statefulsets/scale"),
 					},
 					Verbs: &[]*string{
 						a.Str("get"),
@@ -148,7 +150,7 @@ func container(props *Props) *k8s.Container {
 		Image:           a.Str(props.Image),
 		ImagePullPolicy: a.Str("Always"),
 		Env:             jobEnvVars(props),
-		Resources:       a.ContainerResources("2000m", "1536Mi", "2000m", "1536Mi"),
+		Resources:       a.ContainerResources("1000m", "1024Mi", "1000m", "1024Mi"),
 	}
 }
 

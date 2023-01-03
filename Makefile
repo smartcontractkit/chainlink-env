@@ -57,13 +57,21 @@ install_monitoring:
 uninstall_monitoring:
 	helm uninstall --namespace monitoring loki
 
+.PHONY: build_test_base_image
+build_test_base_image:
+	./scripts/buildBaseImage "$(tag)"
+
+.PHONY: build_test_image
+build_test_image:
+	./scripts/buildTestImage "$(tag)" "$(base_tag)"
+
 .PHONY: test
 test:
 	go test -race ./config -count 1 -v
 
 .PHONY: test_e2e
 test_e2e:
-	go test -race ./e2e -count 1 -v
+	go test ./e2e -count 1 -v -test.parallel=5
 
 .PHONY: examples
 examples:

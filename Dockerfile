@@ -1,7 +1,7 @@
-ARG BASE_IMAGE=795953128386.dkr.ecr.us-west-2.amazonaws.com/test-base-image:v5.0
-FROM $BASE_IMAGE
+ARG BASE_IMAGE
+ARG IMAGE_VERSION=latest
+FROM ${BASE_IMAGE}:${IMAGE_VERSION}
 COPY . testdir/
-WORKDIR testdir
-RUN go build -o test examples/remote-test-runner/env.go
-RUN chmod +x ./test
-ENTRYPOINT ["./test"]
+WORKDIR /go/testdir
+RUN ./scripts/buildTests
+ENTRYPOINT ["./scripts/entrypoint"]

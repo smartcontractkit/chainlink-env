@@ -12,7 +12,7 @@ jobs:
       id-token: write
       contents: read
     env:
-      BASE_IMAGE_TAG: ${{ secrets.QA_AWS_ACCOUNT_NUMBER }}.dkr.ecr.${{ secrets.QA_AWS_REGION }}.amazonaws.com/test-base-image:${{  github.ref_name }}
+      BASE_IMAGE_TAG: ${{ secrets.QA_AWS_ACCOUNT_NUMBER }}.dkr.ecr.${{ secrets.QA_AWS_REGION }}.amazonaws.com/test-base-image:${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v3
       - name: Build Base Image

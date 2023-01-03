@@ -1,7 +1,7 @@
 golang 1.19.4
-helm 3.9.4
+helm 3.10.3
 golangci-lint 1.50.1
-kubectl 1.25.3
-nodejs 16.18.1
+kubectl 1.25.5
+nodejs 18.12.1
 yarn 1.22.19
 k3d 5.4.6
