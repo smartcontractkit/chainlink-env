@@ -53,6 +53,8 @@ func (m Chart) GetValues() *map[string]interface{} {
 }
 
 func (m Chart) ExportData(e *environment.Environment) error {
+	e.URLsMu.Lock()
+	defer e.URLsMu.Unlock()
 	// fetching all apps with label app=chainlink-${deploymentIndex}:${instanceIndex}
 	pods, err := e.Fwd.Client.ListPods(e.Cfg.Namespace, fmt.Sprintf("app=%s", m.Name))
 	if err != nil {

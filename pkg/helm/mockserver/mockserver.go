@@ -47,6 +47,8 @@ func (m Chart) GetValues() *map[string]interface{} {
 }
 
 func (m Chart) ExportData(e *environment.Environment) error {
+	e.URLsMu.Lock()
+	defer e.URLsMu.Unlock()
 	urls := make([]string, 0)
 	mock, err := e.Fwd.FindPort("mockserver:0", "mockserver", "serviceport").As(client.LocalConnection, client.HTTP)
 	if err != nil {

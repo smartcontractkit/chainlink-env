@@ -53,6 +53,8 @@ func (m Chart) GetValues() *map[string]interface{} {
 }
 
 func (m Chart) ExportData(e *environment.Environment) error {
+	e.URLsMu.Lock()
+	defer e.URLsMu.Unlock()
 	if m.Props.Simulated {
 		gethLocalWs, err := e.Fwd.FindPort("polygon-edge:0", "polygon-edge", "http").As(client.LocalConnection, client.WSSUFFIX)
 		if err != nil {

@@ -55,6 +55,8 @@ func (m Chart) GetValues() *map[string]interface{} {
 }
 
 func (m Chart) ExportData(e *environment.Environment) error {
+	e.URLsMu.Lock()
+	defer e.URLsMu.Unlock()
 	urls := make([]string, 0)
 	txPodName := fmt.Sprintf("%s-ethereum-geth:0", m.Props.NetworkName)
 	miner1PodName := fmt.Sprintf("%s-ethereum-miner-node:0", m.Props.NetworkName)

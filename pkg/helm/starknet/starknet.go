@@ -50,6 +50,8 @@ func (m Chart) GetValues() *map[string]interface{} {
 }
 
 func (m Chart) ExportData(e *environment.Environment) error {
+	e.URLsMu.Lock()
+	defer e.URLsMu.Unlock()
 	devnetLocalHttp, err := e.Fwd.FindPort("starknet-dev:0", "starknetdev", "http").As(client.LocalConnection, client.HTTP)
 	if err != nil {
 		return err
