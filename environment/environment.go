@@ -107,6 +107,7 @@ type Environment struct {
 	Artifacts       *Artifacts
 	Chaos           *client.Chaos
 	httpClient      *resty.Client
+	URLsMu          *sync.Mutex
 	URLs            map[string][]string // General URLs of launched resources. Uses '_local' to delineate forwarded ports
 }
 
@@ -120,6 +121,7 @@ func New(cfg *Config) *Environment {
 	config.MustMerge(targetCfg, cfg)
 	c := client.NewK8sClient()
 	e := &Environment{
+		URLsMu: &sync.Mutex{},
 		URLs:   make(map[string][]string),
 		Charts: make([]ConnectedChart, 0),
 		Client: c,

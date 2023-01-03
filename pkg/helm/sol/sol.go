@@ -51,6 +51,8 @@ func (m Chart) GetValues() *map[string]interface{} {
 }
 
 func (m Chart) ExportData(e *environment.Environment) error {
+	e.URLsMu.Lock()
+	defer e.URLsMu.Unlock()
 	netLocal, err := e.Fwd.FindPort("sol:0", "sol-val", "http-rpc").As(client.LocalConnection, client.HTTP)
 	if err != nil {
 		return err
