@@ -27,7 +27,7 @@ func ExecCmd(command string) error {
 	return cmd.Wait()
 }
 
-// readStdPipeDocker continuously read a pipe from the command
+// readStdPipe continuously read a pipe from the command
 func readStdPipe(pipe io.ReadCloser) {
 	scanner := bufio.NewScanner(pipe)
 	scanner.Split(bufio.ScanLines)
