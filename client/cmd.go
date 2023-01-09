@@ -3,6 +3,7 @@ package client
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os/exec"
 	"strings"
 )
@@ -10,15 +11,28 @@ import (
 func ExecCmd(command string) error {
 	c := strings.Split(command, " ")
 	cmd := exec.Command(c[0], c[1:]...)
-	stderr, _ := cmd.StderrPipe()
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return err
+	}
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
 	if err := cmd.Start(); err != nil {
 		return err
 	}
-	scanner := bufio.NewScanner(stderr)
+	go readStdPipe(stderr)
+	go readStdPipe(stdout)
+	return cmd.Wait()
+}
+
+// readStdPipe continuously read a pipe from the command
+func readStdPipe(pipe io.ReadCloser) {
+	scanner := bufio.NewScanner(pipe)
 	scanner.Split(bufio.ScanLines)
 	for scanner.Scan() {
 		m := scanner.Text()
 		fmt.Println(m)
 	}
-	return cmd.Wait()
 }

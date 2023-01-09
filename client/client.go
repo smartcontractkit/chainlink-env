@@ -17,6 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
@@ -254,6 +255,27 @@ type ReadyCheckData struct {
 
 // CheckReady application heath check using ManifestOutputData params
 func (m *K8sClient) CheckReady(namespace string, c *ReadyCheckData) error {
+	// wait for the number of enumerated apps to be at least 1 before checking
+	// for ready or we can error out on slow runs or large jobs
+	var exitErr error
+	if err := wait.PollImmediate(2*time.Second, 2*time.Minute, func() (bool, error) {
+		apps, err2 := m.UniqueLabels(namespace, "app")
+		if err2 != nil {
+			exitErr = err2
+			return false, nil
+		}
+		log.Debug().Interface("Apps", apps).Int("Count", len(apps)).Msg("Found apps")
+		if len(apps) > 0 {
+			exitErr = nil
+			return true, nil
+		}
+		return false, nil
+	}); err != nil {
+		return err
+	}
+	if exitErr != nil {
+		return exitErr
+	}
 	return m.WaitPodsReady(namespace, c)
 }
 
