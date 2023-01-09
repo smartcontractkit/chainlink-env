@@ -48,7 +48,7 @@ jobs:
         with:
           cl_repo: ${{ env.CHAINLINK_IMAGE }}
           cl_image_tag: ${{ env.CHAINLINK_VERSION }}
-          test_command_to_run: make test_e2e
+          test_command_to_run: make test_e2e args="-test.parallel=5 -json" 2>&1 | tee /tmp/gotest.log | gotestfmt
           test_download_vendor_packages_command: go mod download
           artifacts_location: ./e2e/logs
           publish_check_name: E2E Test Results

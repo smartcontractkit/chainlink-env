@@ -1,11 +1,11 @@
-name: Push Base Image
+name: Publish Test Base Image
 on:
   push:
     tags:
       - 'v*'
 
 jobs:
-  e2e_tests:
+  publish_test_base_image:
     runs-on: ubuntu-latest
     environment: integration
     permissions:

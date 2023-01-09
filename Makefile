@@ -71,7 +71,7 @@ test:
 
 .PHONY: test_e2e
 test_e2e:
-	go test ./e2e -count 1 -v -test.parallel=5
+	go test ./e2e -count 1 -v $(args)
 
 .PHONY: examples
 examples:
