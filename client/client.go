@@ -256,10 +256,10 @@ type ReadyCheckData struct {
 
 // CheckReady application heath check using ManifestOutputData params
 func (m *K8sClient) CheckReady(namespace string, c *ReadyCheckData) error {
-	// wait for the number of enumerated apps to be at least 1
-	// before checking for ready
+	// wait for the number of enumerated apps to be at least 1 before checking
+	// for ready or we can error out on slow runs or large jobs
 	var exitErr error
-	if err := wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+	if err := wait.PollImmediate(2*time.Second, 2*time.Minute, func() (bool, error) {
 		apps, err2 := m.UniqueLabels(namespace, "app")
 		if err2 != nil {
 			exitErr = err2
