@@ -281,10 +281,10 @@ func (m *K8sClient) CheckReady(namespace string, c *ReadyCheckData) error {
 }
 
 // WaitForJob wait for job execution, follow logs and returns an error if job failed
-func (m *K8sClient) WaitForJob(namespaceName string, jobName string) error {
+func (m *K8sClient) WaitForJob(namespaceName string, jobName string, fundReturnStatus func(string)) error {
 	cmd := fmt.Sprintf("kubectl --namespace %s logs --follow job/%s", namespaceName, jobName)
 	log.Info().Str("Job", jobName).Str("cmd", cmd).Msg("Waiting for job to complete")
-	if err := ExecCmd(cmd); err != nil {
+	if err := ExecCmdWithOptions(cmd, fundReturnStatus); err != nil {
 		return err
 	}
 	var exitErr error

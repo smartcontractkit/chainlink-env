@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"testing"
 	"time"
 
 	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
@@ -21,10 +22,12 @@ import (
 	"github.com/smartcontractkit/chainlink-env/logging"
 	"github.com/smartcontractkit/chainlink-env/pkg"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
+	"github.com/stretchr/testify/require"
 )
 
 const (
-	COVERAGE_DIR = "cover"
+	COVERAGE_DIR       string = "cover"
+	FAILED_FUND_RETURN string = "FAILED_FUND_RETURN"
 )
 
 var (
@@ -86,10 +89,12 @@ type Config struct {
 	RemoveOnInterrupt bool
 	// UpdateWaitInterval an interval to wait for deployment update started
 	UpdateWaitInterval time.Duration
-	// TestName the name of the test to run in the remote runner
-	TestName string
 	// IsRemoteTest is this env in a remote test
 	IsRemoteTest bool
+	// fundReturnFailed the status of a fund return
+	fundReturnFailed *bool
+	// Test the testing library current Test struct
+	Test *testing.T
 }
 
 func defaultEnvConfig() *Config {
@@ -134,11 +139,9 @@ func New(cfg *Config) *Environment {
 		targetCfg.Namespace = fmt.Sprintf("%s-%s", targetCfg.NamespacePrefix, uuid.NewString()[0:5])
 		log.Info().Str("Namespace", targetCfg.Namespace).Msg("Creating new namespace")
 	}
-	if targetCfg.TestName != "" {
-		targetCfg.JobImage = os.Getenv(config.EnvVarJobImage)
-		insideK8s, _ := strconv.ParseBool(os.Getenv(config.EnvVarInsideK8s))
-		targetCfg.InsideK8s = insideK8s
-	}
+	targetCfg.JobImage = os.Getenv(config.EnvVarJobImage)
+	insideK8s, _ := strconv.ParseBool(os.Getenv(config.EnvVarInsideK8s))
+	targetCfg.InsideK8s = insideK8s
 	irt := os.Getenv("IS_REMOTE_TEST")
 	if irt != "" {
 		targetCfg.IsRemoteTest = true
@@ -157,6 +160,18 @@ func New(cfg *Config) *Environment {
 	defer jsiiGlobalMu.Unlock()
 	e.initApp()
 	e.Chaos = client.NewChaos(c, e.Cfg.Namespace)
+
+	// setup test cleanup if this is using a remote runner
+	if targetCfg.JobImage != "" {
+		f := false
+		targetCfg.fundReturnFailed = &f
+		if targetCfg.Test != nil {
+			targetCfg.Test.Cleanup(func() {
+				err := e.Shutdown()
+				require.NoError(targetCfg.Test, err)
+			})
+		}
+	}
 	return e
 }
 
@@ -356,7 +371,7 @@ func (m *Environment) Run() error {
 			TargetNamespace: m.Cfg.Namespace,
 			Labels:          nil,
 			Image:           m.Cfg.JobImage,
-			EnvVars:         getEnvVarsMap(config.EnvVarPrefix, m.Cfg.TestName),
+			EnvVars:         getEnvVarsMap(config.EnvVarPrefix, m.Cfg.Test.Name()),
 		}))
 	}
 	jsiiGlobalMu.Lock()
@@ -372,8 +387,16 @@ func (m *Environment) Run() error {
 		return nil
 	}
 	if m.Cfg.JobImage != "" {
-		if err := m.Client.WaitForJob(m.Cfg.Namespace, "remote-test-runner"); err != nil {
+		if err := m.Client.WaitForJob(m.Cfg.Namespace, "remote-test-runner", func(message string) {
+			found := strings.Contains(message, FAILED_FUND_RETURN)
+			if found {
+				m.Cfg.fundReturnFailed = &found
+			}
+		}); err != nil {
 			return err
+		}
+		if *m.Cfg.fundReturnFailed {
+			return errors.New("failed to return funds in remote runner.")
 		}
 	} else {
 		if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s); err != nil {
@@ -513,13 +536,50 @@ func (m *Environment) SaveCoverage() error {
 
 // Shutdown environment, remove namespace
 func (m *Environment) Shutdown() error {
-	return m.Client.RemoveNamespace(m.Cfg.Namespace)
+	// don't shutdown if returning of funds failed
+	if m.Cfg.fundReturnFailed != nil {
+		if *m.Cfg.fundReturnFailed {
+			return nil
+		}
+	}
+
+	// don't shutdown if this is a test running remotely
+	if m.Cfg.IsRemoteTest {
+		return nil
+	}
+
+	keepEnvs := os.Getenv("KEEP_ENVIRONMENTS")
+	if keepEnvs == "" {
+		keepEnvs = "NEVER"
+	}
+
+	shouldShutdown := false
+	switch strings.ToUpper(keepEnvs) {
+	case "ALWAYS":
+		return nil
+	case "ONFAIL":
+		if m.Cfg.Test != nil {
+			if !m.Cfg.Test.Failed() {
+				shouldShutdown = true
+			}
+		}
+	case "NEVER":
+		shouldShutdown = true
+	default:
+		log.Warn().Str("Invalid Keep Value", keepEnvs).
+			Msg("Invalid 'keep_environments' value, see the KEEP_ENVIRONMENTS env var")
+	}
+
+	if shouldShutdown {
+		return m.Client.RemoveNamespace(m.Cfg.Namespace)
+	}
+	return nil
 }
 
 // BeforeTest sets the test name variable and determines if we need to start the remote runner
 func (m *Environment) WillUseRemoteRunner() bool {
 	_, onlyStartRunner := os.LookupEnv(config.EnvVarJobImage)
-	return onlyStartRunner && m.Cfg.TestName != ""
+	return onlyStartRunner && m.Cfg.Test.Name() != ""
 }
 
 func getEnvVarsMap(prefix string, testName string) map[string]string {

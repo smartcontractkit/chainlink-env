@@ -21,10 +21,11 @@ var (
 	testSelector = fmt.Sprintf("envType=%s", TestEnvType)
 )
 
-func getTestEnvConfig() *environment.Config {
+func getTestEnvConfig(t *testing.T) *environment.Config {
 	return &environment.Config{
 		NamespacePrefix: TestEnvType,
 		Labels:          []string{testSelector},
+		Test:            t,
 	}
 }
 
@@ -32,8 +33,7 @@ func getTestEnvConfig() *environment.Config {
 func TestLogs(t *testing.T) {
 	t.Skip("problems with GHA and afero")
 	t.Parallel()
-	testEnvConfig := getTestEnvConfig()
-	testEnvConfig.TestName = t.Name()
+	testEnvConfig := getTestEnvConfig(t)
 	e := presets.EVMMinimalLocal(testEnvConfig)
 	err := e.Run()
 	// nolint
@@ -56,8 +56,7 @@ func TestLogs(t *testing.T) {
 
 func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
 	t.Parallel()
-	testEnvConfig := getTestEnvConfig()
-	testEnvConfig.TestName = t.Name()
+	testEnvConfig := getTestEnvConfig(t)
 	e := presets.EVMSoak(testEnvConfig)
 	err := e.Run()
 	// nolint
@@ -67,8 +66,7 @@ func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
 
 func TestWithSingleNodeEnv(t *testing.T) {
 	t.Parallel()
-	testEnvConfig := getTestEnvConfig()
-	testEnvConfig.TestName = t.Name()
+	testEnvConfig := getTestEnvConfig(t)
 	e := presets.EVMOneNode(testEnvConfig)
 	err := e.Run()
 	// nolint
@@ -78,8 +76,7 @@ func TestWithSingleNodeEnv(t *testing.T) {
 
 func TestMinResources5NodesEnv(t *testing.T) {
 	t.Parallel()
-	testEnvConfig := getTestEnvConfig()
-	testEnvConfig.TestName = t.Name()
+	testEnvConfig := getTestEnvConfig(t)
 	e := presets.EVMMinimalLocal(testEnvConfig)
 	err := e.Run()
 	// nolint
@@ -90,8 +87,7 @@ func TestMinResources5NodesEnv(t *testing.T) {
 // t.Run("test min resources 5 nodes env with blockscout", func(t *testing.T) {
 func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
 	t.Parallel()
-	testEnvConfig := getTestEnvConfig()
-	testEnvConfig.TestName = t.Name()
+	testEnvConfig := getTestEnvConfig(t)
 	e := presets.EVMMinimalLocalBS(testEnvConfig)
 	err := e.Run()
 	// nolint
@@ -102,8 +98,7 @@ func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
 // TODO: fixme, use proper TOML config
 // func Test5NodesPlus2MiningGethsReorgEnv(t *testing.T) {
 // 	t.Parallel()
-// 	testEnvConfig := getTestEnvConfig()
-// 	testEnvConfig.TestName = t.Name()
+// 	testEnvConfig := getTestEnvConfig(t)
 // 	e := presets.EVMReorg(testEnvConfig)
 // 	err := e.Run()
 // 	// nolint
@@ -113,8 +108,7 @@ func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
 
 func TestMultipleInstancesOfTheSameType(t *testing.T) {
 	t.Parallel()
-	testEnvConfig := getTestEnvConfig()
-	testEnvConfig.TestName = t.Name()
+	testEnvConfig := getTestEnvConfig(t)
 	e := environment.New(testEnvConfig).
 		AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, nil)).
@@ -123,4 +117,20 @@ func TestMultipleInstancesOfTheSameType(t *testing.T) {
 	// nolint
 	defer e.Shutdown()
 	require.NoError(t, err)
+}
+
+// Note: this test only works when run with a remote runner
+func TestFundReturnShutdownLogic(t *testing.T) {
+	t.Parallel()
+	testEnvConfig := getTestEnvConfig(t)
+	e := presets.EVMMinimalLocal(testEnvConfig)
+	err := e.Run()
+	if e.WillUseRemoteRunner() {
+		require.Error(t, err, "Should return an error")
+		return
+	}
+	// nolint
+	defer e.Shutdown()
+	require.NoError(t, err)
+	fmt.Println(environment.FAILED_FUND_RETURN)
 }
