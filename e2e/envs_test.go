@@ -84,7 +84,6 @@ func TestMinResources5NodesEnv(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// t.Run("test min resources 5 nodes env with blockscout", func(t *testing.T) {
 func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := getTestEnvConfig(t)
