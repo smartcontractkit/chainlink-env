@@ -382,7 +382,7 @@ func (m *Environment) Run() error {
 	jsiiGlobalMu.Lock()
 	m.CurrentManifest = m.App.SynthYaml().(string)
 	jsiiGlobalMu.Unlock()
-	if !m.Cfg.InsideK8s {
+	if !m.Cfg.InsideK8s || m.Cfg.IsRemoteTest { // this outer if can go away once soak tests have been moved to isomorphic deployments
 		if err := m.Deploy(m.CurrentManifest); err != nil {
 			log.Error().Err(err).Msg("Error deploying environment")
 			_ = m.Shutdown()
