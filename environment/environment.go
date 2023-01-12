@@ -133,6 +133,11 @@ func New(cfg *Config) *Environment {
 	} else {
 		e.Cfg.Namespace = fmt.Sprintf("%s-%s", e.Cfg.NamespacePrefix, uuid.NewString()[0:5])
 	}
+	arts, err := NewArtifacts(e.Client, e.Cfg.Namespace)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to create artifacts client")
+	}
+	e.Artifacts = arts
 
 	jsiiGlobalMu.Lock()
 	defer jsiiGlobalMu.Unlock()
@@ -348,11 +353,6 @@ func (m *Environment) Run() error {
 	if err := m.PrintExportData(); err != nil {
 		return err
 	}
-	arts, err := NewArtifacts(m.Client, m.Cfg.Namespace)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to create artifacts client")
-	}
-	m.Artifacts = arts
 	if len(m.URLs["goc"]) != 0 {
 		m.httpClient = resty.New().SetBaseURL(m.URLs["goc"][0])
 	}
