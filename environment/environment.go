@@ -155,6 +155,11 @@ func New(cfg *Config) *Environment {
 		Cfg:    targetCfg,
 		Fwd:    client.NewForwarder(c, targetCfg.KeepConnection),
 	}
+	arts, err := NewArtifacts(e.Client, e.Cfg.Namespace)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to create artifacts client")
+	}
+	e.Artifacts = arts
 
 	jsiiGlobalMu.Lock()
 	defer jsiiGlobalMu.Unlock()
@@ -377,10 +382,12 @@ func (m *Environment) Run() error {
 	jsiiGlobalMu.Lock()
 	m.CurrentManifest = m.App.SynthYaml().(string)
 	jsiiGlobalMu.Unlock()
-	if err := m.Deploy(m.CurrentManifest); err != nil {
-		log.Error().Err(err).Msg("Error deploying environment")
-		_ = m.Shutdown()
-		return err
+	if !m.Cfg.InsideK8s {
+		if err := m.Deploy(m.CurrentManifest); err != nil {
+			log.Error().Err(err).Msg("Error deploying environment")
+			_ = m.Shutdown()
+			return err
+		}
 	}
 	if m.Cfg.DryRun {
 		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
