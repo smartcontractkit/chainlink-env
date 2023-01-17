@@ -40,7 +40,7 @@ func (c *Chaos) Run(app cdk8s.App, id string, resource string) (string, error) {
 	config.JSIIGlobalMu.Lock()
 	manifest := app.SynthYaml().(string)
 	config.JSIIGlobalMu.Unlock()
-	fmt.Println(manifest)
+	log.Trace().Str("Raw", manifest).Msg("Manifest")
 	c.ResourceByName[id] = resource
 	if err := c.Client.Apply(manifest); err != nil {
 		return id, err

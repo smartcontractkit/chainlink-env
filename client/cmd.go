@@ -2,10 +2,11 @@ package client
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"os/exec"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 func ExecCmd(command string) error {
@@ -18,7 +19,7 @@ func readStdPipe(pipe io.ReadCloser, outputFunction func(string)) {
 	scanner.Split(bufio.ScanLines)
 	for scanner.Scan() {
 		m := scanner.Text()
-		fmt.Println(m)
+		log.Trace().Str("Text", m).Msg("Std Pipe")
 		if outputFunction != nil {
 			outputFunction(m)
 		}
