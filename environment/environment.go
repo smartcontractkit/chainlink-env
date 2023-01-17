@@ -278,8 +278,6 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	}
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
-	
-
 
 	values := &map[string]interface{}{
 		"tolerations":  m.Cfg.Tolerations,
