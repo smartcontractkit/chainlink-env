@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"sync"
 
 	"github.com/imdario/mergo"
 	"github.com/rs/zerolog/log"
@@ -55,6 +56,10 @@ const (
 	EnvVarNodeSelector                = "K8S_NODE_SELECTOR"
 	EnvVarNodeSelectorUserDescription = "Node role to deploy to"
 	EnvVarNodeSelectorExample         = "foundations"
+)
+
+var (
+	JSIIGlobalMu = &sync.Mutex{}
 )
 
 func MustMerge(targetVars interface{}, codeVars interface{}) {

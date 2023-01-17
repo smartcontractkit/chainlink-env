@@ -8,7 +8,7 @@ import (
 	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/rs/zerolog/log"
-	"github.com/smartcontractkit/chainlink-env/environment"
+	"github.com/smartcontractkit/chainlink-env/config"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -37,9 +37,9 @@ func NewChaos(client *K8sClient, namespace string) *Chaos {
 // Run runs experiment and saves its ID
 func (c *Chaos) Run(app cdk8s.App, id string, resource string) (string, error) {
 	log.Info().Msg("Applying chaos experiment")
-	environment.JSIIGlobalMu.Lock()
+	config.JSIIGlobalMu.Lock()
 	manifest := app.SynthYaml().(string)
-	environment.JSIIGlobalMu.Unlock()
+	config.JSIIGlobalMu.Unlock()
 	fmt.Println(manifest)
 	c.ResourceByName[id] = resource
 	if err := c.Client.Apply(manifest); err != nil {
