@@ -32,9 +32,10 @@ import (
 )
 
 const (
-	TempDebugManifest          = "tmp-manifest-%s.yaml"
-	ContainerStatePollInterval = 3 * time.Second
-	AppLabel                   = "app"
+	TempDebugManifest    = "tmp-manifest-%s.yaml"
+	K8sStatePollInterval = 2 * time.Second
+	JobFinalizedTimeout  = 2 * time.Minute
+	AppLabel             = "app"
 )
 
 // K8sClient high level k8s client
@@ -225,7 +226,7 @@ func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData) error {
 			if allReady {
 				return nil
 			}
-			time.Sleep(ContainerStatePollInterval)
+			time.Sleep(K8sStatePollInterval)
 		}
 	}
 }
@@ -258,7 +259,7 @@ func (m *K8sClient) CheckReady(namespace string, c *ReadyCheckData) error {
 	// wait for the number of enumerated apps to be at least 1 before checking
 	// for ready or we can error out on slow runs or large jobs
 	var exitErr error
-	if err := wait.PollImmediate(2*time.Second, 2*time.Minute, func() (bool, error) {
+	if err := wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
 		apps, err2 := m.UniqueLabels(namespace, "app")
 		if err2 != nil {
 			exitErr = err2
@@ -277,6 +278,34 @@ func (m *K8sClient) CheckReady(namespace string, c *ReadyCheckData) error {
 		return exitErr
 	}
 	return m.WaitPodsReady(namespace, c)
+}
+
+// WaitForJob wait for job execution, follow logs and returns an error if job failed
+func (m *K8sClient) WaitForJob(namespaceName string, jobName string, fundReturnStatus func(string)) error {
+	cmd := fmt.Sprintf("kubectl --namespace %s logs --follow job/%s", namespaceName, jobName)
+	log.Info().Str("Job", jobName).Str("cmd", cmd).Msg("Waiting for job to complete")
+	if err := ExecCmdWithOptions(cmd, fundReturnStatus); err != nil {
+		return err
+	}
+	var exitErr error
+	if err := wait.PollImmediate(K8sStatePollInterval, JobFinalizedTimeout, func() (bool, error) {
+		job, err := m.ClientSet.BatchV1().Jobs(namespaceName).Get(context.Background(), jobName, metaV1.GetOptions{})
+		if err != nil {
+			exitErr = err
+		}
+		if int(job.Status.Failed) > 0 {
+			exitErr = errors.New("job failed")
+			return true, nil
+		}
+		if int(job.Status.Succeeded) > 0 {
+			exitErr = nil
+			return true, nil
+		}
+		return false, nil
+	}); err != nil {
+		return err
+	}
+	return exitErr
 }
 
 // Apply applying a manifest to a currently connected k8s context
@@ -339,7 +368,7 @@ func (m *K8sClient) CopyToPod(namespace, src, destination, containername string)
 
 	formatted, err := regexp.MatchString(".*?\\/.*?\\:.*", destination)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("Could not run copy operation: %v", err)
+		return nil, nil, nil, fmt.Errorf("could not run copy operation: %v", err)
 	}
 	if !formatted {
 		return nil, nil, nil, fmt.Errorf("destination string improperly formatted, see reference 'NAMESPACE/POD_NAME:folder/FILE_NAME'")
@@ -353,7 +382,7 @@ func (m *K8sClient) CopyToPod(namespace, src, destination, containername string)
 		Msg("Uploading file to pod")
 	err = copyOptions.Run()
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("Could not run copy operation: %v", err)
+		return nil, nil, nil, fmt.Errorf("could not run copy operation: %v", err)
 	}
 	return in, out, errOut, nil
 }

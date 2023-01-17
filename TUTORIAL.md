@@ -18,6 +18,7 @@
   - [Resources summary](#resources-summary)
 - [Chaos](#chaos)
 - [Coverage](#coverage)
+- [Remote run](./REMOTE_RUN.md)
 
 
 ## Getting started

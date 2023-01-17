@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# Runs compiled go executables and specificies the test to run
+# Builds executable go test binaries for this repos tests
+
+set -ex
+
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+cd "$SCRIPT_DIR"/../ || exit 1
+
+go test -c ./e2e

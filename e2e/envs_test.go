@@ -18,16 +18,22 @@ const (
 )
 
 var (
-	testSelector  = fmt.Sprintf("envType=%s", TestEnvType)
-	testEnvConfig = &environment.Config{
+	testSelector = fmt.Sprintf("envType=%s", TestEnvType)
+)
+
+func getTestEnvConfig(t *testing.T) *environment.Config {
+	return &environment.Config{
 		NamespacePrefix: TestEnvType,
 		Labels:          []string{testSelector},
+		Test:            t,
 	}
-)
+}
 
 // TODO: GHA have some problems with filepaths, using afero will add another param for the filesystem
 func TestLogs(t *testing.T) {
 	t.Skip("problems with GHA and afero")
+	t.Parallel()
+	testEnvConfig := getTestEnvConfig(t)
 	e := presets.EVMMinimalLocal(testEnvConfig)
 	err := e.Run()
 	// nolint
@@ -48,51 +54,82 @@ func TestLogs(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestSimpleEnv(t *testing.T) {
-	t.Run("test 5 nodes soak environment with PVCs", func(t *testing.T) {
-		e := presets.EVMSoak(testEnvConfig)
-		err := e.Run()
-		// nolint
-		defer e.Shutdown()
-		require.NoError(t, err)
-	})
-	t.Run("smoke test with a single node env", func(t *testing.T) {
-		e := presets.EVMOneNode(testEnvConfig)
-		err := e.Run()
-		// nolint
-		defer e.Shutdown()
-		require.NoError(t, err)
-	})
-	t.Run("test min resources 5 nodes env", func(t *testing.T) {
-		e := presets.EVMMinimalLocal(testEnvConfig)
-		err := e.Run()
-		// nolint
-		defer e.Shutdown()
-		require.NoError(t, err)
-	})
-	t.Run("test min resources 5 nodes env with blockscout", func(t *testing.T) {
-		e := presets.EVMMinimalLocalBS(testEnvConfig)
-		err := e.Run()
-		// nolint
-		defer e.Shutdown()
-		require.NoError(t, err)
-	})
-	// TODO: fixme, use proper TOML config
-	//t.Run("test 5 nodes + 2 mining geths, reorg env", func(t *testing.T) {
-	//	e := presets.EVMReorg(testEnvConfig)
-	//	err := e.Run()
-	//	// nolint
-	//	defer e.Shutdown()
-	//	require.NoError(t, err)
-	//})
-	t.Run("test multiple instances of the same type", func(t *testing.T) {
-		e := environment.New(testEnvConfig).
-			AddHelm(ethereum.New(nil)).
-			AddHelm(chainlink.New(0, nil)).
-			AddHelm(chainlink.New(1, nil))
-		err := e.Run()
-		// nolint
-		defer e.Shutdown()
-		require.NoError(t, err)
-	})
+func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
+	t.Parallel()
+	testEnvConfig := getTestEnvConfig(t)
+	e := presets.EVMSoak(testEnvConfig)
+	err := e.Run()
+	// nolint
+	defer e.Shutdown()
+	require.NoError(t, err)
+}
+
+func TestWithSingleNodeEnv(t *testing.T) {
+	t.Parallel()
+	testEnvConfig := getTestEnvConfig(t)
+	e := presets.EVMOneNode(testEnvConfig)
+	err := e.Run()
+	// nolint
+	defer e.Shutdown()
+	require.NoError(t, err)
+}
+
+func TestMinResources5NodesEnv(t *testing.T) {
+	t.Parallel()
+	testEnvConfig := getTestEnvConfig(t)
+	e := presets.EVMMinimalLocal(testEnvConfig)
+	err := e.Run()
+	// nolint
+	defer e.Shutdown()
+	require.NoError(t, err)
+}
+
+func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
+	t.Parallel()
+	testEnvConfig := getTestEnvConfig(t)
+	e := presets.EVMMinimalLocalBS(testEnvConfig)
+	err := e.Run()
+	// nolint
+	defer e.Shutdown()
+	require.NoError(t, err)
+}
+
+// TODO: fixme, use proper TOML config
+// func Test5NodesPlus2MiningGethsReorgEnv(t *testing.T) {
+// 	t.Parallel()
+// 	testEnvConfig := getTestEnvConfig(t)
+// 	e := presets.EVMReorg(testEnvConfig)
+// 	err := e.Run()
+// 	// nolint
+// 	defer e.Shutdown()
+// 	require.NoError(t, err)
+// }
+
+func TestMultipleInstancesOfTheSameType(t *testing.T) {
+	t.Parallel()
+	testEnvConfig := getTestEnvConfig(t)
+	e := environment.New(testEnvConfig).
+		AddHelm(ethereum.New(nil)).
+		AddHelm(chainlink.New(0, nil)).
+		AddHelm(chainlink.New(1, nil))
+	err := e.Run()
+	// nolint
+	defer e.Shutdown()
+	require.NoError(t, err)
+}
+
+// Note: this test only works when run with a remote runner
+func TestFundReturnShutdownLogic(t *testing.T) {
+	t.Parallel()
+	testEnvConfig := getTestEnvConfig(t)
+	e := presets.EVMMinimalLocal(testEnvConfig)
+	err := e.Run()
+	if e.WillUseRemoteRunner() {
+		require.Error(t, err, "Should return an error")
+		return
+	}
+	// nolint
+	defer e.Shutdown()
+	require.NoError(t, err)
+	fmt.Println(environment.FAILED_FUND_RETURN)
 }
