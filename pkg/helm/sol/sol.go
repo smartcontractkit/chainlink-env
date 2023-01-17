@@ -67,10 +67,7 @@ func (m Chart) ExportData(e *environment.Environment) error {
 	if err != nil {
 		return err
 	}
-	e.URLs[m.Props.NetworkName] = []string{netLocal, netLocalWS}
-	if e.Cfg.InsideK8s {
-		e.URLs[m.Props.NetworkName] = []string{netInternal, netInternalWS}
-	}
+	e.URLs[m.Props.NetworkName] = []string{netLocal, netLocalWS, netInternal, netInternalWS}
 	log.Info().Str("Name", m.Props.NetworkName).Str("URLs", netLocal).Msg("Solana network")
 	return nil
 }
