@@ -6,7 +6,6 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
-	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -31,7 +30,6 @@ const (
 )
 
 var (
-	jsiiGlobalMu       = &sync.Mutex{}
 	defaultAnnotations = map[string]*string{"prometheus.io/scrape": a.Str("true")}
 )
 
@@ -161,8 +159,8 @@ func New(cfg *Config) *Environment {
 	}
 	e.Artifacts = arts
 
-	jsiiGlobalMu.Lock()
-	defer jsiiGlobalMu.Unlock()
+	config.JSIIGlobalMu.Lock()
+	defer config.JSIIGlobalMu.Unlock()
 	e.initApp()
 	e.Chaos = client.NewChaos(c, e.Cfg.Namespace)
 
@@ -232,8 +230,8 @@ func (m *Environment) initApp() {
 
 // AddChart adds a chart to the deployment
 func (m *Environment) AddChart(f func(root cdk8s.Chart) ConnectedChart) *Environment {
-	jsiiGlobalMu.Lock()
-	defer jsiiGlobalMu.Unlock()
+	config.JSIIGlobalMu.Lock()
+	defer config.JSIIGlobalMu.Unlock()
 	m.Charts = append(m.Charts, f(m.root))
 	return m
 }
@@ -249,8 +247,8 @@ func (m *Environment) removeChart(name string) {
 
 // ModifyHelm modifies helm chart in deployment
 func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment {
-	jsiiGlobalMu.Lock()
-	defer jsiiGlobalMu.Unlock()
+	config.JSIIGlobalMu.Lock()
+	defer config.JSIIGlobalMu.Unlock()
 	m.removeChart(name)
 	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
 		return m
@@ -278,9 +276,10 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
 		return m
 	}
+	config.JSIIGlobalMu.Lock()
+	defer config.JSIIGlobalMu.Unlock()
+	
 
-	jsiiGlobalMu.Lock()
-	defer jsiiGlobalMu.Unlock()
 
 	values := &map[string]interface{}{
 		"tolerations":  m.Cfg.Tolerations,
@@ -379,9 +378,9 @@ func (m *Environment) Run() error {
 			EnvVars:         getEnvVarsMap(config.EnvVarPrefix, m.Cfg.Test.Name()),
 		}))
 	}
-	jsiiGlobalMu.Lock()
+	config.JSIIGlobalMu.Lock()
 	m.CurrentManifest = m.App.SynthYaml().(string)
-	jsiiGlobalMu.Unlock()
+	config.JSIIGlobalMu.Unlock()
 	if !m.Cfg.InsideK8s || m.Cfg.IsRemoteTest { // this outer if can go away once soak tests have been moved to isomorphic deployments
 		if err := m.Deploy(m.CurrentManifest); err != nil {
 			log.Error().Err(err).Msg("Error deploying environment")
