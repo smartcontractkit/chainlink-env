@@ -18,6 +18,7 @@ type Props struct {
 	LabelsSelector *map[string]*string
 	ContainerNames *[]*string
 	DurationStr    string
+	Delay          string
 	FromLabels     *map[string]*string
 	ToLabels       *map[string]*string
 }
@@ -116,6 +117,32 @@ func NewNetworkPartition(namespace string, props *Props) (cdk8s.App, string, str
 			ExternalTargets: nil,
 			Loss: &networkChaos.NetworkChaosSpecLoss{
 				Loss: a.Str("100"),
+			},
+			Target: &networkChaos.NetworkChaosSpecTarget{
+				Mode: networkChaos.NetworkChaosSpecTargetMode_ALL,
+				Selector: &networkChaos.NetworkChaosSpecTargetSelector{
+					LabelSelectors: props.ToLabels,
+				},
+			},
+		},
+	})
+	return app, *c.Name(), "networkchaos"
+}
+
+func NewNetworkLatency(namespace string, props *Props) (cdk8s.App, string, string) {
+	app, root := blankManifest(namespace)
+	c := networkChaos.NewNetworkChaos(root, a.Str("experiment"), &networkChaos.NetworkChaosProps{
+		Spec: &networkChaos.NetworkChaosSpec{
+			Action: networkChaos.NetworkChaosSpecAction_DELAY,
+			Mode:   networkChaos.NetworkChaosSpecMode_ALL,
+			Selector: &networkChaos.NetworkChaosSpecSelector{
+				LabelSelectors: props.FromLabels,
+			},
+			Direction: networkChaos.NetworkChaosSpecDirection_BOTH,
+			Duration:  a.Str(props.DurationStr),
+			Delay: &networkChaos.NetworkChaosSpecDelay{
+				Latency:     a.Str(props.Delay),
+				Correlation: a.Str("100"),
 			},
 			Target: &networkChaos.NetworkChaosSpecTarget{
 				Mode: networkChaos.NetworkChaosSpecTargetMode_ALL,

@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
+	"testing"
 	"time"
 
 	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
@@ -18,10 +21,12 @@ import (
 	"github.com/smartcontractkit/chainlink-env/logging"
 	"github.com/smartcontractkit/chainlink-env/pkg"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
+	"github.com/stretchr/testify/require"
 )
 
 const (
-	COVERAGE_DIR = "cover"
+	COVERAGE_DIR       string = "cover"
+	FAILED_FUND_RETURN string = "FAILED_FUND_RETURN"
 )
 
 var (
@@ -52,6 +57,8 @@ type ConnectedChart interface {
 type Config struct {
 	// TTL is time to live for the environment, used with kube-janitor
 	TTL time.Duration
+	// JobImage an image to run environment as a job inside k8s
+	JobImage string
 	// NamespacePrefix is a static namespace prefix
 	NamespacePrefix string
 	// Namespace is full namespace name
@@ -80,6 +87,12 @@ type Config struct {
 	RemoveOnInterrupt bool
 	// UpdateWaitInterval an interval to wait for deployment update started
 	UpdateWaitInterval time.Duration
+	// IsRemoteTest is this env in a remote test
+	IsRemoteTest bool
+	// fundReturnFailed the status of a fund return
+	fundReturnFailed *bool
+	// Test the testing library current Test struct
+	Test *testing.T
 }
 
 func defaultEnvConfig() *Config {
@@ -116,6 +129,22 @@ func New(cfg *Config) *Environment {
 	}
 	targetCfg := defaultEnvConfig()
 	config.MustMerge(targetCfg, cfg)
+	ns := os.Getenv(config.EnvVarNamespace)
+	if ns != "" {
+		log.Info().Str("Namespace", ns).Msg("Namespace found")
+		targetCfg.Namespace = ns
+	} else {
+		targetCfg.Namespace = fmt.Sprintf("%s-%s", targetCfg.NamespacePrefix, uuid.NewString()[0:5])
+		log.Info().Str("Namespace", targetCfg.Namespace).Msg("Creating new namespace")
+	}
+	targetCfg.JobImage = os.Getenv(config.EnvVarJobImage)
+	insideK8s, _ := strconv.ParseBool(os.Getenv(config.EnvVarInsideK8s))
+	targetCfg.InsideK8s = insideK8s
+	irt := os.Getenv("IS_REMOTE_TEST")
+	if irt != "" {
+		targetCfg.IsRemoteTest = true
+	}
+
 	c := client.NewK8sClient()
 	e := &Environment{
 		URLs:   make(map[string][]string),
@@ -123,13 +152,6 @@ func New(cfg *Config) *Environment {
 		Client: c,
 		Cfg:    targetCfg,
 		Fwd:    client.NewForwarder(c, targetCfg.KeepConnection),
-	}
-	ns := os.Getenv(config.EnvVarNamespace)
-	if e.Client.NamespaceExists(ns) {
-		log.Info().Str("Namespace", ns).Msg("Namespace found")
-		e.Cfg.Namespace = ns
-	} else {
-		e.Cfg.Namespace = fmt.Sprintf("%s-%s", e.Cfg.NamespacePrefix, uuid.NewString()[0:5])
 	}
 	arts, err := NewArtifacts(e.Client, e.Cfg.Namespace)
 	if err != nil {
@@ -140,14 +162,19 @@ func New(cfg *Config) *Environment {
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
 	e.initApp()
-	k8s.NewKubeNamespace(e.root, a.Str("namespace"), &k8s.KubeNamespaceProps{
-		Metadata: &k8s.ObjectMeta{
-			Name:        a.Str(e.Cfg.Namespace),
-			Labels:      e.Cfg.nsLabels,
-			Annotations: &defaultAnnotations,
-		},
-	})
 	e.Chaos = client.NewChaos(c, e.Cfg.Namespace)
+
+	// setup test cleanup if this is using a remote runner
+	if targetCfg.JobImage != "" {
+		f := false
+		targetCfg.fundReturnFailed = &f
+		if targetCfg.Test != nil {
+			targetCfg.Test.Cleanup(func() {
+				err := e.Shutdown()
+				require.NoError(targetCfg.Test, err)
+			})
+		}
+	}
 	return e
 }
 
@@ -192,6 +219,13 @@ func (m *Environment) initApp() {
 		Labels:    m.Cfg.nsLabels,
 		Namespace: a.Str(m.Cfg.Namespace),
 	})
+	k8s.NewKubeNamespace(m.root, a.Str("namespace"), &k8s.KubeNamespaceProps{
+		Metadata: &k8s.ObjectMeta{
+			Name:        a.Str(m.Cfg.Namespace),
+			Labels:      m.Cfg.nsLabels,
+			Annotations: &defaultAnnotations,
+		},
+	})
 }
 
 // AddChart adds a chart to the deployment
@@ -216,56 +250,59 @@ func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
 	m.removeChart(name)
-	if chart.IsDeploymentNeeded() {
-		log.Trace().
-			Str("Chart", chart.GetName()).
-			Str("Path", chart.GetPath()).
-			Interface("Props", chart.GetProps()).
-			Interface("Values", chart.GetValues()).
-			Msg("Chart deployment values")
-		cdk8s.NewHelm(m.root, a.Str(name), &cdk8s.HelmProps{
-			Chart: a.Str(chart.GetPath()),
-			HelmFlags: &[]*string{
-				a.Str("--namespace"),
-				a.Str(m.Cfg.Namespace),
-			},
-			ReleaseName: a.Str(name),
-			Values:      chart.GetValues(),
-		})
+	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
+		return m
 	}
+	log.Trace().
+		Str("Chart", chart.GetName()).
+		Str("Path", chart.GetPath()).
+		Interface("Props", chart.GetProps()).
+		Interface("Values", chart.GetValues()).
+		Msg("Chart deployment values")
+	cdk8s.NewHelm(m.root, a.Str(name), &cdk8s.HelmProps{
+		Chart: a.Str(chart.GetPath()),
+		HelmFlags: &[]*string{
+			a.Str("--namespace"),
+			a.Str(m.Cfg.Namespace),
+		},
+		ReleaseName: a.Str(name),
+		Values:      chart.GetValues(),
+	})
 	m.Charts = append(m.Charts, chart)
 	return m
 }
 
 func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
+	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
+		return m
+	}
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
-	if chart.IsDeploymentNeeded() {
-		values := &map[string]interface{}{
-			"tolerations":  m.Cfg.Tolerations,
-			"nodeSelector": m.Cfg.NodeSelector,
-		}
-		config.MustMerge(values, chart.GetValues())
-		log.Trace().
-			Str("Chart", chart.GetName()).
-			Str("Path", chart.GetPath()).
-			Interface("Props", chart.GetProps()).
-			Interface("Values", values).
-			Msg("Chart deployment values")
-		helmFlags := []*string{
-			a.Str("--namespace"),
-			a.Str(m.Cfg.Namespace),
-		}
-		if chart.GetVersion() != "" {
-			helmFlags = append(helmFlags, a.Str("--version"), a.Str(chart.GetVersion()))
-		}
-		cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
-			Chart:       a.Str(chart.GetPath()),
-			HelmFlags:   &helmFlags,
-			ReleaseName: a.Str(chart.GetName()),
-			Values:      values,
-		})
+
+	values := &map[string]interface{}{
+		"tolerations":  m.Cfg.Tolerations,
+		"nodeSelector": m.Cfg.NodeSelector,
 	}
+	config.MustMerge(values, chart.GetValues())
+	log.Trace().
+		Str("Chart", chart.GetName()).
+		Str("Path", chart.GetPath()).
+		Interface("Props", chart.GetProps()).
+		Interface("Values", values).
+		Msg("Chart deployment values")
+	helmFlags := []*string{
+		a.Str("--namespace"),
+		a.Str(m.Cfg.Namespace),
+	}
+	if chart.GetVersion() != "" {
+		helmFlags = append(helmFlags, a.Str("--version"), a.Str(chart.GetVersion()))
+	}
+	cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
+		Chart:       a.Str(chart.GetPath()),
+		HelmFlags:   &helmFlags,
+		ReleaseName: a.Str(chart.GetName()),
+		Values:      values,
+	})
 	m.Charts = append(m.Charts, chart)
 	return m
 }
@@ -330,10 +367,19 @@ func (m *Environment) Manifest() string {
 
 // Run deploys or connects to already created environment
 func (m *Environment) Run() error {
+	if m.Cfg.JobImage != "" {
+		m.AddChart(NewRunner(&Props{
+			BaseName:        "remote-test-runner",
+			TargetNamespace: m.Cfg.Namespace,
+			Labels:          nil,
+			Image:           m.Cfg.JobImage,
+			EnvVars:         getEnvVarsMap(config.EnvVarPrefix, m.Cfg.Test.Name()),
+		}))
+	}
 	config.JSIIGlobalMu.Lock()
 	m.CurrentManifest = m.App.SynthYaml().(string)
 	config.JSIIGlobalMu.Unlock()
-	if !m.Cfg.InsideK8s {
+	if !m.Cfg.InsideK8s || m.Cfg.IsRemoteTest { // this outer if can go away once soak tests have been moved to isomorphic deployments
 		if err := m.Deploy(m.CurrentManifest); err != nil {
 			log.Error().Err(err).Msg("Error deploying environment")
 			_ = m.Shutdown()
@@ -344,27 +390,46 @@ func (m *Environment) Run() error {
 		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
 		return nil
 	}
-	if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s); err != nil {
-		return err
-	}
-	log.Debug().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
-	if err := m.PrintExportData(); err != nil {
-		return err
-	}
-	if len(m.URLs["goc"]) != 0 {
-		m.httpClient = resty.New().SetBaseURL(m.URLs["goc"][0])
-	}
-	if m.Cfg.KeepConnection {
-		log.Info().Msg("Keeping forwarder connections, press Ctrl+C to interrupt")
-		if m.Cfg.RemoveOnInterrupt {
-			log.Warn().Msg("Environment will be removed on interrupt")
+	if m.Cfg.JobImage != "" {
+		if err := m.Client.WaitForJob(m.Cfg.Namespace, "remote-test-runner", func(message string) {
+			found := strings.Contains(message, FAILED_FUND_RETURN)
+			if found {
+				m.Cfg.fundReturnFailed = &found
+			}
+		}); err != nil {
+			return err
 		}
-		ch := make(chan os.Signal, 1)
-		signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
-		<-ch
-		log.Warn().Msg("Interrupted")
-		if m.Cfg.RemoveOnInterrupt {
-			return m.Client.RemoveNamespace(m.Cfg.Namespace)
+		if *m.Cfg.fundReturnFailed {
+			return errors.New("failed to return funds in remote runner.")
+		}
+	} else {
+		if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s); err != nil {
+			return err
+		}
+		log.Debug().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
+		if err := m.PrintExportData(); err != nil {
+			return err
+		}
+		arts, err := NewArtifacts(m.Client, m.Cfg.Namespace)
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to create artifacts client")
+		}
+		m.Artifacts = arts
+		if len(m.URLs["goc"]) != 0 {
+			m.httpClient = resty.New().SetBaseURL(m.URLs["goc"][0])
+		}
+		if m.Cfg.KeepConnection {
+			log.Info().Msg("Keeping forwarder connections, press Ctrl+C to interrupt")
+			if m.Cfg.RemoveOnInterrupt {
+				log.Warn().Msg("Environment will be removed on interrupt")
+			}
+			ch := make(chan os.Signal, 1)
+			signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
+			<-ch
+			log.Warn().Msg("Interrupted")
+			if m.Cfg.RemoveOnInterrupt {
+				return m.Client.RemoveNamespace(m.Cfg.Namespace)
+			}
 		}
 	}
 	return nil
@@ -475,5 +540,89 @@ func (m *Environment) SaveCoverage() error {
 
 // Shutdown environment, remove namespace
 func (m *Environment) Shutdown() error {
-	return m.Client.RemoveNamespace(m.Cfg.Namespace)
+	// don't shutdown if returning of funds failed
+	if m.Cfg.fundReturnFailed != nil {
+		if *m.Cfg.fundReturnFailed {
+			return nil
+		}
+	}
+
+	// don't shutdown if this is a test running remotely
+	if m.Cfg.IsRemoteTest {
+		return nil
+	}
+
+	keepEnvs := os.Getenv("KEEP_ENVIRONMENTS")
+	if keepEnvs == "" {
+		keepEnvs = "NEVER"
+	}
+
+	shouldShutdown := false
+	switch strings.ToUpper(keepEnvs) {
+	case "ALWAYS":
+		return nil
+	case "ONFAIL":
+		if m.Cfg.Test != nil {
+			if !m.Cfg.Test.Failed() {
+				shouldShutdown = true
+			}
+		}
+	case "NEVER":
+		shouldShutdown = true
+	default:
+		log.Warn().Str("Invalid Keep Value", keepEnvs).
+			Msg("Invalid 'keep_environments' value, see the KEEP_ENVIRONMENTS env var")
+	}
+
+	if shouldShutdown {
+		return m.Client.RemoveNamespace(m.Cfg.Namespace)
+	}
+	return nil
+}
+
+// BeforeTest sets the test name variable and determines if we need to start the remote runner
+func (m *Environment) WillUseRemoteRunner() bool {
+	_, onlyStartRunner := os.LookupEnv(config.EnvVarJobImage)
+	return onlyStartRunner && m.Cfg.Test.Name() != ""
+}
+
+func getEnvVarsMap(prefix string, testName string) map[string]string {
+	m := make(map[string]string)
+	for _, e := range os.Environ() {
+		if i := strings.Index(e, "="); i >= 0 {
+			if strings.HasPrefix(e[:i], prefix) {
+				withoutPrefix := strings.Replace(e[:i], "TEST_", "", 1)
+				m[withoutPrefix] = e[i+1:]
+			}
+		}
+	}
+	// add important variables
+	lookups := []string{
+		config.EnvVarCLImage,
+		config.EnvVarCLTag,
+		config.EnvVarCLCommitSha,
+		config.EnvVarLogLevel,
+		config.EnvVarTestTrigger,
+		config.EnvVarToleration,
+		config.EnvVarSlackChannel,
+		config.EnvVarSlackKey,
+		config.EnvVarSlackUser,
+		config.EnvVarUser,
+		config.EnvVarNodeSelector,
+		config.EnvVarSelectedNetworks,
+	}
+	for _, k := range lookups {
+		v, success := os.LookupEnv(k)
+		if success && len(v) > 0 {
+			log.Debug().Str(k, v).Msg("Forwarding Env Var")
+			m[k] = v
+		}
+	}
+
+	// add test name
+	m["TEST_NAME"] = testName
+	// Tell the remote test it is a remote test
+	m["IS_REMOTE_TEST"] = "true"
+
+	return m
 }
