@@ -1,17 +1,15 @@
 package chaos
 
 import (
-	"sync"
-
 	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
+	"github.com/smartcontractkit/chainlink-env/environment"
 	networkChaos "github.com/smartcontractkit/chainlink-env/imports/k8s/networkchaos/chaosmeshorg"
 	podChaos "github.com/smartcontractkit/chainlink-env/imports/k8s/podchaos/chaosmeshorg"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
 )
 
 var (
-	jsiiChaosMu = &sync.Mutex{}
-	FOREVER     = a.Str("999h")
+	FOREVER = a.Str("999h")
 )
 
 type ManifestFunc func(namespace string, props *Props) (cdk8s.App, string, string)
@@ -34,8 +32,8 @@ func blankManifest(namespace string) (cdk8s.App, cdk8s.Chart) {
 }
 
 func NewKillPods(namespace string, props *Props) (cdk8s.App, string, string) {
-	jsiiChaosMu.Lock()
-	defer jsiiChaosMu.Unlock()
+	environment.JSIIGlobalMu.Lock()
+	defer environment.JSIIGlobalMu.Unlock()
 	app, root := blankManifest(namespace)
 	c := podChaos.NewPodChaos(root, a.Str("experiment"), &podChaos.PodChaosProps{
 		Spec: &podChaos.PodChaosSpec{
@@ -51,8 +49,8 @@ func NewKillPods(namespace string, props *Props) (cdk8s.App, string, string) {
 }
 
 func NewFailPods(namespace string, props *Props) (cdk8s.App, string, string) {
-	jsiiChaosMu.Lock()
-	defer jsiiChaosMu.Unlock()
+	environment.JSIIGlobalMu.Lock()
+	defer environment.JSIIGlobalMu.Unlock()
 	app, root := blankManifest(namespace)
 	c := podChaos.NewPodChaos(root, a.Str("experiment"), &podChaos.PodChaosProps{
 		Spec: &podChaos.PodChaosSpec{
@@ -68,8 +66,8 @@ func NewFailPods(namespace string, props *Props) (cdk8s.App, string, string) {
 }
 
 func NewFailContainers(namespace string, props *Props) (cdk8s.App, string, string) {
-	jsiiChaosMu.Lock()
-	defer jsiiChaosMu.Unlock()
+	environment.JSIIGlobalMu.Lock()
+	defer environment.JSIIGlobalMu.Unlock()
 	app, root := blankManifest(namespace)
 	c := podChaos.NewPodChaos(root, a.Str("experiment"), &podChaos.PodChaosProps{
 		Spec: &podChaos.PodChaosSpec{
@@ -86,8 +84,8 @@ func NewFailContainers(namespace string, props *Props) (cdk8s.App, string, strin
 }
 
 func NewContainerKill(namespace string, props *Props) (cdk8s.App, string, string) {
-	jsiiChaosMu.Lock()
-	defer jsiiChaosMu.Unlock()
+	environment.JSIIGlobalMu.Lock()
+	defer environment.JSIIGlobalMu.Unlock()
 	app, root := blankManifest(namespace)
 	c := podChaos.NewPodChaos(root, a.Str("experiment"), &podChaos.PodChaosProps{
 		Spec: &podChaos.PodChaosSpec{
@@ -103,8 +101,8 @@ func NewContainerKill(namespace string, props *Props) (cdk8s.App, string, string
 }
 
 func NewNetworkPartition(namespace string, props *Props) (cdk8s.App, string, string) {
-	jsiiChaosMu.Lock()
-	defer jsiiChaosMu.Unlock()
+	environment.JSIIGlobalMu.Lock()
+	defer environment.JSIIGlobalMu.Unlock()
 	app, root := blankManifest(namespace)
 	c := networkChaos.NewNetworkChaos(root, a.Str("experiment"), &networkChaos.NetworkChaosProps{
 		Spec: &networkChaos.NetworkChaosSpec{
