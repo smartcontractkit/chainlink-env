@@ -24,6 +24,7 @@ export TEST_ENV_VAR=myTestVarForAJob
 # your image to run as a k8s job
 ACCOUNT=$(aws sts get-caller-identity | jq -r .Account)
 export ENV_JOB_IMAGE="${ACCOUNT}.dkr.ecr.us-west-2.amazonaws.com/core-integration-tests:v1.1"
+export IS_REMOTE_TEST="true"
 # your example test file to run inside k8s
 # if ENV_JOB_IMAGE is present chainlink-env will create a job, wait until it finished and get logs
 go run examples/remote-test-runner/env.go
