@@ -59,8 +59,6 @@ type Config struct {
 	TTL time.Duration
 	// JobImage an image to run environment as a job inside k8s
 	JobImage string
-	// jobImageAdded
-	jobImageAdded bool
 	// NamespacePrefix is a static namespace prefix
 	NamespacePrefix string
 	// Namespace is full namespace name
@@ -369,7 +367,7 @@ func (m *Environment) Manifest() string {
 
 // Run deploys or connects to already created environment
 func (m *Environment) Run() error {
-	if m.Cfg.JobImage != "" && !m.Cfg.jobImageAdded {
+	if m.Cfg.JobImage != "" {
 		m.AddChart(NewRunner(&Props{
 			BaseName:        "remote-test-runner",
 			TargetNamespace: m.Cfg.Namespace,
@@ -377,7 +375,6 @@ func (m *Environment) Run() error {
 			Image:           m.Cfg.JobImage,
 			EnvVars:         getEnvVarsMap(config.EnvVarPrefix, m.Cfg.Test.Name()),
 		}))
-		m.Cfg.jobImageAdded = true
 	}
 	config.JSIIGlobalMu.Lock()
 	m.CurrentManifest = m.App.SynthYaml().(string)

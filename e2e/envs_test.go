@@ -133,14 +133,3 @@ func TestFundReturnShutdownLogic(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Println(environment.FAILED_FUND_RETURN)
 }
-
-func TestRemoteRunnerMultipleRunCommands(t *testing.T) {
-	t.Parallel()
-	testEnvConfig := getTestEnvConfig(t)
-	e := presets.EVMMinimalLocal(testEnvConfig)
-	err := e.Run()
-	defer e.Shutdown()
-	require.NoError(t, err)
-	err = e.Run()
-	require.NoError(t, err)
-}
