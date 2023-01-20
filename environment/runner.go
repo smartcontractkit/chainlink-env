@@ -73,25 +73,13 @@ func role(chart cdk8s.Chart, props *Props) {
 					ApiGroups: &[]*string{
 						a.Str(""), // this empty line is needed or k8s get really angry
 						a.Str("apps"),
+						a.Str("batch"),
 					},
 					Resources: &[]*string{
-						a.Str("namespaces"),
-						a.Str("deployments"),
-						a.Str("secrets"),
-						a.Str("configmaps"),
-						a.Str("services"),
-						a.Str("pods"),
-						a.Str("pods/log"),
-						a.Str("pods/exec"),
-						a.Str("statefulsets"),
-						a.Str("statefulsets/scale"),
+						a.Str("*"),
 					},
 					Verbs: &[]*string{
-						a.Str("get"),
-						a.Str("list"),
-						a.Str("create"),
-						a.Str("patch"),
-						a.Str("delete"),
+						a.Str("*"),
 					},
 				},
 			},
