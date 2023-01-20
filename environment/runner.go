@@ -73,6 +73,7 @@ func role(chart cdk8s.Chart, props *Props) {
 					ApiGroups: &[]*string{
 						a.Str(""), // this empty line is needed or k8s get really angry
 						a.Str("apps"),
+						a.Str("batch"),
 					},
 					Resources: &[]*string{
 						a.Str("*"),
