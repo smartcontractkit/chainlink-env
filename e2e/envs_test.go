@@ -142,6 +142,10 @@ func TestRemoteRunnerMultipleRunCommands(t *testing.T) {
 	// nolint
 	defer e.Shutdown()
 	require.NoError(t, err)
+	if e.WillUseRemoteRunner() {
+		return
+	}
+	e.AddHelm(chainlink.New(1, nil))
 	err = e.Run()
 	require.NoError(t, err)
 }
