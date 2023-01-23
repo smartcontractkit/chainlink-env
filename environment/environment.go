@@ -10,18 +10,19 @@ import (
 	"testing"
 	"time"
 
-	cdk8s "github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
+	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/require"
+
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
 	"github.com/smartcontractkit/chainlink-env/logging"
 	"github.com/smartcontractkit/chainlink-env/pkg"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -614,6 +615,7 @@ func getEnvVarsMap(prefix string, testName string) map[string]string {
 		config.EnvVarUser,
 		config.EnvVarNodeSelector,
 		config.EnvVarSelectedNetworks,
+		config.EnvVarDBURL,
 	}
 	for _, k := range lookups {
 		v, success := os.LookupEnv(k)
