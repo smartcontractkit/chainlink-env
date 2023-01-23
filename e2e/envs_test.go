@@ -6,6 +6,7 @@ import (
 	"path"
 	"testing"
 
+	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
@@ -148,4 +149,24 @@ func TestRemoteRunnerMultipleRunCommands(t *testing.T) {
 	e.AddHelm(chainlink.New(1, nil))
 	err = e.Run()
 	require.NoError(t, err)
+}
+
+func TestRemoteRunnerOneSetupWithMultipeTests(t *testing.T) {
+	t.Parallel()
+	testEnvConfig := getTestEnvConfig(t)
+	e := presets.EVMMinimalLocal(testEnvConfig)
+	err := e.Run()
+	// nolint
+	defer e.Shutdown()
+	require.NoError(t, err)
+	if e.WillUseRemoteRunner() {
+		return
+	}
+
+	t.Run("do one", func(t *testing.T) {
+		log.Info().Str("Test", "One").Msg("Inside test")
+	})
+	t.Run("do two", func(t *testing.T) {
+		log.Info().Str("Test", "One").Msg("Inside test")
+	})
 }
