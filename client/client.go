@@ -255,7 +255,7 @@ type ReadyCheckData struct {
 }
 
 // CheckReady application heath check using ManifestOutputData params
-func (m *K8sClient) CheckReady(namespace string, c *ReadyCheckData) error {
+func (m *K8sClient) CheckReady(namespace string, c *ReadyCheckData, appCount int) error {
 	// wait for the number of enumerated apps to be at least 1 before checking
 	// for ready or we can error out on slow runs or large jobs
 	var exitErr error
@@ -265,8 +265,8 @@ func (m *K8sClient) CheckReady(namespace string, c *ReadyCheckData) error {
 			exitErr = err2
 			return false, nil
 		}
-		log.Debug().Interface("Apps", apps).Int("Count", len(apps)).Msg("Found apps")
-		if len(apps) > 0 {
+		log.Debug().Interface("Apps", apps).Int("Count", len(apps)).Int("Expected", appCount).Msg("Found apps")
+		if len(apps) == appCount {
 			exitErr = nil
 			return true, nil
 		}
@@ -316,6 +316,7 @@ func (m *K8sClient) Apply(manifest string) error {
 		return err
 	}
 	cmd := fmt.Sprintf("kubectl apply -f %s", manifestFile)
+	log.Info().Str("cmd", cmd).Msg("Apply command")
 	return ExecCmd(cmd)
 }
 

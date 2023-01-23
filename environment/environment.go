@@ -62,6 +62,8 @@ type Config struct {
 	JobImage string
 	// jobImageAdded used to limit us to 1 remote runner
 	jobImageAdded bool
+	// jobDeployed used to limit us to 1 remote runner deploy
+	jobDeployed bool
 	// NamespacePrefix is a static namespace prefix
 	NamespacePrefix string
 	// Namespace is full namespace name
@@ -370,6 +372,9 @@ func (m *Environment) Manifest() string {
 
 // Run deploys or connects to already created environment
 func (m *Environment) Run() error {
+	if m.Cfg.jobDeployed {
+		return nil
+	}
 	if m.Cfg.JobImage != "" && !m.Cfg.jobImageAdded {
 		m.AddChart(NewRunner(&Props{
 			BaseName:        "remote-test-runner",
@@ -406,6 +411,7 @@ func (m *Environment) Run() error {
 		if *m.Cfg.fundReturnFailed {
 			return errors.New("failed to return funds in remote runner.")
 		}
+		m.Cfg.jobDeployed = true
 	} else {
 		if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s); err != nil {
 			return err
@@ -466,8 +472,38 @@ func (m *Environment) Deploy(manifest string) error {
 	}
 	if int64(m.Cfg.UpdateWaitInterval) != 0 {
 		time.Sleep(m.Cfg.UpdateWaitInterval)
+	} else {
+		time.Sleep(1 * time.Second)
 	}
-	if err := m.Client.CheckReady(m.Cfg.Namespace, m.Cfg.ReadyCheckData); err != nil {
+	appCount := 0
+	config.JSIIGlobalMu.Lock()
+	charts := m.App.Charts()
+	config.JSIIGlobalMu.Unlock()
+	for _, chart := range *charts {
+		config.JSIIGlobalMu.Lock()
+		json := chart.ToJson()
+		if json != nil {
+			for _, j := range *json {
+				m := j.(map[string]interface{})
+				// if the kind is a deployment then we want to see if it has replicas to count towards the app count
+				kind := m["kind"].(string)
+				if kind == "Deployment" || kind == "StatefulSet" {
+					spec := m["spec"].(map[string]interface{})
+					if spec != nil {
+						replicas := spec["replicas"]
+						if replicas != nil {
+							appCount += int(replicas.(float64))
+						} else {
+							appCount += 1
+						}
+					}
+				}
+			}
+		}
+		config.JSIIGlobalMu.Unlock()
+	}
+	log.Info().Int("Pods", appCount).Msg("Pods Total")
+	if err := m.Client.CheckReady(m.Cfg.Namespace, m.Cfg.ReadyCheckData, appCount); err != nil {
 		return err
 	}
 	return m.enumerateApps()
