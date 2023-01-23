@@ -585,8 +585,8 @@ func (m *Environment) Shutdown() error {
 
 // BeforeTest sets the test name variable and determines if we need to start the remote runner
 func (m *Environment) WillUseRemoteRunner() bool {
-	_, onlyStartRunner := os.LookupEnv(config.EnvVarJobImage)
-	return onlyStartRunner && m.Cfg.Test.Name() != ""
+	val, _ := os.LookupEnv(config.EnvVarJobImage)
+	return val != "" && m.Cfg.Test.Name() != ""
 }
 
 func getEnvVarsMap(prefix string, testName string) map[string]string {
