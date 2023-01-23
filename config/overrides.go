@@ -70,6 +70,10 @@ const (
 	EnvVarNodeSelector                = "K8S_NODE_SELECTOR"
 	EnvVarNodeSelectorUserDescription = "Node role to deploy to"
 	EnvVarNodeSelectorExample         = "foundations"
+
+	EnvVarDetachRunner                = "DETACH_RUNNER"
+	EnvVarDetachRunnerUserDescription = "Should we detach the remote runner after starting a test using it"
+	EnvVarDetachRunnerExample         = "true"
 )
 
 var (
