@@ -51,6 +51,10 @@ const (
 	EnvVarSelectedNetworksDescription = "Networks to select for testing"
 	EnvVarSelectedNetworksExample     = "SIMULATED"
 
+	EnvVarDBURL            = "DATABASE_URL"
+	EnvVarDBURLDescription = "DATABASE_URL needed for component test. This is only necessary if testhelper methods are imported from core"
+	EnvVarDBURLExample     = "postgresql://postgres:node@localhost:5432/chainlink_test?sslmode=disable"
+
 	EnvVarSlackKey            = "SLACK_API_KEY"
 	EnvVarSlackKeyDescription = "The OAuth Slack API key to report tests results with"
 	EnvVarSlackKeyExample     = "xoxb-example-key"
