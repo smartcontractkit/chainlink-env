@@ -485,6 +485,7 @@ func (m *Environment) Deploy(manifest string) error {
 func (m *Environment) findPodCountInDeploymentManifest() int {
 	podCount := 0
 	config.JSIIGlobalMu.Lock()
+	defer config.JSIIGlobalMu.Unlock()
 	charts := m.App.Charts()
 	for _, chart := range *charts {
 		json := chart.ToJson()
@@ -507,7 +508,6 @@ func (m *Environment) findPodCountInDeploymentManifest() int {
 			}
 		}
 	}
-	config.JSIIGlobalMu.Unlock()
 	return podCount
 }
 
