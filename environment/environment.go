@@ -167,7 +167,8 @@ func New(cfg *Config) *Environment {
 	e.Chaos = client.NewChaos(c, e.Cfg.Namespace)
 
 	// setup test cleanup if this is using a remote runner
-	if targetCfg.JobImage != "" {
+	// and not in detached mode
+	if targetCfg.JobImage != "" && !targetCfg.detachRunner {
 		f := false
 		targetCfg.fundReturnFailed = &f
 		if targetCfg.Test != nil {
