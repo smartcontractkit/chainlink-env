@@ -60,8 +60,6 @@ type Config struct {
 	TTL time.Duration
 	// JobImage an image to run environment as a job inside k8s
 	JobImage string
-	// jobImageAdded used to limit us to 1 remote runner
-	jobImageAdded bool
 	// jobDeployed used to limit us to 1 remote runner deploy
 	jobDeployed bool
 	// NamespacePrefix is a static namespace prefix
@@ -375,7 +373,7 @@ func (m *Environment) Run() error {
 	if m.Cfg.jobDeployed {
 		return nil
 	}
-	if m.Cfg.JobImage != "" && !m.Cfg.jobImageAdded {
+	if m.Cfg.JobImage != "" {
 		m.AddChart(NewRunner(&Props{
 			BaseName:        "remote-test-runner",
 			TargetNamespace: m.Cfg.Namespace,
@@ -383,7 +381,6 @@ func (m *Environment) Run() error {
 			Image:           m.Cfg.JobImage,
 			EnvVars:         getEnvVarsMap(config.EnvVarPrefix, m.Cfg.Test.Name()),
 		}))
-		m.Cfg.jobImageAdded = true
 	}
 	config.JSIIGlobalMu.Lock()
 	m.CurrentManifest = m.App.SynthYaml().(string)
@@ -475,12 +472,21 @@ func (m *Environment) Deploy(manifest string) error {
 	} else {
 		time.Sleep(1 * time.Second)
 	}
-	appCount := 0
+
+	expectedPodCount := m.findPodCountInDeploymentManifest()
+
+	if err := m.Client.WaitPodsReady(m.Cfg.Namespace, m.Cfg.ReadyCheckData, expectedPodCount); err != nil {
+		return err
+	}
+	return m.enumerateApps()
+}
+
+// findPodsInDeploymentManifest finds all the pods we will be deploying
+func (m *Environment) findPodCountInDeploymentManifest() int {
+	podCount := 0
 	config.JSIIGlobalMu.Lock()
 	charts := m.App.Charts()
-	config.JSIIGlobalMu.Unlock()
 	for _, chart := range *charts {
-		config.JSIIGlobalMu.Lock()
 		json := chart.ToJson()
 		if json != nil {
 			for _, j := range *json {
@@ -492,21 +498,17 @@ func (m *Environment) Deploy(manifest string) error {
 					if spec != nil {
 						replicas := spec["replicas"]
 						if replicas != nil {
-							appCount += int(replicas.(float64))
+							podCount += int(replicas.(float64))
 						} else {
-							appCount += 1
+							podCount += 1
 						}
 					}
 				}
 			}
 		}
-		config.JSIIGlobalMu.Unlock()
 	}
-	log.Info().Int("Pods", appCount).Msg("Pods Total")
-	if err := m.Client.CheckReady(m.Cfg.Namespace, m.Cfg.ReadyCheckData, appCount); err != nil {
-		return err
-	}
-	return m.enumerateApps()
+	config.JSIIGlobalMu.Unlock()
+	return podCount
 }
 
 type CoverageProfileParams struct {
