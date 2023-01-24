@@ -63,11 +63,20 @@ func (m Chart) ExportData(e *environment.Environment) error {
 	if err != nil {
 		return err
 	}
-	txNode, err := e.Fwd.FindPort(txPodName, "geth", "ws-rpc").As(client.LocalConnection, client.WS)
+	txNodeLocalWS, err := e.Fwd.FindPort(txPodName, "geth", "ws-rpc").As(client.LocalConnection, client.WS)
 	if err != nil {
 		return err
 	}
-	urls = append(urls, txNode)
+	txNodeInternalWs, err := e.Fwd.FindPort(txPodName, "geth", "ws-rpc").As(client.RemoteConnection, client.WS)
+	if err != nil {
+		return err
+	}
+	if e.Cfg.InsideK8s {
+		urls = append(urls, txNodeInternalWs)
+	} else {
+		urls = append(urls, txNodeLocalWS)
+	}
+
 	if len(minerPods.Items) > 0 {
 		miner1, err := e.Fwd.FindPort(miner1PodName, "geth-miner", "ws-rpc-miner").As(client.LocalConnection, client.WS)
 		if err != nil {
@@ -83,7 +92,7 @@ func (m Chart) ExportData(e *environment.Environment) error {
 	}
 
 	e.URLs[m.Props.NetworkName] = urls
-	log.Info().Str("URL", txNode).Msg("Geth network (TX Node)")
+	log.Info().Str("URL", txNodeLocalWS).Msg("Geth network (TX Node)")
 	return nil
 }
 
