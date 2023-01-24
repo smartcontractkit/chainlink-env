@@ -60,8 +60,8 @@ type Config struct {
 	TTL time.Duration
 	// JobImage an image to run environment as a job inside k8s
 	JobImage string
-	// jobImageAdded used to limit us to 1 remote runner
-	jobImageAdded bool
+	// jobDeployed used to limit us to 1 remote runner deploy
+	jobDeployed bool
 	// NamespacePrefix is a static namespace prefix
 	NamespacePrefix string
 	// Namespace is full namespace name
@@ -370,7 +370,10 @@ func (m *Environment) Manifest() string {
 
 // Run deploys or connects to already created environment
 func (m *Environment) Run() error {
-	if m.Cfg.JobImage != "" && !m.Cfg.jobImageAdded {
+	if m.Cfg.jobDeployed {
+		return nil
+	}
+	if m.Cfg.JobImage != "" {
 		m.AddChart(NewRunner(&Props{
 			BaseName:        "remote-test-runner",
 			TargetNamespace: m.Cfg.Namespace,
@@ -378,7 +381,6 @@ func (m *Environment) Run() error {
 			Image:           m.Cfg.JobImage,
 			EnvVars:         getEnvVarsMap(config.EnvVarPrefix, m.Cfg.Test.Name()),
 		}))
-		m.Cfg.jobImageAdded = true
 	}
 	config.JSIIGlobalMu.Lock()
 	m.CurrentManifest = m.App.SynthYaml().(string)
@@ -406,6 +408,7 @@ func (m *Environment) Run() error {
 		if *m.Cfg.fundReturnFailed {
 			return errors.New("failed to return funds in remote runner.")
 		}
+		m.Cfg.jobDeployed = true
 	} else {
 		if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s); err != nil {
 			return err
@@ -466,11 +469,46 @@ func (m *Environment) Deploy(manifest string) error {
 	}
 	if int64(m.Cfg.UpdateWaitInterval) != 0 {
 		time.Sleep(m.Cfg.UpdateWaitInterval)
+	} else {
+		time.Sleep(1 * time.Second)
 	}
-	if err := m.Client.CheckReady(m.Cfg.Namespace, m.Cfg.ReadyCheckData); err != nil {
+
+	expectedPodCount := m.findPodCountInDeploymentManifest()
+
+	if err := m.Client.WaitPodsReady(m.Cfg.Namespace, m.Cfg.ReadyCheckData, expectedPodCount); err != nil {
 		return err
 	}
 	return m.enumerateApps()
+}
+
+// findPodsInDeploymentManifest finds all the pods we will be deploying
+func (m *Environment) findPodCountInDeploymentManifest() int {
+	podCount := 0
+	config.JSIIGlobalMu.Lock()
+	defer config.JSIIGlobalMu.Unlock()
+	charts := m.App.Charts()
+	for _, chart := range *charts {
+		json := chart.ToJson()
+		if json != nil {
+			for _, j := range *json {
+				m := j.(map[string]interface{})
+				// if the kind is a deployment then we want to see if it has replicas to count towards the app count
+				kind := m["kind"].(string)
+				if kind == "Deployment" || kind == "StatefulSet" {
+					spec := m["spec"].(map[string]interface{})
+					if spec != nil {
+						replicas := spec["replicas"]
+						if replicas != nil {
+							podCount += int(replicas.(float64))
+						} else {
+							podCount += 1
+						}
+					}
+				}
+			}
+		}
+	}
+	return podCount
 }
 
 type CoverageProfileParams struct {

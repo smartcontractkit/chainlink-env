@@ -48,7 +48,7 @@ jobs:
         with:
           cl_repo: ${{ env.CHAINLINK_IMAGE }}
           cl_image_tag: ${{ env.CHAINLINK_VERSION }}
-          test_command_to_run: make test_e2e args="-test.parallel=5 -json" 2>&1 | tee /tmp/gotest.log | gotestfmt
+          test_command_to_run: make test_e2e_ci
           test_download_vendor_packages_command: go mod download
           artifacts_location: ./e2e/logs
           publish_check_name: E2E Test Results
@@ -58,6 +58,12 @@ jobs:
           QA_AWS_REGION: ${{ secrets.QA_AWS_REGION }}
           QA_AWS_ROLE_TO_ASSUME: ${{ secrets.QA_AWS_ROLE_TO_ASSUME }}
           QA_KUBECONFIG: ${{ secrets.QA_KUBECONFIG }}
+      - name: Upload test log
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: test-log
+          path: /tmp/gotest.log
       - name: cleanup
         if: always()
         uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/cleanup@e72f0a768ac934afce498a802de893d89b12802f # v2.1.1
