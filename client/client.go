@@ -157,6 +157,7 @@ func (m *K8sClient) UniqueLabels(namespace string, selector string) ([]string, e
 	}
 	log.Info().
 		Interface("Apps", uniqueLabels).
+		Int("Count", len(uniqueLabels)).
 		Msg("Apps found")
 	return uniqueLabels, nil
 }
@@ -186,8 +187,37 @@ func (m *K8sClient) EnumerateInstances(namespace string, selector string) error 
 	return nil
 }
 
+// waitForPodsExist waits for all the expected number of pods to exist
+func (m *K8sClient) waitForPodsExist(ns string, expectedPodCount int) error {
+	log.Debug().Int("ExpectedCount", expectedPodCount).Msg("Waiting for pods to exist")
+	var exitErr error
+	if err := wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+		apps, err2 := m.UniqueLabels(ns, "app")
+		if err2 != nil {
+			exitErr = err2
+			return false, nil
+		}
+		if len(apps) == expectedPodCount {
+			exitErr = nil
+			return true, nil
+		}
+		return false, nil
+	}); err != nil {
+		return err
+	}
+
+	return exitErr
+}
+
 // WaitPodsReady waits until all pods are ready
-func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData) error {
+func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData, expectedPodCount int) error {
+	// Wait for pods to exist
+	err := m.waitForPodsExist(ns, expectedPodCount)
+	if err != nil {
+		return err
+	}
+
+	// Wait for pods to be ready
 	timeout := time.NewTimer(rcd.Timeout)
 	defer timeout.Stop()
 	for {
@@ -254,32 +284,6 @@ type ReadyCheckData struct {
 	Timeout                     time.Duration
 }
 
-// CheckReady application heath check using ManifestOutputData params
-func (m *K8sClient) CheckReady(namespace string, c *ReadyCheckData) error {
-	// wait for the number of enumerated apps to be at least 1 before checking
-	// for ready or we can error out on slow runs or large jobs
-	var exitErr error
-	if err := wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-		apps, err2 := m.UniqueLabels(namespace, "app")
-		if err2 != nil {
-			exitErr = err2
-			return false, nil
-		}
-		log.Debug().Interface("Apps", apps).Int("Count", len(apps)).Msg("Found apps")
-		if len(apps) > 0 {
-			exitErr = nil
-			return true, nil
-		}
-		return false, nil
-	}); err != nil {
-		return err
-	}
-	if exitErr != nil {
-		return exitErr
-	}
-	return m.WaitPodsReady(namespace, c)
-}
-
 // WaitForJob wait for job execution, follow logs and returns an error if job failed
 func (m *K8sClient) WaitForJob(namespaceName string, jobName string, fundReturnStatus func(string)) error {
 	cmd := fmt.Sprintf("kubectl --namespace %s logs --follow job/%s", namespaceName, jobName)
@@ -316,6 +320,7 @@ func (m *K8sClient) Apply(manifest string) error {
 		return err
 	}
 	cmd := fmt.Sprintf("kubectl apply -f %s", manifestFile)
+	log.Info().Str("cmd", cmd).Msg("Apply command")
 	return ExecCmd(cmd)
 }
 

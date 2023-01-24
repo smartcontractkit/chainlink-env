@@ -73,6 +73,9 @@ test:
 test_e2e:
 	go test ./e2e -count 1 -v $(args)
 
+test_e2e_ci:
+	go test ./e2e -count 1 -v -test.parallel=5 -json 2>&1 | tee /tmp/gotest.log | gotestfmt
+
 .PHONY: examples
 examples:
 	go run cmd/test.go
