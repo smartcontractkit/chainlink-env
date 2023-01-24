@@ -653,6 +653,7 @@ func getEnvVarsMap(prefix string, testName string) map[string]string {
 		config.EnvVarNodeSelector,
 		config.EnvVarSelectedNetworks,
 		config.EnvVarDBURL,
+		config.EnvVarEVMKeys,
 	}
 	for _, k := range lookups {
 		v, success := os.LookupEnv(k)

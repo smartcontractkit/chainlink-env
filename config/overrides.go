@@ -74,6 +74,10 @@ const (
 	EnvVarNodeSelector                = "K8S_NODE_SELECTOR"
 	EnvVarNodeSelectorUserDescription = "Node role to deploy to"
 	EnvVarNodeSelectorExample         = "foundations"
+
+	EnvVarEVMKeys                = "EVM_KEYS"
+	EnvVarEVMKeysUserDescription = "The keys used to connect to the evm"
+	EnvVarEVMKeysExample         = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 )
 
 var (
