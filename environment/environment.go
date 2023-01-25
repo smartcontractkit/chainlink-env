@@ -489,26 +489,48 @@ func (m *Environment) findPodCountInDeploymentManifest() int {
 	charts := m.App.Charts()
 	for _, chart := range *charts {
 		json := chart.ToJson()
-		if json != nil {
-			for _, j := range *json {
-				m := j.(map[string]interface{})
-				// if the kind is a deployment then we want to see if it has replicas to count towards the app count
-				kind := m["kind"].(string)
-				if kind == "Deployment" || kind == "StatefulSet" {
-					spec := m["spec"].(map[string]interface{})
-					if spec != nil {
-						replicas := spec["replicas"]
-						if replicas != nil {
-							podCount += int(replicas.(float64))
-						} else {
-							podCount += 1
-						}
-					}
-				}
+		if json == nil {
+			continue
+		}
+		for _, j := range *json {
+			m := j.(map[string]interface{})
+			// if the kind is a deployment then we want to see if it has replicas to count towards the app count
+			kind := m["kind"].(string)
+			if kind == "Deployment" || kind == "StatefulSet" {
+				podCount += getReplicaCount(m["spec"].(map[string]interface{}))
 			}
 		}
+
 	}
 	return podCount
+}
+
+func getReplicaCount(spec map[string]interface{}) int {
+	if spec == nil {
+		return 0
+	}
+	s := spec["selector"].(map[string]interface{})
+	if s == nil {
+		return 0
+	}
+	m := s["matchLabels"].(map[string]interface{})
+	if m == nil {
+		return 0
+	}
+	l := m["app"]
+	if l == nil {
+		return 0
+	}
+
+	replicaCount := 0
+	replicas := spec["replicas"]
+	if replicas != nil {
+		replicaCount += int(replicas.(float64))
+	} else {
+		replicaCount += 1
+	}
+
+	return replicaCount
 }
 
 type CoverageProfileParams struct {
