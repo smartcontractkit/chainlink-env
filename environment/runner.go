@@ -74,6 +74,11 @@ func role(chart cdk8s.Chart, props *Props) {
 						a.Str(""), // this empty line is needed or k8s get really angry
 						a.Str("apps"),
 						a.Str("batch"),
+						a.Str("core"),
+						a.Str("networking.k8s.io"),
+						a.Str("storage.k8s.io"),
+						a.Str("policy"),
+						a.Str("chaos-mesh.org"),
 					},
 					Resources: &[]*string{
 						a.Str("*"),
