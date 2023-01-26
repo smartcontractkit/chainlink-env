@@ -398,6 +398,7 @@ func (m *Environment) Run() error {
 	}
 	if m.Cfg.JobImage != "" {
 		if err := m.Client.WaitForJob(m.Cfg.Namespace, "remote-test-runner", func(message string) {
+			fmt.Printf("Remote: %s\n", message)
 			found := strings.Contains(message, FAILED_FUND_RETURN)
 			if found {
 				m.Cfg.fundReturnFailed = &found

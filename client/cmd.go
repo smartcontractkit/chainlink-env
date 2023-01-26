@@ -10,7 +10,9 @@ import (
 )
 
 func ExecCmd(command string) error {
-	return ExecCmdWithOptions(command, nil)
+	return ExecCmdWithOptions(command, func(m string) {
+		log.Info().Str("Text", m).Msg("Std Pipe")
+	})
 }
 
 // readStdPipe continuously read a pipe from the command
@@ -19,7 +21,6 @@ func readStdPipe(pipe io.ReadCloser, outputFunction func(string)) {
 	scanner.Split(bufio.ScanLines)
 	for scanner.Scan() {
 		m := scanner.Text()
-		log.Trace().Str("Text", m).Msg("Std Pipe")
 		if outputFunction != nil {
 			outputFunction(m)
 		}
