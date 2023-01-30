@@ -164,6 +164,22 @@ func (m *Forwarder) Connect(namespaceName string, selector string, insideK8s boo
 	return eg.Wait()
 }
 
+// PrintLocalPorts prints all local forwarded ports
+func (m *Forwarder) PrintLocalPorts() {
+	for labeledAppPodName, labeledAppPod := range m.Info {
+		for containerName, container := range labeledAppPod.(map[string]interface{}) {
+			for fpName, portsData := range container.(map[string]interface{}) {
+				log.Info().
+					Str("Label", labeledAppPodName).
+					Str("Container", containerName).
+					Str("PortNames", fpName).
+					Uint16("Port", portsData.(ConnectionInfo).Ports.Local).
+					Msg("Local ports")
+			}
+		}
+	}
+}
+
 func (m *Forwarder) FindPort(ks ...string) *URLConverter {
 	d, err := lookupMap(m.Info, ks...)
 	return NewURLConverter(d.(ConnectionInfo), err)

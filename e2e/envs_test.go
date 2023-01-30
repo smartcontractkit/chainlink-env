@@ -3,11 +3,13 @@ package e2e_test
 import (
 	"fmt"
 	"os"
-	"path"
 	"testing"
 	"time"
 
+	"github.com/go-resty/resty/v2"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
@@ -31,29 +33,39 @@ func getTestEnvConfig(t *testing.T) *environment.Config {
 	}
 }
 
-// TODO: GHA have some problems with filepaths, using afero will add another param for the filesystem
-func TestLogs(t *testing.T) {
-	t.Skip("problems with GHA and afero")
-	t.Parallel()
-	testEnvConfig := getTestEnvConfig(t)
-	e := presets.EVMMinimalLocal(testEnvConfig)
+func TestConnectWithoutManifest(t *testing.T) {
+	nsPrefix := fmt.Sprintf("test-no-manifest-connection-%s", uuid.NewString()[0:5])
+	e := environment.New(&environment.Config{
+		NamespacePrefix: nsPrefix,
+		Test:            t,
+	}).
+		AddHelm(ethereum.New(nil)).
+		AddHelm(chainlink.New(0, map[string]interface{}{
+			"replicas": 1,
+		}))
 	err := e.Run()
+	require.NoError(t, err)
 	// nolint
 	defer e.Shutdown()
+	_ = os.Setenv("ENV_NAMESPACE", e.Cfg.Namespace)
+	_ = os.Setenv("NO_MANIFEST_UPDATE", "true")
+	err = environment.New(&environment.Config{
+		NamespacePrefix: nsPrefix,
+		Test:            t,
+	}).
+		Run()
 	require.NoError(t, err)
-	logDir := "./logs/mytest"
-	err = e.DumpLogs(logDir)
+	url, err := e.Fwd.FindPort("chainlink-0:0", "node", "access").As(client.LocalConnection, client.HTTP)
 	require.NoError(t, err)
-	clDir := "chainlink-0_0"
-	_, err = os.Stat(path.Join(logDir, clDir))
+	urlGeth, err := e.Fwd.FindPort("geth:0", "geth-network", "http-rpc").As(client.LocalConnection, client.HTTP)
 	require.NoError(t, err)
-	fi, err := os.Stat(path.Join(logDir, clDir, "node.log"))
+	r := resty.New()
+	res, err := r.R().Get(url)
 	require.NoError(t, err)
-	require.Greaterf(t, fi.Size(), int64(0), "file is empty")
-	_, err = os.Stat(path.Join(logDir, "geth_0"))
+	require.Equal(t, "200 OK", res.Status())
+	res, err = r.R().Get(urlGeth)
 	require.NoError(t, err)
-	_, err = os.Stat(path.Join(logDir, "mockserver_0"))
-	require.NoError(t, err)
+	require.Equal(t, "200 OK", res.Status())
 }
 
 func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
