@@ -400,6 +400,7 @@ func (m *Environment) Run() error {
 			return nil
 		}
 		if err := m.Client.WaitForJob(m.Cfg.Namespace, "remote-test-runner", func(message string) {
+			m.Cfg.Test.Log(message)
 			found := strings.Contains(message, FAILED_FUND_RETURN)
 			if found {
 				m.Cfg.fundReturnFailed = &found
