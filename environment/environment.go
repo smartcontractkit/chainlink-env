@@ -84,6 +84,8 @@ type Config struct {
 	DryRun bool
 	// InsideK8s used for long-running soak tests where you connect to env from the inside
 	InsideK8s bool
+	// NoManifestUpdate is a flag to skip manifest updating when connecting
+	NoManifestUpdate bool
 	// DetachRunner should we detach the remote runner after starting the test
 	detachRunner bool
 	// KeepConnection keeps connection until interrupted with a signal, useful when prototyping and debugging a new env
@@ -134,7 +136,7 @@ func New(cfg *Config) *Environment {
 	config.MustMerge(targetCfg, cfg)
 	ns := os.Getenv(config.EnvVarNamespace)
 	if ns != "" {
-		log.Info().Str("Namespace", ns).Msg("Namespace found")
+		log.Info().Str("Namespace", ns).Msg("Namespace selected")
 		targetCfg.Namespace = ns
 	} else {
 		targetCfg.Namespace = fmt.Sprintf("%s-%s", targetCfg.NamespacePrefix, uuid.NewString()[0:5])
@@ -385,14 +387,18 @@ func (m *Environment) Run() error {
 	config.JSIIGlobalMu.Lock()
 	m.CurrentManifest = m.App.SynthYaml().(string)
 	config.JSIIGlobalMu.Unlock()
-	if err := m.Deploy(m.CurrentManifest); err != nil {
-		log.Error().Err(err).Msg("Error deploying environment")
-		_ = m.Shutdown()
-		return err
-	}
 	if m.Cfg.DryRun {
 		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
 		return nil
+	}
+	m.Cfg.NoManifestUpdate, _ = strconv.ParseBool(os.Getenv(config.EnvVarNoManifestUpdate))
+	log.Info().Bool("ManifestUpdate", !m.Cfg.NoManifestUpdate).Msg("Update mode")
+	if !m.Cfg.NoManifestUpdate {
+		if err := m.Deploy(m.CurrentManifest); err != nil {
+			log.Error().Err(err).Msg("Error deploying environment")
+			_ = m.Shutdown()
+			return err
+		}
 	}
 	if m.Cfg.JobImage != "" {
 		// Do not wait for the job to complete if we are running something like a soak test in the remote runner
@@ -416,10 +422,8 @@ func (m *Environment) Run() error {
 		if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s); err != nil {
 			return err
 		}
-		log.Debug().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
-		if err := m.PrintExportData(); err != nil {
-			return err
-		}
+		log.Info().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
+		m.Fwd.PrintLocalPorts()
 		arts, err := NewArtifacts(m.Client, m.Cfg.Namespace)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to create artifacts client")

@@ -11,6 +11,10 @@ import (
 const (
 	EnvVarPrefix = "TEST_"
 
+	EnvVarNoManifestUpdate            = "NO_MANIFEST_UPDATE"
+	EnvVarNoManifestUpdateDescription = "Skip updating manifest when connecting to the namespace"
+	EnvVarNoManifestUpdateExample     = "false"
+
 	EnvVarNamespace            = "ENV_NAMESPACE"
 	EnvVarNamespaceDescription = "Namespace name to connect to"
 	EnvVarNamespaceExample     = "chainlink-test-epic"

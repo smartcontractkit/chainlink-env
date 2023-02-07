@@ -71,7 +71,7 @@ test:
 
 .PHONY: test_e2e
 test_e2e:
-	go test ./e2e -count 1 -v $(args)
+	go test ./e2e -count 1 -test.parallel=8 -v $(args)
 
 test_e2e_ci:
 	go test ./e2e -count 1 -v -test.parallel=8 -json 2>&1 | tee /tmp/gotest.log | gotestfmt
