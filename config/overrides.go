@@ -79,6 +79,10 @@ const (
 	EnvVarNodeSelectorUserDescription = "Node role to deploy to"
 	EnvVarNodeSelectorExample         = "foundations"
 
+	EnvVarDetachRunner                = "DETACH_RUNNER"
+	EnvVarDetachRunnerUserDescription = "Should we detach the remote runner after starting a test using it"
+	EnvVarDetachRunnerExample         = "true"
+
 	EnvVarEVMKeys                = "EVM_KEYS"
 	EnvVarEVMKeysUserDescription = "The keys used to connect to the evm"
 	EnvVarEVMKeysExample         = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
