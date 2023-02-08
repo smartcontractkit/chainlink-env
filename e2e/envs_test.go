@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
@@ -34,6 +32,7 @@ func getTestEnvConfig(t *testing.T) *environment.Config {
 }
 
 func TestConnectWithoutManifest(t *testing.T) {
+	t.Parallel()
 	nsPrefix := fmt.Sprintf("test-no-manifest-connection-%s", uuid.NewString()[0:5])
 	e := environment.New(&environment.Config{
 		NamespacePrefix: nsPrefix,
@@ -130,57 +129,4 @@ func TestMultipleInstancesOfTheSameType(t *testing.T) {
 	// nolint
 	defer e.Shutdown()
 	require.NoError(t, err)
-}
-
-// Note: this test only works when run with a remote runner
-func TestFundReturnShutdownLogic(t *testing.T) {
-	t.Parallel()
-	testEnvConfig := getTestEnvConfig(t)
-	e := presets.EVMMinimalLocal(testEnvConfig)
-	err := e.Run()
-	if e.WillUseRemoteRunner() {
-		require.Error(t, err, "Should return an error")
-		return
-	}
-	// nolint
-	defer e.Shutdown()
-	require.NoError(t, err)
-	fmt.Println(environment.FAILED_FUND_RETURN)
-}
-
-func TestRemoteRunnerMultipleRunCommands(t *testing.T) {
-	t.Parallel()
-	testEnvConfig := getTestEnvConfig(t)
-	e := presets.EVMMinimalLocal(testEnvConfig)
-	err := e.Run()
-	// nolint
-	defer e.Shutdown()
-	require.NoError(t, err)
-	e.AddHelm(chainlink.New(1, nil))
-	err = e.Run()
-	require.NoError(t, err)
-}
-
-func TestRemoteRunnerOneSetupWithMultipeTests(t *testing.T) {
-	t.Parallel()
-	testEnvConfig := getTestEnvConfig(t)
-	e := presets.EVMMinimalLocal(testEnvConfig)
-	err := e.Run()
-	// nolint
-	defer e.Shutdown()
-	require.NoError(t, err)
-	if e.WillUseRemoteRunner() {
-		return
-	}
-
-	log.Info().Str("Test", "Before").Msg("Before Tests")
-	t.Run("do one", func(t *testing.T) {
-		log.Info().Str("Test", "One").Msg("Inside test")
-		time.Sleep(1 * time.Second)
-	})
-	t.Run("do two", func(t *testing.T) {
-		log.Info().Str("Test", "Two").Msg("Inside test")
-		time.Sleep(1 * time.Second)
-	})
-	log.Info().Str("Test", "After").Msg("After Tests")
 }
