@@ -32,6 +32,7 @@ func getTestEnvConfig(t *testing.T) *environment.Config {
 }
 
 func TestConnectWithoutManifest(t *testing.T) {
+	t.Parallel()
 	nsPrefix := fmt.Sprintf("test-no-manifest-connection-%s", uuid.NewString()[0:5])
 	e := environment.New(&environment.Config{
 		NamespacePrefix: nsPrefix,
