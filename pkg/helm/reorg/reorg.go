@@ -56,25 +56,35 @@ func (m Chart) GetValues() *map[string]interface{} {
 
 func (m Chart) ExportData(e *environment.Environment) error {
 	urls := make([]string, 0)
-	txPodName := fmt.Sprintf("%s-ethereum-geth:0", m.Props.NetworkName)
 	miner1PodName := fmt.Sprintf("%s-ethereum-miner-node:0", m.Props.NetworkName)
 	miner2PodName := fmt.Sprintf("%s-ethereum-miner-node:1", m.Props.NetworkName)
 	minerPods, err := e.Client.ListPods(e.Cfg.Namespace, fmt.Sprintf("app=%s-ethereum-miner-node", m.Props.NetworkName))
 	if err != nil {
 		return err
 	}
-	txNodeLocalWS, err := e.Fwd.FindPort(txPodName, "geth", "ws-rpc").As(client.LocalConnection, client.WS)
+	txPods, err := e.Client.ListPods(e.Cfg.Namespace, fmt.Sprintf("app=%s-ethereum-geth", m.Props.NetworkName))
 	if err != nil {
 		return err
 	}
-	txNodeInternalWs, err := e.Fwd.FindPort(txPodName, "geth", "ws-rpc").As(client.RemoteConnection, client.WS)
-	if err != nil {
-		return err
-	}
-	if e.Cfg.InsideK8s {
-		urls = append(urls, txNodeInternalWs)
-	} else {
-		urls = append(urls, txNodeLocalWS)
+	if len(txPods.Items) > 0 {
+		for i := range txPods.Items {
+			podName := fmt.Sprintf("%s-ethereum-geth:%d", m.Props.NetworkName, i)
+			txNodeLocalWS, err := e.Fwd.FindPort(podName, "geth", "ws-rpc").As(client.LocalConnection, client.WS)
+			if err != nil {
+				return err
+			}
+			txNodeInternalWs, err := e.Fwd.FindPort(podName, "geth", "ws-rpc").As(client.RemoteConnection, client.WS)
+			if err != nil {
+				return err
+			}
+			if e.Cfg.InsideK8s {
+				urls = append(urls, txNodeInternalWs)
+				log.Info().Str("URL", txNodeInternalWs).Msgf("Geth network (TX Node) - %d", i)
+			} else {
+				urls = append(urls, txNodeLocalWS)
+				log.Info().Str("URL", txNodeLocalWS).Msgf("Geth network (TX Node) - %d", i)
+			}
+		}
 	}
 
 	if len(minerPods.Items) > 0 {
@@ -92,7 +102,6 @@ func (m Chart) ExportData(e *environment.Environment) error {
 	}
 
 	e.URLs[m.Props.NetworkName] = urls
-	log.Info().Str("URL", txNodeLocalWS).Msg("Geth network (TX Node)")
 	return nil
 }
 
