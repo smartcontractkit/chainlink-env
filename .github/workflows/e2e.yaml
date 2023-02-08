@@ -14,11 +14,10 @@ env:
   SELECTED_NETWORKS: SIMULATED
   CHAINLINK_COMMIT_SHA: ${{ github.sha }}
   CHAINLINK_ENV_USER: ${{ github.actor }}
-  TEST_TRIGGERED_BY: chainlink-env-ci
   TEST_LOG_LEVEL: debug
 
 jobs:
-  e2e_tests:
+  build_tests:
     runs-on: ubuntu-latest
     environment: integration
     permissions:
@@ -43,12 +42,24 @@ jobs:
             IMAGE_VERSION=ci.${{ github.sha }}
           AWS_REGION: ${{ secrets.QA_AWS_REGION }}
           AWS_ROLE_TO_ASSUME: ${{ secrets.QA_AWS_ROLE_TO_ASSUME }}
+  e2e_tests:
+    runs-on: ubuntu-latest
+    environment: integration
+    needs: [build_tests]
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      TEST_SUITE: e2e
+      TEST_TRIGGERED_BY: chainlink-env-ci
+    steps:
+      - uses: actions/checkout@v3
       - name: Run Tests
         uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/run-tests@e72f0a768ac934afce498a802de893d89b12802f # v2.1.1
         with:
           cl_repo: ${{ env.CHAINLINK_IMAGE }}
           cl_image_tag: ${{ env.CHAINLINK_VERSION }}
-          test_command_to_run: make test_e2e_ci
+          test_command_to_run: unset ENV_JOB_IMAGE && make test_e2e_ci
           test_download_vendor_packages_command: go mod download
           artifacts_location: ./e2e/logs
           publish_check_name: E2E Test Results
@@ -64,6 +75,45 @@ jobs:
         with:
           name: test-log
           path: /tmp/gotest.log
+      - name: cleanup
+        if: always()
+        uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/cleanup@e72f0a768ac934afce498a802de893d89b12802f # v2.1.1
+        with:
+          triggered_by: ${{ env.TEST_TRIGGERED_BY }}
+
+  e2e_remote_runner_tests:
+    runs-on: ubuntu-latest
+    environment: integration
+    needs: [build_tests]
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      TEST_SUITE: e2e_remote_runner
+      TEST_TRIGGERED_BY: chainlink-env-remote-runner-ci
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Remote Runner Tests
+        uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/run-tests@e72f0a768ac934afce498a802de893d89b12802f # v2.1.1
+        with:
+          cl_repo: ${{ env.CHAINLINK_IMAGE }}
+          cl_image_tag: ${{ env.CHAINLINK_VERSION }}
+          test_command_to_run: make test_e2e_ci_remote_runner
+          test_download_vendor_packages_command: go mod download
+          artifacts_location: ./e2e/logs
+          publish_check_name: E2E Remote Runner Test Results
+          triggered_by: ${{ env.TEST_TRIGGERED_BY }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          go_mod_path: go.mod
+          QA_AWS_REGION: ${{ secrets.QA_AWS_REGION }}
+          QA_AWS_ROLE_TO_ASSUME: ${{ secrets.QA_AWS_ROLE_TO_ASSUME }}
+          QA_KUBECONFIG: ${{ secrets.QA_KUBECONFIG }}
+      - name: Upload test log
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: remote-runner-test-log
+          path: /tmp/remoterunnergotest.log
       - name: cleanup
         if: always()
         uses: smartcontractkit/chainlink-github-actions/chainlink-testing-framework/cleanup@e72f0a768ac934afce498a802de893d89b12802f # v2.1.1

@@ -9,4 +9,16 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 cd "$SCRIPT_DIR"/../ || exit 1
 
-go test -c ./e2e
+# parse out quotes if they exist in the string
+suites="e2e e2e_remote_runner"
+temp="${suites%\"}"
+tosplit="${temp#\"}"
+
+# find the suite name
+OIFS=$IFS
+IFS=' '
+for x in $tosplit
+do
+    go test -c ./"${x}"
+done
+IFS=$OIFS
