@@ -424,6 +424,9 @@ func (m *Environment) Run() error {
 		}
 		log.Info().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
 		m.Fwd.PrintLocalPorts()
+		if err := m.PrintExportData(); err != nil {
+			return err
+		}
 		arts, err := NewArtifacts(m.Client, m.Cfg.Namespace)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to create artifacts client")
