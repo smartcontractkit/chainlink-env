@@ -381,7 +381,7 @@ func (m *Environment) Run() error {
 			TargetNamespace: m.Cfg.Namespace,
 			Labels:          nil,
 			Image:           m.Cfg.JobImage,
-			EnvVars:         getEnvVarsMap(config.EnvVarPrefix, m.Cfg.Test.Name()),
+			EnvVars:         getEnvVarsMap(m.Cfg.Test.Name()),
 		}))
 	}
 	config.JSIIGlobalMu.Lock()
@@ -660,12 +660,12 @@ func (m *Environment) WillUseRemoteRunner() bool {
 	return val != "" && m.Cfg.Test.Name() != ""
 }
 
-func getEnvVarsMap(prefix string, testName string) map[string]string {
+func getEnvVarsMap(testName string) map[string]string {
 	m := make(map[string]string)
 	for _, e := range os.Environ() {
 		if i := strings.Index(e, "="); i >= 0 {
-			if strings.HasPrefix(e[:i], prefix) {
-				withoutPrefix := strings.Replace(e[:i], "TEST_", "", 1)
+			if strings.HasPrefix(e[:i], config.EnvVarPrefix) {
+				withoutPrefix := strings.Replace(e[:i], config.EnvVarPrefix, "", 1)
 				m[withoutPrefix] = e[i+1:]
 			}
 		}
