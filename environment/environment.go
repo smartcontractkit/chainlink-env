@@ -84,14 +84,16 @@ type Config struct {
 	DryRun bool
 	// InsideK8s used for long-running soak tests where you connect to env from the inside
 	InsideK8s bool
+	// NoManifestUpdate is a flag to skip manifest updating when connecting
+	NoManifestUpdate bool
+	// DetachRunner should we detach the remote runner after starting the test
+	detachRunner bool
 	// KeepConnection keeps connection until interrupted with a signal, useful when prototyping and debugging a new env
 	KeepConnection bool
 	// RemoveOnInterrupt automatically removes an environment on interrupt
 	RemoveOnInterrupt bool
 	// UpdateWaitInterval an interval to wait for deployment update started
 	UpdateWaitInterval time.Duration
-	// IsRemoteTest is this env in a remote test
-	IsRemoteTest bool
 	// fundReturnFailed the status of a fund return
 	fundReturnFailed *bool
 	// Test the testing library current Test struct
@@ -134,18 +136,17 @@ func New(cfg *Config) *Environment {
 	config.MustMerge(targetCfg, cfg)
 	ns := os.Getenv(config.EnvVarNamespace)
 	if ns != "" {
-		log.Info().Str("Namespace", ns).Msg("Namespace found")
+		log.Info().Str("Namespace", ns).Msg("Namespace selected")
 		targetCfg.Namespace = ns
 	} else {
 		targetCfg.Namespace = fmt.Sprintf("%s-%s", targetCfg.NamespacePrefix, uuid.NewString()[0:5])
 		log.Info().Str("Namespace", targetCfg.Namespace).Msg("Creating new namespace")
 	}
 	targetCfg.JobImage = os.Getenv(config.EnvVarJobImage)
-	insideK8s, _ := strconv.ParseBool(os.Getenv(config.EnvVarInsideK8s))
-	targetCfg.InsideK8s = insideK8s
-	irt := os.Getenv("IS_REMOTE_TEST")
-	if irt != "" {
-		targetCfg.IsRemoteTest = true
+	if targetCfg.JobImage != "" {
+		targetCfg.detachRunner, _ = strconv.ParseBool(os.Getenv(config.EnvVarDetachRunner))
+	} else {
+		targetCfg.InsideK8s, _ = strconv.ParseBool(os.Getenv(config.EnvVarInsideK8s))
 	}
 
 	c := client.NewK8sClient()
@@ -168,7 +169,8 @@ func New(cfg *Config) *Environment {
 	e.Chaos = client.NewChaos(c, e.Cfg.Namespace)
 
 	// setup test cleanup if this is using a remote runner
-	if targetCfg.JobImage != "" {
+	// and not in detached mode
+	if targetCfg.JobImage != "" && !targetCfg.detachRunner {
 		f := false
 		targetCfg.fundReturnFailed = &f
 		if targetCfg.Test != nil {
@@ -385,18 +387,24 @@ func (m *Environment) Run() error {
 	config.JSIIGlobalMu.Lock()
 	m.CurrentManifest = m.App.SynthYaml().(string)
 	config.JSIIGlobalMu.Unlock()
-	if !m.Cfg.InsideK8s || m.Cfg.IsRemoteTest { // this outer if can go away once soak tests have been moved to isomorphic deployments
+	if m.Cfg.DryRun {
+		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
+		return nil
+	}
+	m.Cfg.NoManifestUpdate, _ = strconv.ParseBool(os.Getenv(config.EnvVarNoManifestUpdate))
+	log.Info().Bool("ManifestUpdate", !m.Cfg.NoManifestUpdate).Msg("Update mode")
+	if !m.Cfg.NoManifestUpdate {
 		if err := m.Deploy(m.CurrentManifest); err != nil {
 			log.Error().Err(err).Msg("Error deploying environment")
 			_ = m.Shutdown()
 			return err
 		}
 	}
-	if m.Cfg.DryRun {
-		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
-		return nil
-	}
 	if m.Cfg.JobImage != "" {
+		// Do not wait for the job to complete if we are running something like a soak test in the remote runner
+		if m.Cfg.detachRunner {
+			return nil
+		}
 		if err := m.Client.WaitForJob(m.Cfg.Namespace, "remote-test-runner", func(message string) {
 			m.Cfg.Test.Log(message)
 			found := strings.Contains(message, FAILED_FUND_RETURN)
@@ -414,7 +422,8 @@ func (m *Environment) Run() error {
 		if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s); err != nil {
 			return err
 		}
-		log.Debug().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
+		log.Info().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
+		m.Fwd.PrintLocalPorts()
 		if err := m.PrintExportData(); err != nil {
 			return err
 		}
@@ -613,7 +622,7 @@ func (m *Environment) Shutdown() error {
 	}
 
 	// don't shutdown if this is a test running remotely
-	if m.Cfg.IsRemoteTest {
+	if m.Cfg.InsideK8s {
 		return nil
 	}
 
@@ -688,8 +697,7 @@ func getEnvVarsMap(prefix string, testName string) map[string]string {
 
 	// add test name
 	m["TEST_NAME"] = testName
-	// Tell the remote test it is a remote test
-	m["IS_REMOTE_TEST"] = "true"
+	m[config.EnvVarInsideK8s] = "true"
 
 	return m
 }

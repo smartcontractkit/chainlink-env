@@ -11,6 +11,10 @@ import (
 const (
 	EnvVarPrefix = "TEST_"
 
+	EnvVarNoManifestUpdate            = "NO_MANIFEST_UPDATE"
+	EnvVarNoManifestUpdateDescription = "Skip updating manifest when connecting to the namespace"
+	EnvVarNoManifestUpdateExample     = "false"
+
 	EnvVarNamespace            = "ENV_NAMESPACE"
 	EnvVarNamespaceDescription = "Namespace name to connect to"
 	EnvVarNamespaceExample     = "chainlink-test-epic"
@@ -74,6 +78,10 @@ const (
 	EnvVarNodeSelector                = "K8S_NODE_SELECTOR"
 	EnvVarNodeSelectorUserDescription = "Node role to deploy to"
 	EnvVarNodeSelectorExample         = "foundations"
+
+	EnvVarDetachRunner                = "DETACH_RUNNER"
+	EnvVarDetachRunnerUserDescription = "Should we detach the remote runner after starting a test using it"
+	EnvVarDetachRunnerExample         = "true"
 
 	EnvVarEVMKeys                = "EVM_KEYS"
 	EnvVarEVMKeysUserDescription = "The keys used to connect to the evm"

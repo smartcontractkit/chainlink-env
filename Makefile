@@ -71,10 +71,13 @@ test:
 
 .PHONY: test_e2e
 test_e2e:
-	go test ./e2e -count 1 -v $(args)
+	go test ./e2e -count 1 -test.parallel=8 -v $(args)
 
 test_e2e_ci:
-	go test ./e2e -count 1 -v -test.parallel=8 -json 2>&1 | tee /tmp/gotest.log | gotestfmt
+	go test ./e2e -count 1 -v -test.parallel=6 -json 2>&1 | tee /tmp/gotest.log | gotestfmt
+
+test_e2e_ci_remote_runner:
+	go test ./e2e_remote_runner -count 1 -v -test.parallel=3 -json 2>&1 | tee /tmp/remoterunnergotestgotest.log | gotestfmt
 
 .PHONY: examples
 examples:
