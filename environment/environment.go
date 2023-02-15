@@ -102,8 +102,9 @@ type Config struct {
 
 func defaultEnvConfig() *Config {
 	return &Config{
-		TTL:             20 * time.Minute,
-		NamespacePrefix: "chainlink-test-env",
+		TTL:                20 * time.Minute,
+		NamespacePrefix:    "chainlink-test-env",
+		UpdateWaitInterval: 1 * time.Second,
 		ReadyCheckData: &client.ReadyCheckData{
 			ReadinessProbeCheckSelector: "",
 			Timeout:                     8 * time.Minute,
@@ -480,8 +481,6 @@ func (m *Environment) Deploy(manifest string) error {
 	}
 	if int64(m.Cfg.UpdateWaitInterval) != 0 {
 		time.Sleep(m.Cfg.UpdateWaitInterval)
-	} else {
-		time.Sleep(1 * time.Second)
 	}
 
 	expectedPodCount := m.findPodCountInDeploymentManifest()

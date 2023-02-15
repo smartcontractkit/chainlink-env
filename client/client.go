@@ -77,7 +77,7 @@ func (m *K8sClient) ListPods(namespace, selector string) (*v1.PodList, error) {
 	sort.Slice(pods.Items, func(i, j int) bool {
 		return pods.Items[i].CreationTimestamp.Before(pods.Items[j].CreationTimestamp.DeepCopy())
 	})
-	return pods, err
+	return pods.DeepCopy(), err
 }
 
 // ListNamespaces lists k8s namespaces
@@ -142,10 +142,7 @@ func (m *K8sClient) LabelChaosGroupByLabels(namespace string, labels map[string]
 func (m *K8sClient) UniqueLabels(namespace string, selector string) ([]string, error) {
 	uniqueLabels := make([]string, 0)
 	isUnique := make(map[string]bool)
-	k8sPods := m.ClientSet.CoreV1().Pods(namespace)
-	podList, err := k8sPods.List(context.Background(), metaV1.ListOptions{
-		LabelSelector: selector,
-	})
+	podList, err := m.ListPods(namespace, selector)
 	if err != nil {
 		return nil, err
 	}
