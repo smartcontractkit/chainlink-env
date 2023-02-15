@@ -66,9 +66,8 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		}
 		e.URLs[NodesLocalURLsKey] = append(e.URLs[NodesLocalURLsKey], n)
 		log.Info().Str("Deployment", m.Name).Int("Node", i).Str("URL", n).Msg("Local connection")
-	}
-	for i := 0; i < len(pods.Items); i++ {
-		n, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
+
+		n, err = e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
 			As(client.RemoteConnection, client.HTTP)
 		if err != nil {
 			return err
@@ -78,9 +77,8 @@ func (m Chart) ExportData(e *environment.Environment) error {
 			e.URLs[NodesLocalURLsKey] = e.URLs[NodesInternalURLsKey]
 		}
 		log.Info().Str("Deployment", m.Name).Int("Node", i).Str("URL", n).Msg("Remote (in cluster) connection")
-	}
-	for i := 0; i < len(pods.Items); i++ {
-		n, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "chainlink-db", "postgres").
+
+		n, err = e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "chainlink-db", "postgres").
 			As(client.LocalConnection, client.HTTP)
 		if err != nil {
 			return err

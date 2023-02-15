@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
+	"time"
+
 	"github.com/smartcontractkit/chainlink-env/environment"
-	"github.com/smartcontractkit/chainlink-env/pkg/cdk8s/blockscout"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/mockserver"
@@ -11,26 +11,18 @@ import (
 )
 
 func main() {
-	e := environment.New(nil)
+	e := environment.New(&environment.Config{TTL: 20 * time.Minute})
 	err := e.
-		AddChart(blockscout.New(&blockscout.Props{})). // you can also add cdk8s charts if you like Go code
 		AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, nil)).
 		Run()
 	if err != nil {
 		panic(err)
 	}
-	// do some other stuff with deployed charts
-	pl, err := e.Client.ListPods(e.Cfg.Namespace, "app=chainlink-0")
-	if err != nil {
-		panic(err)
-	}
-	dstPath := fmt.Sprintf("%s/%s:/", e.Cfg.Namespace, pl.Items[0].Name)
-	if _, _, _, err = e.Client.CopyToPod(e.Cfg.Namespace, "./examples/multistage/someData.txt", dstPath, "node"); err != nil {
-		panic(err)
-	}
 	// deploy another part
+	e.Cfg.KeepConnection = true
 	err = e.
+		AddHelm(chainlink.New(1, nil)).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		Run()
