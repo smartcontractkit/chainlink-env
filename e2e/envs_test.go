@@ -2,7 +2,6 @@ package e2e_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -76,7 +75,6 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 }
 
 func TestConnectWithoutManifest(t *testing.T) {
-	t.Parallel()
 	testEnvConfig := getTestEnvConfig(t)
 	e := environment.New(testEnvConfig).
 		AddHelm(ethereum.New(nil)).
@@ -89,8 +87,8 @@ func TestConnectWithoutManifest(t *testing.T) {
 		e.Shutdown()
 	})
 	require.NoError(t, err)
-	_ = os.Setenv("ENV_NAMESPACE", e.Cfg.Namespace)
-	_ = os.Setenv("NO_MANIFEST_UPDATE", "true")
+	t.Setenv("ENV_NAMESPACE", e.Cfg.Namespace)
+	t.Setenv("NO_MANIFEST_UPDATE", "true")
 	err = environment.New(testEnvConfig).
 		Run()
 	require.NoError(t, err)

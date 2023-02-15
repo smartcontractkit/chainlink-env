@@ -77,7 +77,7 @@ test_e2e_ci:
 	go test ./e2e -v -test.parallel=7 -json 2>&1 | tee /tmp/gotest.log | gotestfmt
 
 test_e2e_ci_remote_runner:
-	go test ./e2e_remote_runner -v -test.parallel=4 -json 2>&1 | tee /tmp/remoterunnergotestgotest.log | gotestfmt
+	go test ./e2e_remote_runner -v -test.parallel=3 -json 2>&1 | tee /tmp/remoterunnergotestgotest.log | gotestfmt
 
 .PHONY: examples
 examples:
