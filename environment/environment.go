@@ -480,8 +480,6 @@ func (m *Environment) Deploy(manifest string) error {
 	}
 	if int64(m.Cfg.UpdateWaitInterval) != 0 {
 		time.Sleep(m.Cfg.UpdateWaitInterval)
-	} else {
-		time.Sleep(1 * time.Second)
 	}
 
 	expectedPodCount := m.findPodCountInDeploymentManifest()

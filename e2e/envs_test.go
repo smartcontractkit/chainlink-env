@@ -41,8 +41,7 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 	// we adding the same chart with different index and executing multi-stage deployment
 	// connections should be renewed
 	e := environment.New(testEnvConfig)
-	err := e.
-		AddHelm(ethChart).
+	err := e.AddHelm(ethChart).
 		AddHelm(chainlink.New(0, nil)).
 		Run()
 	t.Cleanup(func() {
@@ -50,8 +49,12 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 		e.Shutdown()
 	})
 	require.NoError(t, err)
-	err = e.
-		AddHelm(chainlink.New(1, nil)).
+	require.Len(t, e.URLs[chainlink.NodesLocalURLsKey], 1)
+	require.Len(t, e.URLs[chainlink.NodesInternalURLsKey], 1)
+	require.Len(t, e.URLs[chainlink.DBsLocalURLsKey], 1)
+	require.Len(t, e.URLs, 7)
+
+	err = e.AddHelm(chainlink.New(1, nil)).
 		Run()
 	require.NoError(t, err)
 	require.Len(t, e.URLs[chainlink.NodesLocalURLsKey], 2)
@@ -81,11 +84,11 @@ func TestConnectWithoutManifest(t *testing.T) {
 			"replicas": 1,
 		}))
 	err := e.Run()
-	require.NoError(t, err)
 	t.Cleanup(func() {
 		// nolint
 		e.Shutdown()
 	})
+	require.NoError(t, err)
 	_ = os.Setenv("ENV_NAMESPACE", e.Cfg.Namespace)
 	_ = os.Setenv("NO_MANIFEST_UPDATE", "true")
 	err = environment.New(testEnvConfig).
