@@ -102,8 +102,9 @@ type Config struct {
 
 func defaultEnvConfig() *Config {
 	return &Config{
-		TTL:             20 * time.Minute,
-		NamespacePrefix: "chainlink-test-env",
+		TTL:                20 * time.Minute,
+		NamespacePrefix:    "chainlink-test-env",
+		UpdateWaitInterval: 1 * time.Second,
 		ReadyCheckData: &client.ReadyCheckData{
 			ReadinessProbeCheckSelector: "",
 			Timeout:                     8 * time.Minute,
