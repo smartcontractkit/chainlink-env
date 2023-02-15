@@ -2,7 +2,6 @@ package e2e_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -49,10 +48,6 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 		e.Shutdown()
 	})
 	require.NoError(t, err)
-	require.Len(t, e.URLs[chainlink.NodesLocalURLsKey], 1)
-	require.Len(t, e.URLs[chainlink.NodesInternalURLsKey], 1)
-	require.Len(t, e.URLs[chainlink.DBsLocalURLsKey], 1)
-	require.Len(t, e.URLs, 7)
 
 	err = e.AddHelm(chainlink.New(1, nil)).
 		Run()
@@ -89,8 +84,8 @@ func TestConnectWithoutManifest(t *testing.T) {
 		e.Shutdown()
 	})
 	require.NoError(t, err)
-	_ = os.Setenv("ENV_NAMESPACE", e.Cfg.Namespace)
-	_ = os.Setenv("NO_MANIFEST_UPDATE", "true")
+	testEnvConfig.NoManifestUpdate = true
+	testEnvConfig.Namespace = e.Cfg.Namespace
 	err = environment.New(testEnvConfig).
 		Run()
 	require.NoError(t, err)

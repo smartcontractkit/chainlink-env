@@ -134,10 +134,12 @@ func New(cfg *Config) *Environment {
 	}
 	targetCfg := defaultEnvConfig()
 	config.MustMerge(targetCfg, cfg)
-	ns := os.Getenv(config.EnvVarNamespace)
-	if ns != "" {
-		log.Info().Str("Namespace", ns).Msg("Namespace selected")
-		targetCfg.Namespace = ns
+	if os.Getenv(config.EnvVarNamespace) != "" {
+		cfg.Namespace = os.Getenv(config.EnvVarNamespace)
+	}
+	if cfg.Namespace != "" {
+		log.Info().Str("Namespace", cfg.Namespace).Msg("Namespace selected")
+		targetCfg.Namespace = cfg.Namespace
 	} else {
 		targetCfg.Namespace = fmt.Sprintf("%s-%s", targetCfg.NamespacePrefix, uuid.NewString()[0:5])
 		log.Info().Str("Namespace", targetCfg.Namespace).Msg("Creating new namespace")
@@ -392,7 +394,14 @@ func (m *Environment) Run() error {
 		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
 		return nil
 	}
-	m.Cfg.NoManifestUpdate, _ = strconv.ParseBool(os.Getenv(config.EnvVarNoManifestUpdate))
+	manifestUpdate := os.Getenv(config.EnvVarNoManifestUpdate)
+	if manifestUpdate != "" {
+		mu, err := strconv.ParseBool(manifestUpdate)
+		if err != nil {
+			return fmt.Errorf("manifest update should be bool: true, false")
+		}
+		m.Cfg.NoManifestUpdate = mu
+	}
 	log.Info().Bool("ManifestUpdate", !m.Cfg.NoManifestUpdate).Msg("Update mode")
 	if !m.Cfg.NoManifestUpdate {
 		if err := m.Deploy(m.CurrentManifest); err != nil {
@@ -480,6 +489,8 @@ func (m *Environment) Deploy(manifest string) error {
 	}
 	if int64(m.Cfg.UpdateWaitInterval) != 0 {
 		time.Sleep(m.Cfg.UpdateWaitInterval)
+	} else {
+		time.Sleep(1 * time.Second)
 	}
 
 	expectedPodCount := m.findPodCountInDeploymentManifest()
