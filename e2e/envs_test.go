@@ -32,6 +32,7 @@ func getTestEnvConfig(t *testing.T) *environment.Config {
 }
 
 func TestMultiStageMultiManifestConnection(t *testing.T) {
+	t.Parallel()
 	testEnvConfig := getTestEnvConfig(t)
 
 	ethChart := ethereum.New(nil)

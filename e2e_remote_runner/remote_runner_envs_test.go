@@ -37,8 +37,10 @@ func TestFundReturnShutdownLogic(t *testing.T) {
 		require.Error(t, err, "Should return an error")
 		return
 	}
-	// nolint
-	defer e.Shutdown()
+	t.Cleanup(func() {
+		// nolint
+		e.Shutdown()
+	})
 	require.NoError(t, err)
 	fmt.Println(environment.FAILED_FUND_RETURN)
 }
@@ -48,8 +50,10 @@ func TestRemoteRunnerMultipleRunCommands(t *testing.T) {
 	testEnvConfig := getTestEnvConfig(t)
 	e := presets.EVMMinimalLocal(testEnvConfig)
 	err := e.Run()
-	// nolint
-	defer e.Shutdown()
+	t.Cleanup(func() {
+		// nolint
+		e.Shutdown()
+	})
 	require.NoError(t, err)
 	e.AddHelm(chainlink.New(1, nil))
 	err = e.Run()
@@ -61,8 +65,10 @@ func TestRemoteRunnerOneSetupWithMultipeTests(t *testing.T) {
 	testEnvConfig := getTestEnvConfig(t)
 	e := presets.EVMMinimalLocal(testEnvConfig)
 	err := e.Run()
-	// nolint
-	defer e.Shutdown()
+	t.Cleanup(func() {
+		// nolint
+		e.Shutdown()
+	})
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
 		return
