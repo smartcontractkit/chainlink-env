@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
@@ -31,27 +31,63 @@ func getTestEnvConfig(t *testing.T) *environment.Config {
 	}
 }
 
+func TestMultiStageMultiManifestConnection(t *testing.T) {
+	testEnvConfig := getTestEnvConfig(t)
+
+	ethChart := ethereum.New(nil)
+	ethNetworkName := ethChart.GetProps().(*ethereum.Props).NetworkName
+
+	// we adding the same chart with different index and executing multi-stage deployment
+	// connections should be renewed
+	e := environment.New(testEnvConfig)
+	err := e.
+		AddHelm(ethChart).
+		AddHelm(chainlink.New(0, nil)).
+		Run()
+	t.Cleanup(func() {
+		// nolint
+		e.Shutdown()
+	})
+	require.NoError(t, err)
+	err = e.
+		AddHelm(chainlink.New(1, nil)).
+		Run()
+	require.NoError(t, err)
+	require.Len(t, e.URLs[chainlink.NodesLocalURLsKey], 2)
+	require.Len(t, e.URLs[chainlink.NodesInternalURLsKey], 2)
+	require.Len(t, e.URLs[chainlink.DBsLocalURLsKey], 2)
+	require.Len(t, e.URLs, 7)
+
+	urls := make([]string, 0)
+	urls = append(urls, e.URLs[chainlink.NodesLocalURLsKey]...)
+	urls = append(urls, e.URLs[ethNetworkName+"_http"]...)
+
+	r := resty.New()
+	for _, u := range urls {
+		log.Info().Str("URL", u).Send()
+		res, err := r.R().Get(u)
+		require.NoError(t, err)
+		require.Equal(t, "200 OK", res.Status())
+	}
+}
+
 func TestConnectWithoutManifest(t *testing.T) {
 	t.Parallel()
-	nsPrefix := fmt.Sprintf("test-no-manifest-connection-%s", uuid.NewString()[0:5])
-	e := environment.New(&environment.Config{
-		NamespacePrefix: nsPrefix,
-		Test:            t,
-	}).
+	testEnvConfig := getTestEnvConfig(t)
+	e := environment.New(testEnvConfig).
 		AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 1,
 		}))
 	err := e.Run()
 	require.NoError(t, err)
-	// nolint
-	defer e.Shutdown()
+	t.Cleanup(func() {
+		// nolint
+		e.Shutdown()
+	})
 	_ = os.Setenv("ENV_NAMESPACE", e.Cfg.Namespace)
 	_ = os.Setenv("NO_MANIFEST_UPDATE", "true")
-	err = environment.New(&environment.Config{
-		NamespacePrefix: nsPrefix,
-		Test:            t,
-	}).
+	err = environment.New(testEnvConfig).
 		Run()
 	require.NoError(t, err)
 	url, err := e.Fwd.FindPort("chainlink-0:0", "node", "access").As(client.LocalConnection, client.HTTP)
@@ -72,8 +108,10 @@ func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
 	testEnvConfig := getTestEnvConfig(t)
 	e := presets.EVMSoak(testEnvConfig)
 	err := e.Run()
-	// nolint
-	defer e.Shutdown()
+	t.Cleanup(func() {
+		// nolint
+		e.Shutdown()
+	})
 	require.NoError(t, err)
 }
 
@@ -82,8 +120,10 @@ func TestWithSingleNodeEnv(t *testing.T) {
 	testEnvConfig := getTestEnvConfig(t)
 	e := presets.EVMOneNode(testEnvConfig)
 	err := e.Run()
-	// nolint
-	defer e.Shutdown()
+	t.Cleanup(func() {
+		// nolint
+		e.Shutdown()
+	})
 	require.NoError(t, err)
 }
 
@@ -92,8 +132,10 @@ func TestMinResources5NodesEnv(t *testing.T) {
 	testEnvConfig := getTestEnvConfig(t)
 	e := presets.EVMMinimalLocal(testEnvConfig)
 	err := e.Run()
-	// nolint
-	defer e.Shutdown()
+	t.Cleanup(func() {
+		// nolint
+		e.Shutdown()
+	})
 	require.NoError(t, err)
 }
 
@@ -102,8 +144,10 @@ func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
 	testEnvConfig := getTestEnvConfig(t)
 	e := presets.EVMMinimalLocalBS(testEnvConfig)
 	err := e.Run()
-	// nolint
-	defer e.Shutdown()
+	t.Cleanup(func() {
+		// nolint
+		e.Shutdown()
+	})
 	require.NoError(t, err)
 }
 
@@ -126,7 +170,9 @@ func TestMultipleInstancesOfTheSameType(t *testing.T) {
 		AddHelm(chainlink.New(0, nil)).
 		AddHelm(chainlink.New(1, nil))
 	err := e.Run()
-	// nolint
-	defer e.Shutdown()
+	t.Cleanup(func() {
+		// nolint
+		e.Shutdown()
+	})
 	require.NoError(t, err)
 }

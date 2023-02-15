@@ -314,6 +314,7 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 
 // PrintExportData prints export data
 func (m *Environment) PrintExportData() error {
+	m.URLs = make(map[string][]string)
 	for _, c := range m.Charts {
 		err := c.ExportData(m)
 		if err != nil {

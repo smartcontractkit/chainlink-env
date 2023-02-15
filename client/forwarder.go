@@ -144,6 +144,7 @@ func (m *Forwarder) portRulesForPod(pod v1.Pod) []string {
 }
 
 func (m *Forwarder) Connect(namespaceName string, selector string, insideK8s bool) error {
+	m.Info = make(map[string]interface{})
 	pods, err := m.Client.ListPods(namespaceName, selector)
 	if err != nil {
 		return err
