@@ -3,9 +3,9 @@ module github.com/smartcontractkit/chainlink-env
 go 1.19
 
 require (
-	github.com/aws/constructs-go/constructs/v10 v10.1.249
-	github.com/aws/jsii-runtime-go v1.74.0
-	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.5.72
+	github.com/aws/constructs-go/constructs/v10 v10.1.251
+	github.com/aws/jsii-runtime-go v1.75.0
+	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.7.1
 	github.com/chaos-mesh/chaos-mesh/api/v1alpha1 v0.0.0-20220226050744-799408773657
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/google/uuid v1.3.0
@@ -59,7 +59,7 @@ require (
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
