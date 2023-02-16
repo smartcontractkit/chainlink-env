@@ -40,6 +40,10 @@ func TestMultipleInstancesOfTheSameType(t *testing.T) {
 	common.TestMultipleInstancesOfTheSameType(t)
 }
 
+func Test5NodesPlus2MiningGethsReorgEnv(t *testing.T) {
+	common.Test5NodesPlus2MiningGethsReorgEnv(t)
+}
+
 func TestFundReturnShutdownLogic(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := common.GetTestEnvConfig(t)

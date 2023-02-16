@@ -172,16 +172,20 @@ func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
 
 }
 
-// TODO: fixme, use proper TOML config
-// func Test5NodesPlus2MiningGethsReorgEnv(t *testing.T) {
-// 	t.Parallel()
-// 	testEnvConfig := getTestEnvConfig(t)
-// 	e := presets.EVMReorg(testEnvConfig)
-// 	err := e.Run()
-// 	// nolint
-// 	defer e.Shutdown()
-// 	require.NoError(t, err)
-// }
+func Test5NodesPlus2MiningGethsReorgEnv(t *testing.T) {
+	t.Parallel()
+	testEnvConfig := GetTestEnvConfig(t)
+	e := presets.EVMReorg(testEnvConfig)
+	err := e.Run()
+	require.NoError(t, err)
+	if e.WillUseRemoteRunner() {
+		return
+	}
+	t.Cleanup(func() {
+		// nolint
+		e.Shutdown()
+	})
+}
 
 func TestMultipleInstancesOfTheSameType(t *testing.T) {
 	t.Parallel()

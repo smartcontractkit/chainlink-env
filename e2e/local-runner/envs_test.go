@@ -33,3 +33,7 @@ func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
 func TestMultipleInstancesOfTheSameType(t *testing.T) {
 	common.TestMultipleInstancesOfTheSameType(t)
 }
+
+func Test5NodesPlus2MiningGethsReorgEnv(t *testing.T) {
+	common.Test5NodesPlus2MiningGethsReorgEnv(t)
+}
