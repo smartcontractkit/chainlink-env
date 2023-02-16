@@ -2,7 +2,6 @@ package e2e_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -32,6 +31,7 @@ func getTestEnvConfig(t *testing.T) *environment.Config {
 }
 
 func TestMultiStageMultiManifestConnection(t *testing.T) {
+	t.Parallel()
 	testEnvConfig := getTestEnvConfig(t)
 
 	ethChart := ethereum.New(nil)
@@ -40,8 +40,7 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 	// we adding the same chart with different index and executing multi-stage deployment
 	// connections should be renewed
 	e := environment.New(testEnvConfig)
-	err := e.
-		AddHelm(ethChart).
+	err := e.AddHelm(ethChart).
 		AddHelm(chainlink.New(0, nil)).
 		Run()
 	t.Cleanup(func() {
@@ -49,8 +48,12 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 		e.Shutdown()
 	})
 	require.NoError(t, err)
-	err = e.
-		AddHelm(chainlink.New(1, nil)).
+	require.Len(t, e.URLs[chainlink.NodesLocalURLsKey], 1)
+	require.Len(t, e.URLs[chainlink.NodesInternalURLsKey], 1)
+	require.Len(t, e.URLs[chainlink.DBsLocalURLsKey], 1)
+	require.Len(t, e.URLs, 7)
+
+	err = e.AddHelm(chainlink.New(1, nil)).
 		Run()
 	require.NoError(t, err)
 	require.Len(t, e.URLs[chainlink.NodesLocalURLsKey], 2)
@@ -72,7 +75,6 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 }
 
 func TestConnectWithoutManifest(t *testing.T) {
-	t.Parallel()
 	testEnvConfig := getTestEnvConfig(t)
 	e := environment.New(testEnvConfig).
 		AddHelm(ethereum.New(nil)).
@@ -80,13 +82,13 @@ func TestConnectWithoutManifest(t *testing.T) {
 			"replicas": 1,
 		}))
 	err := e.Run()
-	require.NoError(t, err)
 	t.Cleanup(func() {
 		// nolint
 		e.Shutdown()
 	})
-	_ = os.Setenv("ENV_NAMESPACE", e.Cfg.Namespace)
-	_ = os.Setenv("NO_MANIFEST_UPDATE", "true")
+	require.NoError(t, err)
+	t.Setenv("ENV_NAMESPACE", e.Cfg.Namespace)
+	t.Setenv("NO_MANIFEST_UPDATE", "true")
 	err = environment.New(testEnvConfig).
 		Run()
 	require.NoError(t, err)
