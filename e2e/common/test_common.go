@@ -1,4 +1,4 @@
-package e2e_test
+package common
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ var (
 	testSelector = fmt.Sprintf("envType=%s", TestEnvType)
 )
 
-func getTestEnvConfig(t *testing.T) *environment.Config {
+func GetTestEnvConfig(t *testing.T) *environment.Config {
 	return &environment.Config{
 		NamespacePrefix: TestEnvType,
 		Labels:          []string{testSelector},
@@ -32,7 +32,7 @@ func getTestEnvConfig(t *testing.T) *environment.Config {
 
 func TestMultiStageMultiManifestConnection(t *testing.T) {
 	t.Parallel()
-	testEnvConfig := getTestEnvConfig(t)
+	testEnvConfig := GetTestEnvConfig(t)
 
 	ethChart := ethereum.New(nil)
 	ethNetworkName := ethChart.GetProps().(*ethereum.Props).NetworkName
@@ -43,11 +43,14 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 	err := e.AddHelm(ethChart).
 		AddHelm(chainlink.New(0, nil)).
 		Run()
+	require.NoError(t, err)
+	if e.WillUseRemoteRunner() {
+		return
+	}
 	t.Cleanup(func() {
 		// nolint
 		e.Shutdown()
 	})
-	require.NoError(t, err)
 	require.Len(t, e.URLs[chainlink.NodesLocalURLsKey], 1)
 	require.Len(t, e.URLs[chainlink.NodesInternalURLsKey], 1)
 	require.Len(t, e.URLs[chainlink.DBsLocalURLsKey], 1)
@@ -75,18 +78,22 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 }
 
 func TestConnectWithoutManifest(t *testing.T) {
-	testEnvConfig := getTestEnvConfig(t)
+	testEnvConfig := GetTestEnvConfig(t)
 	e := environment.New(testEnvConfig).
 		AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 1,
 		}))
 	err := e.Run()
+	require.NoError(t, err)
+	if e.WillUseRemoteRunner() {
+		return
+	}
 	t.Cleanup(func() {
 		// nolint
 		e.Shutdown()
 	})
-	require.NoError(t, err)
+
 	t.Setenv("ENV_NAMESPACE", e.Cfg.Namespace)
 	t.Setenv("NO_MANIFEST_UPDATE", "true")
 	err = environment.New(testEnvConfig).
@@ -107,7 +114,7 @@ func TestConnectWithoutManifest(t *testing.T) {
 
 func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
 	t.Parallel()
-	testEnvConfig := getTestEnvConfig(t)
+	testEnvConfig := GetTestEnvConfig(t)
 	e := presets.EVMSoak(testEnvConfig)
 	err := e.Run()
 	t.Cleanup(func() {
@@ -119,38 +126,50 @@ func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
 
 func TestWithSingleNodeEnv(t *testing.T) {
 	t.Parallel()
-	testEnvConfig := getTestEnvConfig(t)
+	testEnvConfig := GetTestEnvConfig(t)
 	e := presets.EVMOneNode(testEnvConfig)
 	err := e.Run()
+	require.NoError(t, err)
+	if e.WillUseRemoteRunner() {
+		return
+	}
 	t.Cleanup(func() {
 		// nolint
 		e.Shutdown()
 	})
-	require.NoError(t, err)
+
 }
 
 func TestMinResources5NodesEnv(t *testing.T) {
 	t.Parallel()
-	testEnvConfig := getTestEnvConfig(t)
+	testEnvConfig := GetTestEnvConfig(t)
 	e := presets.EVMMinimalLocal(testEnvConfig)
 	err := e.Run()
+	require.NoError(t, err)
+	if e.WillUseRemoteRunner() {
+		return
+	}
 	t.Cleanup(func() {
 		// nolint
 		e.Shutdown()
 	})
-	require.NoError(t, err)
+
 }
 
 func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
 	t.Parallel()
-	testEnvConfig := getTestEnvConfig(t)
+	testEnvConfig := GetTestEnvConfig(t)
 	e := presets.EVMMinimalLocalBS(testEnvConfig)
 	err := e.Run()
+	require.NoError(t, err)
+	if e.WillUseRemoteRunner() {
+		return
+	}
 	t.Cleanup(func() {
 		// nolint
 		e.Shutdown()
 	})
-	require.NoError(t, err)
+
 }
 
 // TODO: fixme, use proper TOML config
@@ -166,15 +185,19 @@ func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
 
 func TestMultipleInstancesOfTheSameType(t *testing.T) {
 	t.Parallel()
-	testEnvConfig := getTestEnvConfig(t)
+	testEnvConfig := GetTestEnvConfig(t)
 	e := environment.New(testEnvConfig).
 		AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, nil)).
 		AddHelm(chainlink.New(1, nil))
 	err := e.Run()
+	require.NoError(t, err)
+	if e.WillUseRemoteRunner() {
+		return
+	}
 	t.Cleanup(func() {
 		// nolint
 		e.Shutdown()
 	})
-	require.NoError(t, err)
+
 }

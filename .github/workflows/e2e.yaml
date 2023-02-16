@@ -49,7 +49,7 @@ jobs:
       id-token: write
       contents: read
     env:
-      TEST_SUITE: e2e
+      TEST_SUITE: local-runner
     steps:
       - uses: actions/checkout@v3
       - name: Run Tests
@@ -81,7 +81,7 @@ jobs:
       id-token: write
       contents: read
     env:
-      TEST_SUITE: e2e_remote_runner
+      TEST_SUITE: remote-runner
       TEST_TRIGGERED_BY: chainlink-env-remote-runner-ci
     steps:
       - uses: actions/checkout@v3

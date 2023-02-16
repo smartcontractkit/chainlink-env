@@ -10,7 +10,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 cd "$SCRIPT_DIR"/../ || exit 1
 
 # parse out quotes if they exist in the string
-suites="e2e e2e_remote_runner"
+suites="local-runner remote-runner"
 temp="${suites%\"}"
 tosplit="${temp#\"}"
 
@@ -19,6 +19,6 @@ OIFS=$IFS
 IFS=' '
 for x in $tosplit
 do
-    go test -c ./"${x}"
+    go test -c ./e2e/"${x}"
 done
 IFS=$OIFS
