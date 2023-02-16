@@ -38,7 +38,7 @@ func NewChaos(client *K8sClient, namespace string) *Chaos {
 func (c *Chaos) Run(app cdk8s.App, id string, resource string) (string, error) {
 	log.Info().Msg("Applying chaos experiment")
 	config.JSIIGlobalMu.Lock()
-	manifest := app.SynthYaml().(string)
+	manifest := *app.SynthYaml()
 	config.JSIIGlobalMu.Unlock()
 	log.Trace().Str("Raw", manifest).Msg("Manifest")
 	c.ResourceByName[id] = resource

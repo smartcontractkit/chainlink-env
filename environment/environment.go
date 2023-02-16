@@ -387,7 +387,7 @@ func (m *Environment) Run() error {
 		}))
 	}
 	config.JSIIGlobalMu.Lock()
-	m.CurrentManifest = m.App.SynthYaml().(string)
+	m.CurrentManifest = *m.App.SynthYaml()
 	config.JSIIGlobalMu.Unlock()
 	if m.Cfg.DryRun {
 		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
