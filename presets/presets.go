@@ -71,8 +71,9 @@ func EVMReorg(config *environment.Config) *environment.Environment {
 				},
 			},
 		})).
-		AddHelm(chainlink.New(0, map[string]interface{}{
+		AddHelm(chainlink.NewVersioned(0, "0.0.11", map[string]interface{}{
 			"replicas": 5,
+			// TODO: convert to toml
 			"env": map[string]interface{}{
 				"eth_url": "ws://geth-reorg-ethereum-geth:8546",
 			},
