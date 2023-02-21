@@ -137,8 +137,11 @@ func New(cfg *Config) *Environment {
 	config.MustMerge(targetCfg, cfg)
 	ns := os.Getenv(config.EnvVarNamespace)
 	if ns != "" {
-		log.Info().Str("Namespace", ns).Msg("Namespace selected")
-		targetCfg.Namespace = ns
+		cfg.Namespace = ns
+	}
+	if cfg.Namespace != "" {
+		log.Info().Str("Namespace", cfg.Namespace).Msg("Namespace selected")
+		targetCfg.Namespace = cfg.Namespace
 	} else {
 		targetCfg.Namespace = fmt.Sprintf("%s-%s", targetCfg.NamespacePrefix, uuid.NewString()[0:5])
 		log.Info().Str("Namespace", targetCfg.Namespace).Msg("Creating new namespace")
@@ -393,7 +396,14 @@ func (m *Environment) Run() error {
 		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
 		return nil
 	}
-	m.Cfg.NoManifestUpdate, _ = strconv.ParseBool(os.Getenv(config.EnvVarNoManifestUpdate))
+	manifestUpdate := os.Getenv(config.EnvVarNoManifestUpdate)
+	if manifestUpdate != "" {
+		mu, err := strconv.ParseBool(manifestUpdate)
+		if err != nil {
+			return fmt.Errorf("manifest update should be bool: true, false")
+		}
+		m.Cfg.NoManifestUpdate = mu
+	}
 	log.Info().Bool("ManifestUpdate", !m.Cfg.NoManifestUpdate).Msg("Update mode")
 	if !m.Cfg.NoManifestUpdate {
 		if err := m.Deploy(m.CurrentManifest); err != nil {

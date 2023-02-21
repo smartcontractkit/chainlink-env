@@ -78,6 +78,7 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 }
 
 func TestConnectWithoutManifest(t *testing.T) {
+	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
 	e := environment.New(testEnvConfig).
 		AddHelm(ethereum.New(nil)).
@@ -94,8 +95,8 @@ func TestConnectWithoutManifest(t *testing.T) {
 		e.Shutdown()
 	})
 
-	t.Setenv("ENV_NAMESPACE", e.Cfg.Namespace)
-	t.Setenv("NO_MANIFEST_UPDATE", "true")
+	testEnvConfig.NoManifestUpdate = true
+	testEnvConfig.Namespace = e.Cfg.Namespace
 	err = environment.New(testEnvConfig).
 		Run()
 	require.NoError(t, err)
@@ -137,7 +138,6 @@ func TestWithSingleNodeEnv(t *testing.T) {
 		// nolint
 		e.Shutdown()
 	})
-
 }
 
 func TestMinResources5NodesEnv(t *testing.T) {
@@ -153,7 +153,6 @@ func TestMinResources5NodesEnv(t *testing.T) {
 		// nolint
 		e.Shutdown()
 	})
-
 }
 
 func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
@@ -169,7 +168,6 @@ func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
 		// nolint
 		e.Shutdown()
 	})
-
 }
 
 func Test5NodesPlus2MiningGethsReorgEnv(t *testing.T) {
@@ -203,5 +201,26 @@ func TestMultipleInstancesOfTheSameType(t *testing.T) {
 		// nolint
 		e.Shutdown()
 	})
-
 }
+
+// func TestWithChaos(t *require.TestingT) {
+// 	t.Parallel()
+
+// 	testCases := map[string]struct {
+// 		networkChart environment.ConnectedChart
+// 		clChart      environment.ConnectedChart
+// 		chaosFunc    chaos.ManifestFunc
+// 		chaosProps   *chaos.Props
+// 	}{
+// 		// see ocr_chaos.test.go for comments
+// 		"pod-chaos-fail-minority-nodes": {
+// 			ethereum.New(nil),
+// 			chainlink.New(0, nil),
+// 			chaos.NewFailPods,
+// 			&chaos.Props{
+// 				LabelsSelector: &map[string]*string{"chaosGroupMinority": a.Str("1")},
+// 				DurationStr:    "1m",
+// 			},
+// 		},
+// 	}
+// }
