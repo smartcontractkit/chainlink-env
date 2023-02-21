@@ -72,7 +72,7 @@ const (
 	EnvVarSlackUserExample     = "U000000000"
 
 	EnvVarPyroscopeServer      = "PYROSCOPE_SERVER"
-	EnvVarPyroscopeEnvironment = "PYROSCOPE_SERVER"
+	EnvVarPyroscopeEnvironment = "PYROSCOPE_ENVIRONMENT"
 	EnvVarPyroscopeKey         = "PYROSCOPE_KEY"
 
 	EnvVarToleration                 = "K8S_TOLERATION"
