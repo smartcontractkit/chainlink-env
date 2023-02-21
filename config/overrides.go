@@ -71,6 +71,10 @@ const (
 	EnvVarSlackUserDescription = "The Slack code for the user you want to notify"
 	EnvVarSlackUserExample     = "U000000000"
 
+	EnvVarPyroscopeServer      = "PYROSCOPE_SERVER"
+	EnvVarPyroscopeEnvironment = "PYROSCOPE_SERVER"
+	EnvVarPyroscopeKey         = "PYROSCOPE_KEY"
+
 	EnvVarToleration                 = "K8S_TOLERATION"
 	EnvVarTolerationsUserDescription = "Node roles to tolerate"
 	EnvVarTolerationsExample         = "foundations"
