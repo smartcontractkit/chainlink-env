@@ -2,6 +2,7 @@ package chainlink
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/rs/zerolog/log"
 
@@ -25,7 +26,7 @@ type Chart struct {
 	Path    string
 	Version string
 	Props   *Props
-	Values  *map[string]interface{}
+	Values  *map[string]any
 }
 
 func (m Chart) IsDeploymentNeeded() bool {
@@ -44,11 +45,11 @@ func (m Chart) GetVersion() string {
 	return m.Version
 }
 
-func (m Chart) GetProps() interface{} {
+func (m Chart) GetProps() any {
 	return m.Props
 }
 
-func (m Chart) GetValues() *map[string]interface{} {
+func (m Chart) GetValues() *map[string]any {
 	return m.Values
 }
 
@@ -89,39 +90,44 @@ func (m Chart) ExportData(e *environment.Environment) error {
 	return nil
 }
 
-func defaultProps() map[string]interface{} {
-	return map[string]interface{}{
+func defaultProps() map[string]any {
+	env := map[string]any{
+		"CL_DATABASE_URL": "postgresql://postgres:verylongdatabasepassword@0.0.0.0/chainlink?sslmode=disable",
+	}
+	pyroscopeAuth := os.Getenv(config.EnvVarPyroscopeKey)
+	if pyroscopeAuth != "" {
+		env[config.EnvVarPyroscopeKey] = pyroscopeAuth
+	}
+	return map[string]any{
 		"replicas": "1",
-		"env": map[string]interface{}{
-			"CL_DATABASE_URL": "postgresql://postgres:verylongdatabasepassword@0.0.0.0/chainlink?sslmode=disable",
-		},
-		"chainlink": map[string]interface{}{
-			"image": map[string]interface{}{
+		"env":      env,
+		"chainlink": map[string]any{
+			"image": map[string]any{
 				"image":   "795953128386.dkr.ecr.us-west-2.amazonaws.com/chainlink",
 				"version": "develop",
 			},
 			"web_port": "6688",
 			"p2p_port": "8090",
-			"resources": map[string]interface{}{
-				"requests": map[string]interface{}{
+			"resources": map[string]any{
+				"requests": map[string]any{
 					"cpu":    "350m",
 					"memory": "1024Mi",
 				},
-				"limits": map[string]interface{}{
+				"limits": map[string]any{
 					"cpu":    "350m",
 					"memory": "1024Mi",
 				},
 			},
 		},
-		"db": map[string]interface{}{
+		"db": map[string]any{
 			"stateful": false,
 			"capacity": "1Gi",
-			"resources": map[string]interface{}{
-				"requests": map[string]interface{}{
+			"resources": map[string]any{
+				"requests": map[string]any{
 					"cpu":    "250m",
 					"memory": "256Mi",
 				},
-				"limits": map[string]interface{}{
+				"limits": map[string]any{
 					"cpu":    "250m",
 					"memory": "256Mi",
 				},
@@ -130,12 +136,12 @@ func defaultProps() map[string]interface{} {
 	}
 }
 
-func New(index int, props map[string]interface{}) environment.ConnectedChart {
+func New(index int, props map[string]any) environment.ConnectedChart {
 	return NewVersioned(index, "", props)
 }
 
 // NewVersioned enables you to select a specific helm chart version
-func NewVersioned(index int, helmVersion string, props map[string]interface{}) environment.ConnectedChart {
+func NewVersioned(index int, helmVersion string, props map[string]any) environment.ConnectedChart {
 	dp := defaultProps()
 	config.MustEnvOverrideVersion(&dp)
 	config.MustMerge(&dp, props)
