@@ -96,7 +96,7 @@ func defaultProps() map[string]any {
 	}
 	pyroscopeAuth := os.Getenv(config.EnvVarPyroscopeKey)
 	if pyroscopeAuth != "" {
-		env[config.EnvVarPyroscopeKey] = pyroscopeAuth
+		env["CL_PYROSCOPE_AUTH_TOKEN"] = pyroscopeAuth
 	}
 	return map[string]any{
 		"replicas": "1",
