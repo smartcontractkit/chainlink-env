@@ -211,25 +211,3 @@ func TestMultipleInstancesOfTheSameType(t *testing.T) {
 		e.Shutdown()
 	})
 }
-
-// func TestWithChaos(t *require.TestingT) {
-// 	t.Parallel()
-
-// 	testCases := map[string]struct {
-// 		networkChart environment.ConnectedChart
-// 		clChart      environment.ConnectedChart
-// 		chaosFunc    chaos.ManifestFunc
-// 		chaosProps   *chaos.Props
-// 	}{
-// 		// see ocr_chaos.test.go for comments
-// 		"pod-chaos-fail-minority-nodes": {
-// 			ethereum.New(nil),
-// 			chainlink.New(0, nil),
-// 			chaos.NewFailPods,
-// 			&chaos.Props{
-// 				LabelsSelector: &map[string]*string{"chaosGroupMinority": a.Str("1")},
-// 				DurationStr:    "1m",
-// 			},
-// 		},
-// 	}
-// }
