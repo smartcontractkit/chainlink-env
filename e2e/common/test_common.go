@@ -65,8 +65,13 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 	require.Len(t, e.URLs, 7)
 
 	urls := make([]string, 0)
-	urls = append(urls, e.URLs[chainlink.NodesLocalURLsKey]...)
-	urls = append(urls, e.URLs[ethNetworkName+"_http"]...)
+	if e.Cfg.InsideK8s {
+		urls = append(urls, e.URLs[chainlink.NodesInternalURLsKey]...)
+		urls = append(urls, e.URLs[ethNetworkName+"_internal_http"]...)
+	} else {
+		urls = append(urls, e.URLs[chainlink.NodesLocalURLsKey]...)
+		urls = append(urls, e.URLs[ethNetworkName+"_http"]...)
+	}
 
 	r := resty.New()
 	for _, u := range urls {
@@ -106,10 +111,8 @@ func TestConnectWithoutManifest(t *testing.T) {
 	}
 	url, err := e.Fwd.FindPort("chainlink-0:0", "node", "access").As(connection, client.HTTP)
 	require.NoError(t, err)
-	t.Log(url)
 	urlGeth, err := e.Fwd.FindPort("geth:0", "geth-network", "http-rpc").As(connection, client.HTTP)
 	require.NoError(t, err)
-	t.Log(urlGeth)
 	r := resty.New()
 	res, err := r.R().Get(url)
 	require.NoError(t, err)
