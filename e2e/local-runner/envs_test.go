@@ -37,3 +37,7 @@ func TestMultipleInstancesOfTheSameType(t *testing.T) {
 func Test5NodesPlus2MiningGethsReorgEnv(t *testing.T) {
 	common.Test5NodesPlus2MiningGethsReorgEnv(t)
 }
+
+func TestWithChaos(t *testing.T) {
+	common.TestWithChaos(t)
+}
