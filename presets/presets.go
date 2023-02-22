@@ -46,6 +46,17 @@ func EVMMinimalLocal(config *environment.Config) *environment.Environment {
 
 // EVMReorg deployment for two Ethereum networks re-org test
 func EVMReorg(config *environment.Config) *environment.Environment {
+	var clToml = `[[EVM]]
+ChainID = '1337'
+FinalityDepth = 200
+
+[[EVM.Nodes]]
+Name = 'geth'
+WSURL = 'ws://geth-ethereum-geth:8546'
+HTTPURL = 'http://geth-ethereum-geth:8544'
+
+[EVM.HeadTracker]
+HistoryDepth = 400`
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
@@ -71,12 +82,9 @@ func EVMReorg(config *environment.Config) *environment.Environment {
 				},
 			},
 		})).
-		AddHelm(chainlink.NewVersioned(0, "0.0.11", map[string]interface{}{
+		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 5,
-			// TODO: convert to toml
-			"env": map[string]interface{}{
-				"eth_url": "ws://geth-reorg-ethereum-geth:8546",
-			},
+			"toml":     clToml,
 		}))
 }
 

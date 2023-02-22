@@ -60,32 +60,32 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		return err
 	}
 	for i := 0; i < len(pods.Items); i++ {
-		n, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
+		localConnection, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
 			As(client.LocalConnection, client.HTTP)
 		if err != nil {
 			return err
 		}
-		e.URLs[NodesLocalURLsKey] = append(e.URLs[NodesLocalURLsKey], n)
-		log.Info().Str("Deployment", m.Name).Int("Node", i).Str("URL", n).Msg("Local connection")
+		e.URLs[NodesLocalURLsKey] = append(e.URLs[NodesLocalURLsKey], localConnection)
+		log.Info().Str("Deployment", m.Name).Int("Node", i).Str("URL", localConnection).Msg("Local connection")
 
-		n, err = e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
+		remoteConnection, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
 			As(client.RemoteConnection, client.HTTP)
 		if err != nil {
 			return err
 		}
-		e.URLs[NodesInternalURLsKey] = append(e.URLs[NodesInternalURLsKey], n)
+		e.URLs[NodesInternalURLsKey] = append(e.URLs[NodesInternalURLsKey], remoteConnection)
 		if e.Cfg.InsideK8s {
 			e.URLs[NodesLocalURLsKey] = e.URLs[NodesInternalURLsKey]
 		}
-		log.Info().Str("Deployment", m.Name).Int("Node", i).Str("URL", n).Msg("Remote (in cluster) connection")
+		log.Info().Str("Deployment", m.Name).Int("Node", i).Str("URL", remoteConnection).Msg("Remote (in cluster) connection")
 
-		n, err = e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "chainlink-db", "postgres").
+		dbLocalConnection, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "chainlink-db", "postgres").
 			As(client.LocalConnection, client.HTTP)
 		if err != nil {
 			return err
 		}
-		e.URLs[DBsLocalURLsKey] = append(e.URLs[DBsLocalURLsKey], n)
-		log.Info().Str("Deployment", m.Name).Int("Node", i).Str("URL", n).Msg("DB local Connection")
+		e.URLs[DBsLocalURLsKey] = append(e.URLs[DBsLocalURLsKey], dbLocalConnection)
+		log.Info().Str("Deployment", m.Name).Int("Node", i).Str("URL", dbLocalConnection).Msg("DB local Connection")
 	}
 	return nil
 }

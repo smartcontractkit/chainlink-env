@@ -127,11 +127,11 @@ func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
 	testEnvConfig := GetTestEnvConfig(t)
 	e := presets.EVMSoak(testEnvConfig)
 	err := e.Run()
+	require.NoError(t, err)
 	t.Cleanup(func() {
 		// nolint
 		e.Shutdown()
 	})
-	require.NoError(t, err)
 }
 
 func TestWithSingleNodeEnv(t *testing.T) {
