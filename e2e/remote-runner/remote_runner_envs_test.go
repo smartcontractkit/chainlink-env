@@ -6,31 +6,47 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/smartcontractkit/chainlink-env/e2e/common"
 	"github.com/smartcontractkit/chainlink-env/environment"
-	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
 	"github.com/smartcontractkit/chainlink-env/presets"
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	TestEnvType = "chainlink-env-test"
-)
+func TestMultiStageMultiManifestConnection(t *testing.T) {
+	common.TestMultiStageMultiManifestConnection(t)
+}
 
-var (
-	testSelector = fmt.Sprintf("envType=%s", TestEnvType)
-)
+func TestConnectWithoutManifest(t *testing.T) {
+	common.TestConnectWithoutManifest(t)
+}
 
-func getTestEnvConfig(t *testing.T) *environment.Config {
-	return &environment.Config{
-		NamespacePrefix: TestEnvType,
-		Labels:          []string{testSelector},
-		Test:            t,
-	}
+func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
+	common.Test5NodesSoakEnvironmentWithPVCs(t)
+}
+
+func TestWithSingleNodeEnv(t *testing.T) {
+	common.TestWithSingleNodeEnv(t)
+}
+
+func TestMinResources5NodesEnv(t *testing.T) {
+	common.TestMinResources5NodesEnv(t)
+}
+
+func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
+	common.TestMinResources5NodesEnvWithBlockscout(t)
+}
+
+func TestMultipleInstancesOfTheSameType(t *testing.T) {
+	common.TestMultipleInstancesOfTheSameType(t)
+}
+
+func Test5NodesPlus2MiningGethsReorgEnv(t *testing.T) {
+	common.Test5NodesPlus2MiningGethsReorgEnv(t)
 }
 
 func TestFundReturnShutdownLogic(t *testing.T) {
 	t.Parallel()
-	testEnvConfig := getTestEnvConfig(t)
+	testEnvConfig := common.GetTestEnvConfig(t)
 	e := presets.EVMMinimalLocal(testEnvConfig)
 	err := e.Run()
 	if e.WillUseRemoteRunner() {
@@ -45,24 +61,9 @@ func TestFundReturnShutdownLogic(t *testing.T) {
 	fmt.Println(environment.FAILED_FUND_RETURN)
 }
 
-func TestRemoteRunnerMultipleRunCommands(t *testing.T) {
-	t.Parallel()
-	testEnvConfig := getTestEnvConfig(t)
-	e := presets.EVMMinimalLocal(testEnvConfig)
-	err := e.Run()
-	t.Cleanup(func() {
-		// nolint
-		e.Shutdown()
-	})
-	require.NoError(t, err)
-	e.AddHelm(chainlink.New(1, nil))
-	err = e.Run()
-	require.NoError(t, err)
-}
-
 func TestRemoteRunnerOneSetupWithMultipeTests(t *testing.T) {
 	t.Parallel()
-	testEnvConfig := getTestEnvConfig(t)
+	testEnvConfig := common.GetTestEnvConfig(t)
 	e := presets.EVMMinimalLocal(testEnvConfig)
 	err := e.Run()
 	t.Cleanup(func() {
