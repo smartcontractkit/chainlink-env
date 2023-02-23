@@ -267,8 +267,10 @@ func main() {
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		Run()
-	// nolint
-	defer e.Shutdown()
+	defer func() {
+		errr := e.Shutdown()
+		panic(errr)
+	}()
 	if err != nil {
 		panic(err)
 	}

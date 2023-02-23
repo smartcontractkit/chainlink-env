@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type Props struct {
@@ -50,10 +51,10 @@ func TestOverrideCodeEnv(t *testing.T) {
 				},
 			},
 		}
-		// nolint
-		os.Setenv(EnvVarCLImage, "abc")
-		// nolint
-		os.Setenv(EnvVarCLTag, "def")
+		err := os.Setenv(EnvVarCLImage, "abc")
+		require.NoError(t, err)
+		err = os.Setenv(EnvVarCLTag, "def")
+		require.NoError(t, err)
 		MustEnvOverrideVersion(&defaultCodeProps)
 		require.Equal(t, "abc", defaultCodeProps["chainlink"].(map[string]interface{})["image"].(map[string]interface{})["image"])
 		require.Equal(t, "def", defaultCodeProps["chainlink"].(map[string]interface{})["image"].(map[string]interface{})["version"])
