@@ -5,9 +5,12 @@ import (
 	"testing"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/onsi/gomega"
 	"github.com/rs/zerolog/log"
+	"github.com/smartcontractkit/chainlink-env/chaos"
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/environment"
+	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
 	"github.com/smartcontractkit/chainlink-env/presets"
@@ -210,4 +213,67 @@ func TestMultipleInstancesOfTheSameType(t *testing.T) {
 		// nolint
 		e.Shutdown()
 	})
+}
+
+// TestWithChaos runs a test with chaos injected into the environment.
+func TestWithChaos(t *testing.T) {
+	t.Parallel()
+	appLabel := "chainlink-0"
+	testCase := struct {
+		chaosFunc  chaos.ManifestFunc
+		chaosProps *chaos.Props
+	}{
+		chaos.NewFailPods,
+		&chaos.Props{
+			LabelsSelector: &map[string]*string{"app": a.Str(appLabel)},
+			DurationStr:    "30s",
+		},
+	}
+	testEnvConfig := GetTestEnvConfig(t)
+	e := environment.New(testEnvConfig).
+		AddHelm(ethereum.New(nil)).
+		AddHelm(chainlink.New(0, map[string]interface{}{
+			"replicas": 1,
+		}))
+	err := e.Run()
+	require.NoError(t, err)
+	if e.WillUseRemoteRunner() {
+		return
+	}
+	t.Cleanup(func() {
+		// nolint
+		e.Shutdown()
+	})
+
+	connection := client.LocalConnection
+	if e.Cfg.InsideK8s {
+		connection = client.RemoteConnection
+	}
+	url, err := e.Fwd.FindPort("chainlink-0:0", "node", "access").As(connection, client.HTTP)
+	require.NoError(t, err)
+	r := resty.New()
+	res, err := r.R().Get(url)
+	require.NoError(t, err)
+	require.Equal(t, "200 OK", res.Status())
+
+	// start chaos
+	_, err = e.Chaos.Run(testCase.chaosFunc(e.Cfg.Namespace, testCase.chaosProps))
+	require.NoError(t, err)
+	gom := gomega.NewGomegaWithT(t)
+	gom.Eventually(func(g gomega.Gomega) {
+		res, err = r.R().Get(url)
+		g.Expect(err).Should(gomega.HaveOccurred())
+		t.Log("Expected error was found")
+	}, "1m", "3s").Should(gomega.Succeed())
+
+	t.Log("Waiting for Pod to start back up")
+	err = e.Run()
+	require.NoError(t, err)
+
+	// verify that the node can recieve requests again
+	url, err = e.Fwd.FindPort("chainlink-0:0", "node", "access").As(connection, client.HTTP)
+	require.NoError(t, err)
+	res, err = r.R().Get(url)
+	require.NoError(t, err)
+	require.Equal(t, "200 OK", res.Status())
 }

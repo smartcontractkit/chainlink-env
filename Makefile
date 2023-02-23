@@ -74,10 +74,10 @@ test_e2e:
 	go test ./e2e/local-runner -count 1 -test.parallel=8 -v $(args)
 
 test_e2e_ci:
-	go test ./e2e/local-runner -count 1 -v -test.parallel=7 -json 2>&1 | tee /tmp/gotest.log | gotestfmt
+	go test ./e2e/local-runner -count 1 -v -test.parallel=9 -json 2>&1 | tee /tmp/gotest.log | gotestfmt
 
 test_e2e_ci_remote_runner:
-	go test ./e2e/remote-runner -count 1 -v -test.parallel=9 -json 2>&1 | tee /tmp/remoterunnergotestgotest.log | gotestfmt
+	go test ./e2e/remote-runner -count 1 -v -test.parallel=11 -json 2>&1 | tee /tmp/remoterunnergotestgotest.log | gotestfmt
 
 .PHONY: examples
 examples:

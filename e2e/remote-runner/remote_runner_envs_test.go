@@ -44,6 +44,10 @@ func Test5NodesPlus2MiningGethsReorgEnv(t *testing.T) {
 	common.Test5NodesPlus2MiningGethsReorgEnv(t)
 }
 
+func TestWithChaos(t *testing.T) {
+	common.TestWithChaos(t)
+}
+
 func TestFundReturnShutdownLogic(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := common.GetTestEnvConfig(t)
