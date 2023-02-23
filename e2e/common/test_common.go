@@ -14,6 +14,7 @@ import (
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
 	"github.com/smartcontractkit/chainlink-env/presets"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -51,8 +52,7 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 		return
 	}
 	t.Cleanup(func() {
-		// nolint
-		e.Shutdown()
+		assert.NoError(t, e.Shutdown())
 	})
 	require.Len(t, e.URLs[chainlink.NodesLocalURLsKey], 1)
 	require.Len(t, e.URLs[chainlink.NodesInternalURLsKey], 1)
@@ -99,8 +99,7 @@ func TestConnectWithoutManifest(t *testing.T) {
 		return
 	}
 	t.Cleanup(func() {
-		// nolint
-		e.Shutdown()
+		assert.NoError(t, e.Shutdown())
 	})
 
 	testEnvConfig.NoManifestUpdate = true
@@ -132,8 +131,7 @@ func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
 	err := e.Run()
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		// nolint
-		e.Shutdown()
+		assert.NoError(t, e.Shutdown())
 	})
 }
 
@@ -147,8 +145,7 @@ func TestWithSingleNodeEnv(t *testing.T) {
 		return
 	}
 	t.Cleanup(func() {
-		// nolint
-		e.Shutdown()
+		assert.NoError(t, e.Shutdown())
 	})
 }
 
@@ -162,8 +159,7 @@ func TestMinResources5NodesEnv(t *testing.T) {
 		return
 	}
 	t.Cleanup(func() {
-		// nolint
-		e.Shutdown()
+		assert.NoError(t, e.Shutdown())
 	})
 }
 
@@ -177,8 +173,7 @@ func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
 		return
 	}
 	t.Cleanup(func() {
-		// nolint
-		e.Shutdown()
+		assert.NoError(t, e.Shutdown())
 	})
 }
 
@@ -192,8 +187,7 @@ func Test5NodesPlus2MiningGethsReorgEnv(t *testing.T) {
 		return
 	}
 	t.Cleanup(func() {
-		// nolint
-		e.Shutdown()
+		assert.NoError(t, e.Shutdown())
 	})
 }
 
@@ -210,8 +204,7 @@ func TestMultipleInstancesOfTheSameType(t *testing.T) {
 		return
 	}
 	t.Cleanup(func() {
-		// nolint
-		e.Shutdown()
+		assert.NoError(t, e.Shutdown())
 	})
 }
 
@@ -241,8 +234,7 @@ func TestWithChaos(t *testing.T) {
 		return
 	}
 	t.Cleanup(func() {
-		// nolint
-		e.Shutdown()
+		assert.NoError(t, e.Shutdown())
 	})
 
 	connection := client.LocalConnection

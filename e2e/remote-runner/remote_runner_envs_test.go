@@ -9,6 +9,7 @@ import (
 	"github.com/smartcontractkit/chainlink-env/e2e/common"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/presets"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -58,8 +59,7 @@ func TestFundReturnShutdownLogic(t *testing.T) {
 		return
 	}
 	t.Cleanup(func() {
-		// nolint
-		e.Shutdown()
+		assert.NoError(t, e.Shutdown())
 	})
 	require.NoError(t, err)
 	fmt.Println(environment.FAILED_FUND_RETURN)
@@ -71,8 +71,7 @@ func TestRemoteRunnerOneSetupWithMultipeTests(t *testing.T) {
 	e := presets.EVMMinimalLocal(testEnvConfig)
 	err := e.Run()
 	t.Cleanup(func() {
-		// nolint
-		e.Shutdown()
+		assert.NoError(t, e.Shutdown())
 	})
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
