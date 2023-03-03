@@ -14,6 +14,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 
@@ -418,7 +419,9 @@ func (m *Environment) Run() error {
 			return nil
 		}
 		if err := m.Client.WaitForJob(m.Cfg.Namespace, "remote-test-runner", func(message string) {
-			m.Cfg.Test.Log(message)
+			l := zerolog.New(zerolog.NewTestWriter(m.Cfg.Test))
+			l.Print(message)
+			// m.Cfg.Test.Log(message)
 			found := strings.Contains(message, FAILED_FUND_RETURN)
 			if found {
 				m.Cfg.fundReturnFailed = &found
