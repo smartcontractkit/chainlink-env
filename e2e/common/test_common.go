@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -9,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/chaos"
 	"github.com/smartcontractkit/chainlink-env/client"
+	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
@@ -86,7 +88,10 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 }
 
 func TestConnectWithoutManifest(t *testing.T) {
-	t.Parallel()
+	// this test can't run in parallel because it sets env variables
+	// deploy environment and not remote runner so we have an environment up to put a remote runner into
+	remoteRunnerJobImage := os.Getenv(config.EnvVarJobImage)
+	t.Setenv(config.EnvVarJobImage, "")
 	testEnvConfig := GetTestEnvConfig(t)
 	e := environment.New(testEnvConfig).
 		AddHelm(ethereum.New(nil)).
@@ -94,6 +99,11 @@ func TestConnectWithoutManifest(t *testing.T) {
 			"replicas": 1,
 		}))
 	err := e.Run()
+	require.NoError(t, err)
+
+	// Now if we are running this test using a remote runner we need to set the job image
+	t.Setenv(config.EnvVarJobImage, remoteRunnerJobImage)
+	err = e.Run()
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
 		return

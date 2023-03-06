@@ -174,7 +174,8 @@ func New(cfg *Config) *Environment {
 
 	// setup test cleanup if this is using a remote runner
 	// and not in detached mode
-	if targetCfg.JobImage != "" && !targetCfg.detachRunner {
+	// and not using an existing environment
+	if targetCfg.JobImage != "" && !targetCfg.detachRunner && !targetCfg.NoManifestUpdate {
 		f := false
 		targetCfg.fundReturnFailed = &f
 		if targetCfg.Test != nil {
@@ -386,7 +387,7 @@ func (m *Environment) Run() error {
 			TargetNamespace: m.Cfg.Namespace,
 			Labels:          nil,
 			Image:           m.Cfg.JobImage,
-			EnvVars:         getEnvVarsMap(m.Cfg.Test.Name()),
+			EnvVars:         m.getEnvVarsMap(),
 		}))
 	}
 	config.JSIIGlobalMu.Lock()
@@ -405,7 +406,7 @@ func (m *Environment) Run() error {
 		m.Cfg.NoManifestUpdate = mu
 	}
 	log.Info().Bool("ManifestUpdate", !m.Cfg.NoManifestUpdate).Msg("Update mode")
-	if !m.Cfg.NoManifestUpdate {
+	if !m.Cfg.NoManifestUpdate || m.Cfg.JobImage != "" {
 		if err := m.Deploy(m.CurrentManifest); err != nil {
 			log.Error().Err(err).Msg("Error deploying environment")
 			_ = m.Shutdown()
@@ -670,13 +671,13 @@ func (m *Environment) WillUseRemoteRunner() bool {
 	return val != "" && m.Cfg.Test.Name() != ""
 }
 
-func getEnvVarsMap(testName string) map[string]string {
-	m := make(map[string]string)
+func (m *Environment) getEnvVarsMap() map[string]string {
+	env := make(map[string]string)
 	for _, e := range os.Environ() {
 		if i := strings.Index(e, "="); i >= 0 {
 			if strings.HasPrefix(e[:i], config.EnvVarPrefix) {
 				withoutPrefix := strings.Replace(e[:i], config.EnvVarPrefix, "", 1)
-				m[withoutPrefix] = e[i+1:]
+				env[withoutPrefix] = e[i+1:]
 			}
 		}
 	}
@@ -704,13 +705,14 @@ func getEnvVarsMap(testName string) map[string]string {
 		v, success := os.LookupEnv(k)
 		if success && len(v) > 0 {
 			log.Debug().Str(k, v).Msg("Forwarding Env Var")
-			m[k] = v
+			env[k] = v
 		}
 	}
 
 	// add test name
-	m["TEST_NAME"] = testName
-	m[config.EnvVarInsideK8s] = "true"
+	env["TEST_NAME"] = m.Cfg.Test.Name()
+	env[config.EnvVarInsideK8s] = "true"
+	env[config.EnvVarNoManifestUpdate] = strconv.FormatBool(m.Cfg.NoManifestUpdate)
 
-	return m
+	return env
 }
