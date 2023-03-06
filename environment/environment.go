@@ -146,8 +146,9 @@ func New(cfg *Config) *Environment {
 		targetCfg.Namespace = fmt.Sprintf("%s-%s", targetCfg.NamespacePrefix, uuid.NewString()[0:5])
 		log.Info().Str("Namespace", targetCfg.Namespace).Msg("Creating new namespace")
 	}
-	targetCfg.JobImage = os.Getenv(config.EnvVarJobImage)
+	jobImage := os.Getenv(config.EnvVarJobImage)
 	if targetCfg.JobImage != "" {
+		targetCfg.JobImage = jobImage
 		targetCfg.detachRunner, _ = strconv.ParseBool(os.Getenv(config.EnvVarDetachRunner))
 	} else {
 		targetCfg.InsideK8s, _ = strconv.ParseBool(os.Getenv(config.EnvVarInsideK8s))

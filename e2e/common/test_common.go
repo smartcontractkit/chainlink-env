@@ -2,7 +2,6 @@ package common
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -10,7 +9,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/chaos"
 	"github.com/smartcontractkit/chainlink-env/client"
-	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
@@ -88,13 +86,14 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 }
 
 func TestConnectWithoutManifest(t *testing.T) {
-	// this test can't run in parallel because it sets env variables
-	// deploy environment and not remote runner so we have an environment up to put a remote runner into
-	remoteRunnerJobImage := os.Getenv(config.EnvVarJobImage)
-	t.Setenv(config.EnvVarJobImage, "")
+	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
-	e := environment.New(testEnvConfig).
-		AddHelm(ethereum.New(nil)).
+	e := environment.New(testEnvConfig)
+
+	// deploy environment and not remote runner so we have an environment up to put a remote runner into
+	remoteRunnerJobImage := e.Cfg.JobImage
+	e.Cfg.JobImage = ""
+	e.AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 1,
 		}))
@@ -102,7 +101,7 @@ func TestConnectWithoutManifest(t *testing.T) {
 	require.NoError(t, err)
 
 	// Now if we are running this test using a remote runner we need to set the job image
-	t.Setenv(config.EnvVarJobImage, remoteRunnerJobImage)
+	e.Cfg.JobImage = remoteRunnerJobImage
 	err = e.Run()
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
@@ -112,6 +111,7 @@ func TestConnectWithoutManifest(t *testing.T) {
 		assert.NoError(t, e.Shutdown())
 	})
 
+	// Now we can test without using a manifest update
 	testEnvConfig.NoManifestUpdate = true
 	testEnvConfig.Namespace = e.Cfg.Namespace
 	err = environment.New(testEnvConfig).
