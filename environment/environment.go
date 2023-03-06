@@ -95,7 +95,7 @@ type Config struct {
 	// UpdateWaitInterval an interval to wait for deployment update started
 	UpdateWaitInterval time.Duration
 	// fundReturnFailed the status of a fund return
-	fundReturnFailed *bool
+	fundReturnFailed bool
 	// Test the testing library current Test struct
 	Test *testing.T
 }
@@ -177,8 +177,7 @@ func New(cfg *Config) *Environment {
 	// and not in detached mode
 	// and not using an existing environment
 	if targetCfg.JobImage != "" && !targetCfg.detachRunner && !targetCfg.NoManifestUpdate {
-		f := false
-		targetCfg.fundReturnFailed = &f
+		targetCfg.fundReturnFailed = false
 		if targetCfg.Test != nil {
 			targetCfg.Test.Cleanup(func() {
 				err := e.Shutdown()
@@ -423,12 +422,12 @@ func (m *Environment) Run() error {
 			m.Cfg.Test.Log(message)
 			found := strings.Contains(message, FAILED_FUND_RETURN)
 			if found {
-				m.Cfg.fundReturnFailed = &found
+				m.Cfg.fundReturnFailed = true
 			}
 		}); err != nil {
 			return err
 		}
-		if *m.Cfg.fundReturnFailed {
+		if m.Cfg.fundReturnFailed {
 			return errors.New("failed to return funds in remote runner.")
 		}
 		m.Cfg.jobDeployed = true
@@ -627,10 +626,8 @@ func (m *Environment) SaveCoverage() error {
 // Shutdown environment, remove namespace
 func (m *Environment) Shutdown() error {
 	// don't shutdown if returning of funds failed
-	if m.Cfg.fundReturnFailed != nil {
-		if *m.Cfg.fundReturnFailed {
-			return nil
-		}
+	if m.Cfg.fundReturnFailed {
+		return nil
 	}
 
 	// don't shutdown if this is a test running remotely
