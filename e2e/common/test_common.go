@@ -88,42 +88,41 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 func TestConnectWithoutManifest(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
-	e := environment.New(testEnvConfig)
+	existingEnv := environment.New(testEnvConfig)
 
 	// deploy environment and not remote runner so we have an environment up to put a remote runner into
-	remoteRunnerJobImage := e.Cfg.JobImage
-	e.Cfg.JobImage = ""
-	e.AddHelm(ethereum.New(nil)).
+	existingEnv.Cfg.JobImage = ""
+	existingEnv.AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 1,
 		}))
-	err := e.Run()
+	err := existingEnv.Run()
 	require.NoError(t, err)
 
-	// Now if we are running this test using a remote runner we need to set the job image
-	e.Cfg.JobImage = remoteRunnerJobImage
-	err = e.Run()
+	// Now run an environment without a manifest which will do nothing for local or spin up the remote runner
+	testEnvConfig.NoManifestUpdate = true
+	testEnvConfig.Namespace = existingEnv.Cfg.Namespace
+	testEnv := environment.New(testEnvConfig)
+	err = testEnv.Run()
 	require.NoError(t, err)
-	if e.WillUseRemoteRunner() {
+	if testEnv.WillUseRemoteRunner() {
 		return
 	}
 	t.Cleanup(func() {
-		assert.NoError(t, e.Shutdown())
+		assert.NoError(t, testEnv.Shutdown())
 	})
 
 	// Now we can test without using a manifest update
-	testEnvConfig.NoManifestUpdate = true
-	testEnvConfig.Namespace = e.Cfg.Namespace
 	err = environment.New(testEnvConfig).
 		Run()
 	require.NoError(t, err)
 	connection := client.LocalConnection
-	if e.Cfg.InsideK8s {
+	if testEnv.Cfg.InsideK8s {
 		connection = client.RemoteConnection
 	}
-	url, err := e.Fwd.FindPort("chainlink-0:0", "node", "access").As(connection, client.HTTP)
+	url, err := testEnv.Fwd.FindPort("chainlink-0:0", "node", "access").As(connection, client.HTTP)
 	require.NoError(t, err)
-	urlGeth, err := e.Fwd.FindPort("geth:0", "geth-network", "http-rpc").As(connection, client.HTTP)
+	urlGeth, err := testEnv.Fwd.FindPort("geth:0", "geth-network", "http-rpc").As(connection, client.HTTP)
 	require.NoError(t, err)
 	r := resty.New()
 	res, err := r.R().Get(url)
