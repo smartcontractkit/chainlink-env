@@ -147,7 +147,7 @@ func New(cfg *Config) *Environment {
 		log.Info().Str("Namespace", targetCfg.Namespace).Msg("Creating new namespace")
 	}
 	jobImage := os.Getenv(config.EnvVarJobImage)
-	if targetCfg.JobImage != "" {
+	if jobImage != "" {
 		targetCfg.JobImage = jobImage
 		targetCfg.detachRunner, _ = strconv.ParseBool(os.Getenv(config.EnvVarDetachRunner))
 	} else {
@@ -414,6 +414,7 @@ func (m *Environment) Run() error {
 		}
 	}
 	if m.Cfg.JobImage != "" {
+		log.Info().Msg("Waiting for remote runner to complete")
 		// Do not wait for the job to complete if we are running something like a soak test in the remote runner
 		if m.Cfg.detachRunner {
 			return nil
