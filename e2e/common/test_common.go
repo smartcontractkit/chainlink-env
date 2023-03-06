@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -86,24 +87,37 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 }
 
 func TestConnectWithoutManifest(t *testing.T) {
-	t.Parallel()
+	existingEnvConfig := GetTestEnvConfig(t)
 	testEnvConfig := GetTestEnvConfig(t)
-	existingEnv := environment.New(testEnvConfig)
+	existingEnvAlreadySetupVar := "ENV_ALREADY_EXISTS"
+	var existingEnv *environment.Environment
 
-	// deploy environment and not remote runner so we have an environment up to put a remote runner into
-	existingEnv.Cfg.JobImage = ""
-	existingEnv.AddHelm(ethereum.New(nil)).
+	// only run this section if we don't already have an existing environment
+	// needed for remote runner based tests to prevent duplicate envs from being created
+	if os.Getenv(existingEnvAlreadySetupVar) == "" {
+		existingEnv = environment.New(existingEnvConfig)
+		// deploy environment to use as an existing one for the test
+		existingEnv.Cfg.JobImage = ""
+		existingEnv.AddHelm(ethereum.New(nil)).
+			AddHelm(chainlink.New(0, map[string]interface{}{
+				"replicas": 1,
+			}))
+		err := existingEnv.Run()
+		require.NoError(t, err)
+		// propagate the existing environment to the remote runner
+		t.Setenv(fmt.Sprintf("TEST_%s", existingEnvAlreadySetupVar), "true")
+		// set the namespace to the existing one for local runs
+		testEnvConfig.Namespace = existingEnv.Cfg.Namespace
+	}
+
+	// Now run an environment without a manifest like a normal test
+	testEnvConfig.NoManifestUpdate = true
+	testEnv := environment.New(testEnvConfig)
+	err := testEnv.AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 1,
-		}))
-	err := existingEnv.Run()
-	require.NoError(t, err)
-
-	// Now run an environment without a manifest which will do nothing for local or spin up the remote runner
-	testEnvConfig.NoManifestUpdate = true
-	testEnvConfig.Namespace = existingEnv.Cfg.Namespace
-	testEnv := environment.New(testEnvConfig)
-	err = testEnv.Run()
+		})).
+		Run()
 	require.NoError(t, err)
 	if testEnv.WillUseRemoteRunner() {
 		return
@@ -112,10 +126,6 @@ func TestConnectWithoutManifest(t *testing.T) {
 		assert.NoError(t, testEnv.Shutdown())
 	})
 
-	// Now we can test without using a manifest update
-	err = environment.New(testEnvConfig).
-		Run()
-	require.NoError(t, err)
 	connection := client.LocalConnection
 	if testEnv.Cfg.InsideK8s {
 		connection = client.RemoteConnection
