@@ -105,7 +105,7 @@ func TestConnectWithoutManifest(t *testing.T) {
 		err := existingEnv.Run()
 		require.NoError(t, err)
 		// propagate the existing environment to the remote runner
-		t.Setenv(fmt.Sprintf("TEST_%s", existingEnvAlreadySetupVar), "true")
+		t.Setenv(fmt.Sprintf("TEST_%s", existingEnvAlreadySetupVar), "abc")
 		// set the namespace to the existing one for local runs
 		testEnvConfig.Namespace = existingEnv.Cfg.Namespace
 	}
@@ -113,6 +113,8 @@ func TestConnectWithoutManifest(t *testing.T) {
 	// Now run an environment without a manifest like a normal test
 	testEnvConfig.NoManifestUpdate = true
 	testEnv := environment.New(testEnvConfig)
+	require.Equal(t, testEnv.Cfg.Namespace, existingEnv.Cfg.Namespace)
+	require.NotEmpty(t, testEnv.Cfg.JobImage)
 	err := testEnv.AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 1,
@@ -135,12 +137,15 @@ func TestConnectWithoutManifest(t *testing.T) {
 	urlGeth, err := testEnv.Fwd.FindPort("geth:0", "geth-network", "http-rpc").As(connection, client.HTTP)
 	require.NoError(t, err)
 	r := resty.New()
+	t.Log("getting", url)
 	res, err := r.R().Get(url)
 	require.NoError(t, err)
 	require.Equal(t, "200 OK", res.Status())
+	t.Log("getting", url)
 	res, err = r.R().Get(urlGeth)
 	require.NoError(t, err)
 	require.Equal(t, "200 OK", res.Status())
+	t.Log("done", url)
 }
 
 func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
