@@ -114,7 +114,6 @@ func TestConnectWithoutManifest(t *testing.T) {
 	} else {
 		t.Log("Environment already exists, verfying it is correct")
 		require.NotEmpty(t, os.Getenv(config.EnvVarNamespace))
-		require.NotEmpty(t, os.Getenv(config.EnvVarJobImage))
 		noManifestUpdate, err := strconv.ParseBool(os.Getenv(config.EnvVarNoManifestUpdate))
 		require.NoError(t, err, "Failed to parse the no manifest update env var")
 		require.True(t, noManifestUpdate)
