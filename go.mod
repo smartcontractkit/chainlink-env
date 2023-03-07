@@ -1,6 +1,6 @@
 module github.com/smartcontractkit/chainlink-env
 
-go 1.19
+go 1.20
 
 require (
 	github.com/aws/constructs-go/constructs/v10 v10.1.255
