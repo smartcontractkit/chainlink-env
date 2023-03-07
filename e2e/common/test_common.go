@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -10,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/chaos"
 	"github.com/smartcontractkit/chainlink-env/client"
+	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
@@ -96,6 +98,7 @@ func TestConnectWithoutManifest(t *testing.T) {
 	// needed for remote runner based tests to prevent duplicate envs from being created
 	if os.Getenv(existingEnvAlreadySetupVar) == "" {
 		existingEnv = environment.New(existingEnvConfig)
+		t.Log("Existing Env Namespace", existingEnv.Cfg.Namespace)
 		// deploy environment to use as an existing one for the test
 		existingEnv.Cfg.JobImage = ""
 		existingEnv.AddHelm(ethereum.New(nil)).
@@ -108,13 +111,19 @@ func TestConnectWithoutManifest(t *testing.T) {
 		t.Setenv(fmt.Sprintf("TEST_%s", existingEnvAlreadySetupVar), "abc")
 		// set the namespace to the existing one for local runs
 		testEnvConfig.Namespace = existingEnv.Cfg.Namespace
+	} else {
+		t.Log("Environment already exists, verfying it is correct")
+		require.NotEmpty(t, os.Getenv(config.EnvVarNamespace))
+		require.NotEmpty(t, os.Getenv(config.EnvVarJobImage))
+		noManifestUpdate, err := strconv.ParseBool(os.Getenv(config.EnvVarNoManifestUpdate))
+		require.NoError(t, err, "Failed to parse the no manifest update env var")
+		require.True(t, noManifestUpdate)
 	}
 
 	// Now run an environment without a manifest like a normal test
 	testEnvConfig.NoManifestUpdate = true
 	testEnv := environment.New(testEnvConfig)
-	require.Equal(t, testEnv.Cfg.Namespace, existingEnv.Cfg.Namespace)
-	require.NotEmpty(t, testEnv.Cfg.JobImage)
+	t.Log("Testing Env Namespace", testEnv.Cfg.Namespace)
 	err := testEnv.AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 1,
