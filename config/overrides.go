@@ -87,6 +87,14 @@ const (
 	EnvVarDetachRunnerUserDescription = "Should we detach the remote runner after starting a test using it"
 	EnvVarDetachRunnerExample         = "true"
 
+	EnvVarRemoteRunnerCpu                = "RR_CPU"
+	EnvVarRemoteRunnerCpuUserDescription = "The cpu limit and req for the remote runner"
+	EnvVarRemoteRunnerCpuExample         = "1000m"
+
+	EnvVarRemoteRunnerMem                = "RR_MEM"
+	EnvVarRemoteRunnerMemUserDescription = "The mem limit and req for the remote runner"
+	EnvVarRemoteRunnerMemExample         = "1024Mi"
+
 	EnvVarEVMKeys                = "EVM_KEYS"
 	EnvVarEVMKeysUserDescription = "The keys used to connect to the evm"
 	EnvVarEVMKeysExample         = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"

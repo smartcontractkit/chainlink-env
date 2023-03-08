@@ -2,6 +2,7 @@ package environment
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/smartcontractkit/chainlink-env/config"
@@ -138,12 +139,20 @@ func job(chart cdk8s.Chart, props *Props) {
 }
 
 func container(props *Props) *k8s.Container {
+	cpu := os.Getenv(config.EnvVarRemoteRunnerCpu)
+	if cpu == "" {
+		cpu = "1000m"
+	}
+	mem := os.Getenv(config.EnvVarRemoteRunnerMem)
+	if mem == "" {
+		mem = "1024Mi"
+	}
 	return &k8s.Container{
 		Name:            a.Str(fmt.Sprintf("%s-node", props.BaseName)),
 		Image:           a.Str(props.Image),
 		ImagePullPolicy: a.Str("Always"),
 		Env:             jobEnvVars(props),
-		Resources:       a.ContainerResources("1000m", "1024Mi", "1000m", "1024Mi"),
+		Resources:       a.ContainerResources(cpu, mem, cpu, mem),
 	}
 }
 
