@@ -95,7 +95,7 @@ type Config struct {
 	// UpdateWaitInterval an interval to wait for deployment update started
 	UpdateWaitInterval time.Duration
 	// fundReturnFailed the status of a fund return
-	fundReturnFailed *bool
+	fundReturnFailed bool
 	// Test the testing library current Test struct
 	Test *testing.T
 }
@@ -146,8 +146,9 @@ func New(cfg *Config) *Environment {
 		targetCfg.Namespace = fmt.Sprintf("%s-%s", targetCfg.NamespacePrefix, uuid.NewString()[0:5])
 		log.Info().Str("Namespace", targetCfg.Namespace).Msg("Creating new namespace")
 	}
-	targetCfg.JobImage = os.Getenv(config.EnvVarJobImage)
-	if targetCfg.JobImage != "" {
+	jobImage := os.Getenv(config.EnvVarJobImage)
+	if jobImage != "" {
+		targetCfg.JobImage = jobImage
 		targetCfg.detachRunner, _ = strconv.ParseBool(os.Getenv(config.EnvVarDetachRunner))
 	} else {
 		targetCfg.InsideK8s, _ = strconv.ParseBool(os.Getenv(config.EnvVarInsideK8s))
@@ -174,9 +175,9 @@ func New(cfg *Config) *Environment {
 
 	// setup test cleanup if this is using a remote runner
 	// and not in detached mode
-	if targetCfg.JobImage != "" && !targetCfg.detachRunner {
-		f := false
-		targetCfg.fundReturnFailed = &f
+	// and not using an existing environment
+	if targetCfg.JobImage != "" && !targetCfg.detachRunner && !targetCfg.NoManifestUpdate {
+		targetCfg.fundReturnFailed = false
 		if targetCfg.Test != nil {
 			targetCfg.Test.Cleanup(func() {
 				err := e.Shutdown()
@@ -386,7 +387,7 @@ func (m *Environment) Run() error {
 			TargetNamespace: m.Cfg.Namespace,
 			Labels:          nil,
 			Image:           m.Cfg.JobImage,
-			EnvVars:         getEnvVarsMap(m.Cfg.Test.Name()),
+			EnvVars:         m.getEnvVarsMap(),
 		}))
 	}
 	config.JSIIGlobalMu.Lock()
@@ -405,7 +406,7 @@ func (m *Environment) Run() error {
 		m.Cfg.NoManifestUpdate = mu
 	}
 	log.Info().Bool("ManifestUpdate", !m.Cfg.NoManifestUpdate).Msg("Update mode")
-	if !m.Cfg.NoManifestUpdate {
+	if !m.Cfg.NoManifestUpdate || m.Cfg.JobImage != "" {
 		if err := m.Deploy(m.CurrentManifest); err != nil {
 			log.Error().Err(err).Msg("Error deploying environment")
 			_ = m.Shutdown()
@@ -413,6 +414,7 @@ func (m *Environment) Run() error {
 		}
 	}
 	if m.Cfg.JobImage != "" {
+		log.Info().Msg("Waiting for remote runner to complete")
 		// Do not wait for the job to complete if we are running something like a soak test in the remote runner
 		if m.Cfg.detachRunner {
 			return nil
@@ -421,12 +423,12 @@ func (m *Environment) Run() error {
 			m.Cfg.Test.Log(message)
 			found := strings.Contains(message, FAILED_FUND_RETURN)
 			if found {
-				m.Cfg.fundReturnFailed = &found
+				m.Cfg.fundReturnFailed = true
 			}
 		}); err != nil {
 			return err
 		}
-		if *m.Cfg.fundReturnFailed {
+		if m.Cfg.fundReturnFailed {
 			return errors.New("failed to return funds in remote runner.")
 		}
 		m.Cfg.jobDeployed = true
@@ -625,10 +627,8 @@ func (m *Environment) SaveCoverage() error {
 // Shutdown environment, remove namespace
 func (m *Environment) Shutdown() error {
 	// don't shutdown if returning of funds failed
-	if m.Cfg.fundReturnFailed != nil {
-		if *m.Cfg.fundReturnFailed {
-			return nil
-		}
+	if m.Cfg.fundReturnFailed {
+		return nil
 	}
 
 	// don't shutdown if this is a test running remotely
@@ -670,13 +670,13 @@ func (m *Environment) WillUseRemoteRunner() bool {
 	return val != "" && m.Cfg.Test.Name() != ""
 }
 
-func getEnvVarsMap(testName string) map[string]string {
-	m := make(map[string]string)
+func (m *Environment) getEnvVarsMap() map[string]string {
+	env := make(map[string]string)
 	for _, e := range os.Environ() {
 		if i := strings.Index(e, "="); i >= 0 {
 			if strings.HasPrefix(e[:i], config.EnvVarPrefix) {
 				withoutPrefix := strings.Replace(e[:i], config.EnvVarPrefix, "", 1)
-				m[withoutPrefix] = e[i+1:]
+				env[withoutPrefix] = e[i+1:]
 			}
 		}
 	}
@@ -704,13 +704,14 @@ func getEnvVarsMap(testName string) map[string]string {
 		v, success := os.LookupEnv(k)
 		if success && len(v) > 0 {
 			log.Debug().Str(k, v).Msg("Forwarding Env Var")
-			m[k] = v
+			env[k] = v
 		}
 	}
 
 	// add test name
-	m["TEST_NAME"] = testName
-	m[config.EnvVarInsideK8s] = "true"
+	env["TEST_NAME"] = m.Cfg.Test.Name()
+	env[config.EnvVarInsideK8s] = "true"
+	env[config.EnvVarNoManifestUpdate] = strconv.FormatBool(m.Cfg.NoManifestUpdate)
 
-	return m
+	return env
 }

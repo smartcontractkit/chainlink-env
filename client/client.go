@@ -194,7 +194,7 @@ func (m *K8sClient) waitForPodsExist(ns string, expectedPodCount int) error {
 			exitErr = err2
 			return false, nil
 		}
-		if len(apps) == expectedPodCount {
+		if len(apps) >= expectedPodCount {
 			exitErr = nil
 			return true, nil
 		}

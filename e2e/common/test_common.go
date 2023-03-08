@@ -2,6 +2,8 @@ package common
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -9,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/chaos"
 	"github.com/smartcontractkit/chainlink-env/client"
+	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
@@ -86,42 +89,71 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 }
 
 func TestConnectWithoutManifest(t *testing.T) {
-	t.Parallel()
+	existingEnvConfig := GetTestEnvConfig(t)
 	testEnvConfig := GetTestEnvConfig(t)
-	e := environment.New(testEnvConfig).
-		AddHelm(ethereum.New(nil)).
+	existingEnvAlreadySetupVar := "ENV_ALREADY_EXISTS"
+	var existingEnv *environment.Environment
+
+	// only run this section if we don't already have an existing environment
+	// needed for remote runner based tests to prevent duplicate envs from being created
+	if os.Getenv(existingEnvAlreadySetupVar) == "" {
+		existingEnv = environment.New(existingEnvConfig)
+		t.Log("Existing Env Namespace", existingEnv.Cfg.Namespace)
+		// deploy environment to use as an existing one for the test
+		existingEnv.Cfg.JobImage = ""
+		existingEnv.AddHelm(ethereum.New(nil)).
+			AddHelm(chainlink.New(0, map[string]interface{}{
+				"replicas": 1,
+			}))
+		err := existingEnv.Run()
+		require.NoError(t, err)
+		// propagate the existing environment to the remote runner
+		t.Setenv(fmt.Sprintf("TEST_%s", existingEnvAlreadySetupVar), "abc")
+		// set the namespace to the existing one for local runs
+		testEnvConfig.Namespace = existingEnv.Cfg.Namespace
+	} else {
+		t.Log("Environment already exists, verfying it is correct")
+		require.NotEmpty(t, os.Getenv(config.EnvVarNamespace))
+		noManifestUpdate, err := strconv.ParseBool(os.Getenv(config.EnvVarNoManifestUpdate))
+		require.NoError(t, err, "Failed to parse the no manifest update env var")
+		require.True(t, noManifestUpdate)
+	}
+
+	// Now run an environment without a manifest like a normal test
+	testEnvConfig.NoManifestUpdate = true
+	testEnv := environment.New(testEnvConfig)
+	t.Log("Testing Env Namespace", testEnv.Cfg.Namespace)
+	err := testEnv.AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 1,
-		}))
-	err := e.Run()
+		})).
+		Run()
 	require.NoError(t, err)
-	if e.WillUseRemoteRunner() {
+	if testEnv.WillUseRemoteRunner() {
 		return
 	}
 	t.Cleanup(func() {
-		assert.NoError(t, e.Shutdown())
+		assert.NoError(t, testEnv.Shutdown())
 	})
 
-	testEnvConfig.NoManifestUpdate = true
-	testEnvConfig.Namespace = e.Cfg.Namespace
-	err = environment.New(testEnvConfig).
-		Run()
-	require.NoError(t, err)
 	connection := client.LocalConnection
-	if e.Cfg.InsideK8s {
+	if testEnv.Cfg.InsideK8s {
 		connection = client.RemoteConnection
 	}
-	url, err := e.Fwd.FindPort("chainlink-0:0", "node", "access").As(connection, client.HTTP)
+	url, err := testEnv.Fwd.FindPort("chainlink-0:0", "node", "access").As(connection, client.HTTP)
 	require.NoError(t, err)
-	urlGeth, err := e.Fwd.FindPort("geth:0", "geth-network", "http-rpc").As(connection, client.HTTP)
+	urlGeth, err := testEnv.Fwd.FindPort("geth:0", "geth-network", "http-rpc").As(connection, client.HTTP)
 	require.NoError(t, err)
 	r := resty.New()
+	t.Log("getting", url)
 	res, err := r.R().Get(url)
 	require.NoError(t, err)
 	require.Equal(t, "200 OK", res.Status())
+	t.Log("getting", url)
 	res, err = r.R().Get(urlGeth)
 	require.NoError(t, err)
 	require.Equal(t, "200 OK", res.Status())
+	t.Log("done", url)
 }
 
 func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
