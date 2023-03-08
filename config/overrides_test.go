@@ -1,7 +1,6 @@
 package config
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -51,10 +50,8 @@ func TestOverrideCodeEnv(t *testing.T) {
 				},
 			},
 		}
-		err := os.Setenv(EnvVarCLImage, "abc")
-		require.NoError(t, err)
-		err = os.Setenv(EnvVarCLTag, "def")
-		require.NoError(t, err)
+		t.Setenv(EnvVarCLImage, "abc")
+		t.Setenv(EnvVarCLTag, "def")
 		MustEnvOverrideVersion(&defaultCodeProps)
 		require.Equal(t, "abc", defaultCodeProps["chainlink"].(map[string]interface{})["image"].(map[string]interface{})["image"])
 		require.Equal(t, "def", defaultCodeProps["chainlink"].(map[string]interface{})["image"].(map[string]interface{})["version"])
