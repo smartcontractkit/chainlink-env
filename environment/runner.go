@@ -80,7 +80,6 @@ func role(chart cdk8s.Chart, props *Props) {
 						a.Str("storage.k8s.io"),
 						a.Str("policy"),
 						a.Str("chaos-mesh.org"),
-						a.Str("monitoring.coreos.com"),
 					},
 					Resources: &[]*string{
 						a.Str("*"),
