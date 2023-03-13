@@ -81,7 +81,7 @@ func NewVersioned(helmVersion string, props map[string]interface{}) environment.
 	config.MustMerge(&dp, props)
 	return Chart{
 		Name:    "mercury-server",
-		Path:    "chainlink-qa/mercury-server",
+		Path:    "infra-charts/mercury-server",
 		Values:  &dp,
 		Version: helmVersion,
 	}
