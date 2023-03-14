@@ -80,10 +80,24 @@ func TestRemoteRunnerOneSetupWithMultipeTests(t *testing.T) {
 
 	log.Info().Str("Test", "Before").Msg("Before Tests")
 	t.Run("do one", func(t *testing.T) {
+		t.Parallel()
+		test1EnvConfig := common.GetTestEnvConfig(t)
+		test1EnvConfig.Namespace = e.Cfg.Namespace
+		test1EnvConfig.NoManifestUpdate = true
+		e1 := presets.EVMMinimalLocal(test1EnvConfig)
+		err := e1.Run()
+		require.NoError(t, err)
 		log.Info().Str("Test", "One").Msg("Inside test")
 		time.Sleep(1 * time.Second)
 	})
 	t.Run("do two", func(t *testing.T) {
+		t.Parallel()
+		test2EnvConfig := common.GetTestEnvConfig(t)
+		test2EnvConfig.Namespace = e.Cfg.Namespace
+		test2EnvConfig.NoManifestUpdate = true
+		e2 := presets.EVMMinimalLocal(test2EnvConfig)
+		err := e2.Run()
+		require.NoError(t, err)
 		log.Info().Str("Test", "Two").Msg("Inside test")
 		time.Sleep(1 * time.Second)
 	})
