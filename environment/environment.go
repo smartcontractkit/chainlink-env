@@ -15,7 +15,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"github.com/stretchr/testify/require"
 
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
@@ -87,7 +86,7 @@ type Config struct {
 	// NoManifestUpdate is a flag to skip manifest updating when connecting
 	NoManifestUpdate bool
 	// DetachRunner should we detach the remote runner after starting the test
-	detachRunner bool
+	DetachRunner bool
 	// KeepConnection keeps connection until interrupted with a signal, useful when prototyping and debugging a new env
 	KeepConnection bool
 	// RemoveOnInterrupt automatically removes an environment on interrupt
@@ -96,8 +95,6 @@ type Config struct {
 	UpdateWaitInterval time.Duration
 	// fundReturnFailed the status of a fund return
 	fundReturnFailed bool
-	// Test the testing library current Test struct
-	Test *testing.T
 }
 
 func defaultEnvConfig() *Config {
@@ -149,7 +146,7 @@ func New(cfg *Config) *Environment {
 	jobImage := os.Getenv(config.EnvVarJobImage)
 	if jobImage != "" {
 		targetCfg.JobImage = jobImage
-		targetCfg.detachRunner, _ = strconv.ParseBool(os.Getenv(config.EnvVarDetachRunner))
+		targetCfg.DetachRunner, _ = strconv.ParseBool(os.Getenv(config.EnvVarDetachRunner))
 	} else {
 		targetCfg.InsideK8s, _ = strconv.ParseBool(os.Getenv(config.EnvVarInsideK8s))
 	}
@@ -172,19 +169,6 @@ func New(cfg *Config) *Environment {
 	defer config.JSIIGlobalMu.Unlock()
 	e.initApp()
 	e.Chaos = client.NewChaos(c, e.Cfg.Namespace)
-
-	// setup test cleanup if this is using a remote runner
-	// and not in detached mode
-	// and not using an existing environment
-	if targetCfg.JobImage != "" && !targetCfg.detachRunner && !targetCfg.NoManifestUpdate {
-		targetCfg.fundReturnFailed = false
-		if targetCfg.Test != nil {
-			targetCfg.Test.Cleanup(func() {
-				err := e.Shutdown()
-				require.NoError(targetCfg.Test, err)
-			})
-		}
-	}
 	return e
 }
 
@@ -376,18 +360,23 @@ func (m *Environment) Manifest() string {
 	return m.CurrentManifest
 }
 
-// Run deploys or connects to already created environment
 func (m *Environment) Run() error {
+	return m.RunTest(nil)
+}
+
+func (m *Environment) RunTest(test *testing.T) error {
 	if m.Cfg.jobDeployed {
 		return nil
 	}
 	if m.Cfg.JobImage != "" {
 		m.AddChart(NewRunner(&Props{
-			BaseName:        "remote-test-runner",
-			TargetNamespace: m.Cfg.Namespace,
-			Labels:          nil,
-			Image:           m.Cfg.JobImage,
-			EnvVars:         m.getEnvVarsMap(),
+			BaseName:         "remote-test-runner",
+			TargetNamespace:  m.Cfg.Namespace,
+			Labels:           nil,
+			Image:            m.Cfg.JobImage,
+			Test:             test,
+			Environment:      m,
+			fundReturnFailed: false,
 		}))
 	}
 	config.JSIIGlobalMu.Lock()
@@ -416,11 +405,11 @@ func (m *Environment) Run() error {
 	if m.Cfg.JobImage != "" {
 		log.Info().Msg("Waiting for remote runner to complete")
 		// Do not wait for the job to complete if we are running something like a soak test in the remote runner
-		if m.Cfg.detachRunner {
+		if m.Cfg.DetachRunner {
 			return nil
 		}
 		if err := m.Client.WaitForJob(m.Cfg.Namespace, "remote-test-runner", func(message string) {
-			m.Cfg.Test.Log(message)
+			test.Log(message)
 			found := strings.Contains(message, FAILED_FUND_RETURN)
 			if found {
 				m.Cfg.fundReturnFailed = true

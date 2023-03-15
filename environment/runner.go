@@ -3,11 +3,15 @@ package environment
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
+	"testing"
 
 	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
+	"github.com/stretchr/testify/require"
 )
 
 type Chart struct {
@@ -43,6 +47,7 @@ func (m Chart) ExportData(e *Environment) error {
 }
 
 func NewRunner(props *Props) func(root cdk8s.Chart) ConnectedChart {
+	setupShutdown(props)
 	return func(root cdk8s.Chart) ConnectedChart {
 		c := &Chart{
 			Props: props,
@@ -54,11 +59,13 @@ func NewRunner(props *Props) func(root cdk8s.Chart) ConnectedChart {
 }
 
 type Props struct {
-	BaseName        string
-	TargetNamespace string
-	Labels          *map[string]*string
-	Image           string
-	EnvVars         map[string]string
+	BaseName         string
+	TargetNamespace  string
+	Labels           *map[string]*string
+	Image            string
+	Test             *testing.T
+	Environment      *Environment
+	fundReturnFailed bool
 }
 
 func role(chart cdk8s.Chart, props *Props) {
@@ -160,8 +167,59 @@ func container(props *Props) *k8s.Container {
 func jobEnvVars(props *Props) *[]*k8s.EnvVar {
 	cdk8sVars := make([]*k8s.EnvVar, 0)
 	cdk8sVars = append(cdk8sVars, a.EnvVarStr(config.EnvVarNamespace, props.TargetNamespace))
-	for k, v := range props.EnvVars {
-		cdk8sVars = append(cdk8sVars, a.EnvVarStr(k, v))
+	cdk8sVars = append(cdk8sVars, a.EnvVarStr("TEST_NAME", props.Test.Name()))
+	cdk8sVars = append(cdk8sVars, a.EnvVarStr(config.EnvVarInsideK8s, "true"))
+	cdk8sVars = append(cdk8sVars, a.EnvVarStr(config.EnvVarNoManifestUpdate, strconv.FormatBool(props.Environment.Cfg.NoManifestUpdate)))
+	for _, e := range os.Environ() {
+		if i := strings.Index(e, "="); i >= 0 {
+			if strings.HasPrefix(e[:i], config.EnvVarPrefix) {
+				withoutPrefix := strings.Replace(e[:i], config.EnvVarPrefix, "", 1)
+				cdk8sVars = append(cdk8sVars, a.EnvVarStr(withoutPrefix, e[i+1:]))
+			}
+		}
 	}
+	// add important variables
+	lookups := []string{
+		config.EnvVarCLImage,
+		config.EnvVarCLTag,
+		config.EnvVarCLCommitSha,
+		config.EnvVarLogLevel,
+		config.EnvVarTestTrigger,
+		config.EnvVarToleration,
+		config.EnvVarSlackChannel,
+		config.EnvVarSlackKey,
+		config.EnvVarSlackUser,
+		config.EnvVarPyroscopeKey,
+		config.EnvVarPyroscopeEnvironment,
+		config.EnvVarPyroscopeServer,
+		config.EnvVarUser,
+		config.EnvVarNodeSelector,
+		config.EnvVarSelectedNetworks,
+		config.EnvVarDBURL,
+		config.EnvVarEVMKeys,
+	}
+	for _, k := range lookups {
+		v, success := os.LookupEnv(k)
+		if success && len(v) > 0 {
+			cdk8sVars = append(cdk8sVars, a.EnvVarStr(k, v))
+		}
+	}
+
 	return &cdk8sVars
+}
+
+func setupShutdown(props *Props) {
+	// setup test cleanup
+	// if not in detached mode
+	// and not using an existing environment
+	if !props.Environment.Cfg.DetachRunner && !props.Environment.Cfg.NoManifestUpdate {
+		if props.Test != nil {
+			props.Test.Cleanup(func() {
+				if props.fundReturnFailed {
+					err := props.Environment.Shutdown()
+					require.NoError(props.Test, err)
+				}
+			})
+		}
+	}
 }
