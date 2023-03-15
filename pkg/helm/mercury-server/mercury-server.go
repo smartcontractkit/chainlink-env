@@ -71,17 +71,14 @@ func defaultProps() map[string]interface{} {
 	return map[string]interface{}{}
 }
 
-func New(props map[string]interface{}) environment.ConnectedChart {
-	return NewVersioned("", props)
-}
-
 // NewVersioned enables choosing a specific helm chart version
-func NewVersioned(helmVersion string, props map[string]interface{}) environment.ConnectedChart {
+
+func New(path string, helmVersion string, props map[string]interface{}) environment.ConnectedChart {
 	dp := defaultProps()
 	config.MustMerge(&dp, props)
 	return Chart{
 		Name:    "mercury-server",
-		Path:    "chainlink-qa/mercury-server",
+		Path:    path,
 		Values:  &dp,
 		Version: helmVersion,
 	}
