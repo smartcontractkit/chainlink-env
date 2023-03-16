@@ -495,12 +495,18 @@ func (m *Environment) Deploy(manifest string) error {
 		time.Sleep(m.Cfg.UpdateWaitInterval)
 	}
 
-	expectedPodCount := m.findPodCountInDeploymentManifest()
-
-	if err := m.Client.WaitPodsReady(m.Cfg.Namespace, m.Cfg.ReadyCheckData, expectedPodCount); err != nil {
+	if err := m.WaitHealthy(); err != nil {
 		return err
 	}
 	return m.enumerateApps()
+}
+
+// WaitHealthy waits until all pods are running
+func (m *Environment) WaitHealthy() error {
+	if err := m.Client.WaitPodsReady(m.Cfg.Namespace, m.Cfg.ReadyCheckData, m.findPodCountInDeploymentManifest()); err != nil {
+		return err
+	}
+	return nil
 }
 
 // findPodsInDeploymentManifest finds all the pods we will be deploying
