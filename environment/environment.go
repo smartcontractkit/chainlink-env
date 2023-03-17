@@ -496,9 +496,10 @@ func (m *Environment) Deploy(manifest string) error {
 	}
 
 	expectedPodCount := m.findPodCountInDeploymentManifest()
-
-	if err := m.Client.WaitPodsReady(m.Cfg.Namespace, m.Cfg.ReadyCheckData, expectedPodCount); err != nil {
-		return err
+	if expectedPodCount > 0 {
+		if err := m.Client.WaitPodsReady(m.Cfg.Namespace, m.Cfg.ReadyCheckData, expectedPodCount); err != nil {
+			return err
+		}
 	}
 	return m.enumerateApps()
 }
