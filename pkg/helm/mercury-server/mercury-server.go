@@ -48,22 +48,36 @@ func (m Chart) GetValues() *map[string]interface{} {
 
 func (m Chart) ExportData(e *environment.Environment) error {
 	urls := make([]string, 0)
-	mercuryServerInternal, err := e.Fwd.FindPort("mercury-server:0", "mercury-server", "http").As(client.LocalConnection, client.HTTP)
+	httpLocal, err := e.Fwd.FindPort("mercury-server:0", "mercury-server", "http").As(client.LocalConnection, client.HTTP)
 	if err != nil {
 		return err
 	}
-	mercuryServerRemote, err := e.Fwd.FindPort("mercury-server:0", "mercury-server", "http").As(client.RemoteConnection, client.HTTP)
+	httpRemote, err := e.Fwd.FindPort("mercury-server:0", "mercury-server", "http").As(client.RemoteConnection, client.HTTP)
+	if err != nil {
+		return err
+	}
+	wsrpcLocal, err := e.Fwd.FindPort("mercury-server:0", "mercury-server", "ws-rpc").As(client.LocalConnection, client.WSS)
+	if err != nil {
+		return err
+	}
+	wsrpcRemote, err := e.Fwd.FindPort("mercury-server:0", "mercury-server", "ws-rpc").As(client.RemoteConnection, client.WSS)
 	if err != nil {
 		return err
 	}
 	if e.Cfg.InsideK8s {
-		urls = append(urls, mercuryServerInternal, mercuryServerInternal)
+		urls = append(urls, httpLocal, httpLocal)
+		urls = append(urls, wsrpcLocal, wsrpcLocal)
 	} else {
-		urls = append(urls, mercuryServerRemote, mercuryServerInternal)
+		urls = append(urls, httpRemote, httpLocal)
+		urls = append(urls, wsrpcRemote, wsrpcLocal)
+
 	}
 	e.URLs[URLsKey] = urls
-	log.Info().Str("URL", mercuryServerInternal).Msg("mercury-server local connection")
-	log.Info().Str("URL", mercuryServerRemote).Msg("mercury-server remote connection")
+	log.Info().Str("URL", httpLocal).Msg("mercury-server local connection")
+	log.Info().Str("URL", httpRemote).Msg("mercury-server remote connection")
+	log.Info().Str("URL", wsrpcLocal).Msg("mercury-server wsrpc local connection")
+	log.Info().Str("URL", wsrpcRemote).Msg("mercury-server wsrpc remote connection")
+
 	return nil
 }
 
