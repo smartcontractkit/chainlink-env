@@ -64,12 +64,22 @@ func (m Chart) ExportData(e *environment.Environment) error {
 	if err != nil {
 		return err
 	}
+	dbLocal, err := e.Fwd.FindPort("mercury-server-db:0", "postgresql", "tcp-postgresql").As(client.LocalConnection, client.POSTGRESQL)
+	if err != nil {
+		return err
+	}
+	dbRemote, err := e.Fwd.FindPort("mercury-server-db:0", "postgresql", "tcp-postgresql").As(client.RemoteConnection, client.POSTGRESQL)
+	if err != nil {
+		return err
+	}
 	if e.Cfg.InsideK8s {
 		urls = append(urls, httpLocal, httpLocal)
 		urls = append(urls, wsrpcLocal, wsrpcLocal)
+		urls = append(urls, dbLocal, dbLocal)
 	} else {
 		urls = append(urls, httpRemote, httpLocal)
 		urls = append(urls, wsrpcRemote, wsrpcLocal)
+		urls = append(urls, dbRemote, dbLocal)
 
 	}
 	e.URLs[URLsKey] = urls
@@ -77,6 +87,8 @@ func (m Chart) ExportData(e *environment.Environment) error {
 	log.Info().Str("URL", httpRemote).Msg("mercury-server remote connection")
 	log.Info().Str("URL", wsrpcLocal).Msg("mercury-server wsrpc local connection")
 	log.Info().Str("URL", wsrpcRemote).Msg("mercury-server wsrpc remote connection")
+	log.Info().Str("URL", dbLocal).Msg("mercury-server-db local connection")
+	log.Info().Str("URL", dbRemote).Msg("mercury-server-db remote connection")
 
 	return nil
 }
