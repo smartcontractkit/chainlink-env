@@ -194,7 +194,11 @@ func (m *Environment) initApp() {
 		YamlOutputType: cdk8s.YamlOutputType_FILE_PER_APP,
 	})
 	m.Cfg.Labels = append(m.Cfg.Labels, "generatedBy=cdk8s")
-	m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("owner=%s", os.Getenv(config.EnvVarUser)))
+	owner := os.Getenv(config.EnvVarUser)
+	if owner == "" {
+		panic(fmt.Sprintf("missing owner environment variable, please set %s to your name or if you are seeing this in CI please set it to ${{ github.actor }}", config.EnvVarUser))
+	}
+	m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("owner=%s", owner))
 
 	if os.Getenv(config.EnvVarCLCommitSha) != "" {
 		m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("commit=%s", os.Getenv(config.EnvVarCLCommitSha)))
