@@ -196,7 +196,7 @@ func (m *Environment) initApp() {
 	m.Cfg.Labels = append(m.Cfg.Labels, "generatedBy=cdk8s")
 	owner := os.Getenv(config.EnvVarUser)
 	if owner == "" {
-		panic(fmt.Sprintf("missing owner environment variable, please set %s to your name or if you are seeing this in CI please set it to ${{ github.actor }}", config.EnvVarUser))
+		log.Fatal().Str(config.EnvVarUser, owner).Msg(fmt.Sprintf("missing owner environment variable, please set %s to your name or if you are seeing this in CI please set it to ${{ github.actor }}", config.EnvVarUser))
 	}
 	m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("owner=%s", owner))
 
