@@ -26,6 +26,7 @@ const (
 	HTTP
 	// HTTPS : Hypertext Transfer Protocol Secure
 	HTTPS
+	POSTGRESQL
 )
 
 // URLConverter converts ports to URLs
@@ -64,6 +65,8 @@ func (m *URLConverter) As(conn ConnectionMode, proto Protocol) (string, error) {
 		return fmt.Sprintf("ws://%s:%d/ws", host, port), nil
 	case WSS:
 		return fmt.Sprintf("wss://%s:%d", host, port), nil
+	case POSTGRESQL:
+		return fmt.Sprintf("postgresql://%s:%d", host, port), nil
 	default:
 		return "", errors.New("unknown protocol conversion type")
 	}
