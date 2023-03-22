@@ -112,7 +112,7 @@ func EVMSoak(config *environment.Config) *environment.Environment {
 			"replicas": 5,
 			"db": map[string]interface{}{
 				"stateful": true,
-				"capacity": "30Gi",
+				"capacity": "1Gi",
 				"resources": map[string]interface{}{
 					"requests": map[string]interface{}{
 						"cpu":    "250m",
