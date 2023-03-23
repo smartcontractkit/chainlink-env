@@ -65,3 +65,7 @@ func Test5NodesPlus2MiningGethsReorgEnv(t *testing.T) {
 func TestWithChaos(t *testing.T) {
 	common.TestWithChaos(t)
 }
+
+func TestEmptyEnvironmentStartup(t *testing.T) {
+	common.TestEmptyEnvironmentStartup(t)
+}

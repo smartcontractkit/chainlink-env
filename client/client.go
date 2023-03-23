@@ -214,6 +214,11 @@ func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData, expectedPodCou
 		return err
 	}
 
+	// short circuit if there are no pods to wait for
+	if expectedPodCount == 0 {
+		return nil
+	}
+
 	// Wait for pods to be ready
 	timeout := time.NewTimer(rcd.Timeout)
 	defer timeout.Stop()
