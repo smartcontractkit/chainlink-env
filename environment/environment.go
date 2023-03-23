@@ -30,6 +30,11 @@ const (
 	FAILED_FUND_RETURN string = "FAILED_FUND_RETURN"
 )
 
+const (
+	ErrInvalidOCI string = "OCI chart url should be in format oci://$ECR_URL/$ECR_REGISTRY_NAME/$CHART_NAME, was %s"
+	ErrOCIPull    string = "failed to pull OCI repo: %s"
+)
+
 var (
 	defaultAnnotations = map[string]*string{"prometheus.io/scrape": a.Str("true")}
 )
@@ -311,14 +316,36 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	if chart.GetVersion() != "" {
 		helmFlags = append(helmFlags, a.Str("--version"), a.Str(chart.GetVersion()))
 	}
+	chartPath, err := m.getChartPath(chart)
+	if err != nil {
+		panic(err)
+	}
 	cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
-		Chart:       a.Str(chart.GetPath()),
+		Chart:       a.Str(chartPath),
 		HelmFlags:   &helmFlags,
 		ReleaseName: a.Str(chart.GetName()),
 		Values:      values,
 	})
 	m.Charts = append(m.Charts, chart)
 	return m
+}
+
+// getChartPath handles working with OCI format repositories
+// https://helm.sh/docs/topics/registries/
+// API is not compatible between helm repos and OCI repos, so we download and untar the chart
+func (m *Environment) getChartPath(chart ConnectedChart) (string, error) {
+	if !strings.HasPrefix(chart.GetPath(), "oci") {
+		return chart.GetPath(), nil
+	}
+	cp := strings.Split(chart.GetPath(), "/")
+	if len(cp) != 5 {
+		return "", fmt.Errorf(ErrInvalidOCI, chart.GetPath())
+	}
+	chartDir := uuid.NewString()
+	if err := client.ExecCmd(fmt.Sprintf("helm pull %s --untar --untardir %s", chart.GetPath(), chartDir)); err != nil {
+		return "", fmt.Errorf(ErrOCIPull, chart.GetPath())
+	}
+	return fmt.Sprintf("%s/%s/", chartDir, cp[len(cp)-1]), nil
 }
 
 // PrintExportData prints export data
