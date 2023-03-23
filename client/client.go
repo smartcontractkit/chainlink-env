@@ -214,11 +214,6 @@ func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData, expectedPodCou
 		return err
 	}
 
-	// short circuit if there are no pods to wait for
-	if expectedPodCount == 0 {
-		return nil
-	}
-
 	// Wait for pods to be ready
 	timeout := time.NewTimer(rcd.Timeout)
 	defer timeout.Stop()
@@ -232,7 +227,7 @@ func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData, expectedPodCou
 			if err != nil {
 				return err
 			}
-			if len(podList.Items) == 0 {
+			if len(podList.Items) == 0 && expectedPodCount > 0 {
 				log.Debug().
 					Str("Namespace", ns).
 					Str("Selector", rcd.ReadinessProbeCheckSelector).
