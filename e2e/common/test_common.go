@@ -301,3 +301,17 @@ func TestWithChaos(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "200 OK", res.Status())
 }
+
+func TestEmptyEnvironmentStartup(t *testing.T) {
+	t.Parallel()
+	testEnvConfig := GetTestEnvConfig(t)
+	e := environment.New(testEnvConfig)
+	err := e.Run()
+	require.NoError(t, err)
+	if e.WillUseRemoteRunner() {
+		return
+	}
+	t.Cleanup(func() {
+		assert.NoError(t, e.Shutdown())
+	})
+}

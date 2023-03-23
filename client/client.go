@@ -227,7 +227,7 @@ func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData, expectedPodCou
 			if err != nil {
 				return err
 			}
-			if len(podList.Items) == 0 {
+			if len(podList.Items) == 0 && expectedPodCount > 0 {
 				log.Debug().
 					Str("Namespace", ns).
 					Str("Selector", rcd.ReadinessProbeCheckSelector).

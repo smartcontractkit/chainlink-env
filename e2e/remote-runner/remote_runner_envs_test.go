@@ -131,3 +131,7 @@ func TestRemoteRunnerOneSetupWithMultipeTests(t *testing.T) {
 
 	log.Info().Str("Test", "After").Msg("After Tests")
 }
+
+func TestEmptyEnvironmentStartup(t *testing.T) {
+	common.TestEmptyEnvironmentStartup(t)
+}
