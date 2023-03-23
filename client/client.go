@@ -213,7 +213,9 @@ func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData, expectedPodCou
 	if err != nil {
 		return err
 	}
-
+	if rcd.ReadinessProbeCheckSelector == "" {
+		return nil
+	}
 	// Wait for pods to be ready
 	timeout := time.NewTimer(rcd.Timeout)
 	defer timeout.Stop()
