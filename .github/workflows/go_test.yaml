@@ -11,5 +11,5 @@ jobs:
         with:
           go-version-file: "go.mod"
           check-latest: true
-      - name: Test
+      - name: Test config
         run: make test
