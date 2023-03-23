@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
@@ -29,7 +30,7 @@ func main() {
 			},
 			"db": map[string]interface{}{
 				"stateful": "true",
-				"capacity": "5Gi",
+				"capacity": "1Gi",
 			},
 		})).
 		AddHelm(chainlink.New(1,
