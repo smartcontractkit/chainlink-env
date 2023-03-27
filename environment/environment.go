@@ -534,6 +534,11 @@ func (m *Environment) Deploy(manifest string) error {
 	return m.enumerateApps()
 }
 
+// RolloutStatefulSets applies "rollout statefulset" to all existing statefulsets in our namespace
+func (m *Environment) RolloutStatefulSets() error {
+	return m.Client.RolloutStatefulSets(m.Cfg.Namespace)
+}
+
 // findPodsInDeploymentManifest finds all the pods we will be deploying
 func (m *Environment) findPodCountInDeploymentManifest() int {
 	podCount := 0

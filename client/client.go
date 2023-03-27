@@ -275,6 +275,23 @@ func (m *K8sClient) RemoveNamespace(namespace string) error {
 	return nil
 }
 
+// RolloutStatefulSets applies "rollout statefulset" to all existing statefulsets in that namespace
+func (m *K8sClient) RolloutStatefulSets(namespace string) error {
+	stsClient := m.ClientSet.AppsV1().StatefulSets(namespace)
+	sts, err := stsClient.List(context.Background(), metaV1.ListOptions{})
+	if err != nil {
+		return err
+	}
+	for _, s := range sts.Items {
+		cmd := fmt.Sprintf("kubectl rollout restart statefulset %s --namespace %s", s.Name, namespace)
+		log.Info().Str("Command", cmd).Msg("Applying StatefulSet rollout")
+		if err := ExecCmd(cmd); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // ReadyCheckData data to check if selected pods are running and all containers are ready ( readiness check ) are ready
 type ReadyCheckData struct {
 	ReadinessProbeCheckSelector string
