@@ -56,11 +56,11 @@ func (m Chart) ExportData(e *environment.Environment) error {
 	if err != nil {
 		return err
 	}
-	wsrpcLocal, err := e.Fwd.FindPort("mercury-server:0", "mercury-server", "ws-rpc").As(client.LocalConnection, client.WSS)
+	wsrpcLocal, err := e.Fwd.FindPort("mercury-server:0", "mercury-server", "wsrpc").As(client.LocalConnection, client.WSS)
 	if err != nil {
 		return err
 	}
-	wsrpcRemote, err := e.Fwd.FindPort("mercury-server:0", "mercury-server", "ws-rpc").As(client.RemoteConnection, client.WSS)
+	wsrpcRemote, err := e.Fwd.FindPort("mercury-server:0", "mercury-server", "wsrpc").As(client.RemoteConnection, client.WSS)
 	if err != nil {
 		return err
 	}
