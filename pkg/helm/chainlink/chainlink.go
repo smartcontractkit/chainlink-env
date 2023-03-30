@@ -120,6 +120,10 @@ func defaultProps() map[string]any {
 			},
 		},
 		"db": map[string]any{
+			"image": map[string]any{
+				"image":   "795953128386.dkr.ecr.us-west-2.amazonaws.com/postgres",
+				"version": "11.15",
+			},
 			"stateful": false,
 			"capacity": "1Gi",
 			"resources": map[string]any{

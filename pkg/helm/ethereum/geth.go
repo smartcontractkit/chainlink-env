@@ -97,7 +97,7 @@ func defaultProps() *Props {
 			"replicas": "1",
 			"geth": map[string]interface{}{
 				"image": map[string]interface{}{
-					"image":   "ethereum/client-go",
+					"image":   "795953128386.dkr.ecr.us-west-2.amazonaws.com/ethereum/client-go",
 					"version": "v1.10.25",
 				},
 			},
