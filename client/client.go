@@ -292,6 +292,12 @@ func (m *K8sClient) RolloutStatefulSets(namespace string) error {
 	return nil
 }
 
+func (m *K8sClient) RolloutRestartBySelector(namespace string, resource string, selector string) error {
+	cmd := fmt.Sprintf("kubectl --namespace %s rollout restart -l %s %s", namespace, selector, resource)
+	log.Info().Str("Command", cmd).Msg("rollout restart by selector")
+	return ExecCmd(cmd)
+}
+
 // ReadyCheckData data to check if selected pods are running and all containers are ready ( readiness check ) are ready
 type ReadyCheckData struct {
 	ReadinessProbeCheckSelector string

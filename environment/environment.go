@@ -407,6 +407,12 @@ func (m *Environment) Manifest() string {
 	return m.CurrentManifest
 }
 
+func (m *Environment) UpdateManifest() {
+	config.JSIIGlobalMu.Lock()
+	m.CurrentManifest = *m.App.SynthYaml()
+	config.JSIIGlobalMu.Unlock()
+}
+
 // Run deploys or connects to already created environment
 func (m *Environment) Run() error {
 	if m.Cfg.jobDeployed {
@@ -421,9 +427,7 @@ func (m *Environment) Run() error {
 			EnvVars:         m.getEnvVarsMap(),
 		}))
 	}
-	config.JSIIGlobalMu.Lock()
-	m.CurrentManifest = *m.App.SynthYaml()
-	config.JSIIGlobalMu.Unlock()
+	m.UpdateManifest()
 	if m.Cfg.DryRun {
 		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
 		return nil
@@ -438,7 +442,7 @@ func (m *Environment) Run() error {
 	}
 	log.Info().Bool("ManifestUpdate", !m.Cfg.NoManifestUpdate).Msg("Update mode")
 	if !m.Cfg.NoManifestUpdate || m.Cfg.JobImage != "" {
-		if err := m.Deploy(m.CurrentManifest); err != nil {
+		if err := m.Deploy(); err != nil {
 			log.Error().Err(err).Msg("Error deploying environment")
 			_ = m.Shutdown()
 			return err
@@ -510,16 +514,17 @@ func (m *Environment) enumerateApps() error {
 	return nil
 }
 
-// Deploy deploy synthesized manifest and check logs for readiness
-func (m *Environment) Deploy(manifest string) error {
+// Deploy deploy current manifest and check logs for readiness
+func (m *Environment) Deploy() error {
 	log.Info().Str("Namespace", m.Cfg.Namespace).Msg("Deploying namespace")
+
 	if m.Cfg.DryRun {
-		if err := m.Client.DryRun(manifest); err != nil {
+		if err := m.Client.DryRun(m.CurrentManifest); err != nil {
 			return err
 		}
 		return nil
 	}
-	if err := m.Client.Apply(manifest); err != nil {
+	if err := m.Client.Apply(m.CurrentManifest); err != nil {
 		return err
 	}
 	if int64(m.Cfg.UpdateWaitInterval) != 0 {
