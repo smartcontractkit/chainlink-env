@@ -2,6 +2,7 @@ package blockscout
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/rs/zerolog/log"
@@ -125,9 +126,14 @@ func service(chart cdk8s.Chart, vars vars) {
 }
 
 func postgresContainer(p vars) *k8s.Container {
+	internalRepo := os.Getenv(config.EnvVarInternalDockerRepo)
+	postgresRepo := "postgres"
+	if internalRepo != "" {
+		postgresRepo = fmt.Sprintf("%s/postgres", internalRepo)
+	}
 	return &k8s.Container{
 		Name:  a.Str(fmt.Sprintf("%s-db", p.BaseName)),
-		Image: a.Str("postgres:13.6"),
+		Image: a.Str(fmt.Sprintf("%s:13.6", postgresRepo)),
 		Ports: &[]*k8s.ContainerPort{
 			{
 				Name:          a.Str("postgres"),
@@ -183,9 +189,14 @@ func deployment(chart cdk8s.Chart, vars vars) {
 }
 
 func container(vars vars) *k8s.Container {
+	internalRepo := os.Getenv(config.EnvVarInternalDockerRepo)
+	blockscoutRepo := "f4hrenh9it/blockscout"
+	if internalRepo != "" {
+		blockscoutRepo = fmt.Sprintf("%s/blockscout", internalRepo)
+	}
 	return &k8s.Container{
 		Name:            a.Str(fmt.Sprintf("%s-node", vars.BaseName)),
-		Image:           a.Str("f4hrenh9it/blockscout:v1"),
+		Image:           a.Str(fmt.Sprintf("%s:v1", blockscoutRepo)),
 		ImagePullPolicy: a.Str("Always"),
 		Command:         &[]*string{a.Str(`/bin/bash`)},
 		Args: &[]*string{
