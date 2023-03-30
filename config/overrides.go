@@ -98,6 +98,10 @@ const (
 	EnvVarEVMKeys                = "EVM_KEYS"
 	EnvVarEVMKeysUserDescription = "The keys used to connect to the evm"
 	EnvVarEVMKeysExample         = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+	EnvVarInternalDockerRepo            = "INTERNAL_DOCKER_REPO"
+	EnvVarInternalDockerRepoDescription = "Use internal docker repository for some images"
+	EnvVarInternalDockerRepoExample     = "public.ecr.aws"
 )
 
 var (

@@ -2,6 +2,7 @@ package reorg
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/rs/zerolog/log"
 
@@ -111,6 +112,13 @@ func (m Chart) ExportData(e *environment.Environment) error {
 }
 
 func defaultProps() *Props {
+	internalRepo := os.Getenv(config.EnvVarInternalDockerRepo)
+	gethRepo := "ethereum/client-go"
+	bootnodeRepo := "jpoon/bootnode-registrar"
+	if internalRepo != "" {
+		gethRepo = fmt.Sprintf("%s/ethereum/client-go", internalRepo)
+		bootnodeRepo = fmt.Sprintf("%s/jpoon/bootnode-registrar", internalRepo)
+	}
 	return &Props{
 		NetworkName: "geth",
 		NetworkType: "geth-reorg",
@@ -119,20 +127,20 @@ func defaultProps() *Props {
 			"bootnode": map[string]interface{}{
 				"replicas": "2",
 				"image": map[string]interface{}{
-					"repository": "ethereum/client-go",
+					"repository": gethRepo,
 					"tag":        "alltools-v1.10.25",
 				},
 			},
 			"bootnodeRegistrar": map[string]interface{}{
 				"replicas": "1",
 				"image": map[string]interface{}{
-					"repository": "jpoon/bootnode-registrar",
+					"repository": bootnodeRepo,
 					"tag":        "v1.0.0",
 				},
 			},
 			"geth": map[string]interface{}{
 				"image": map[string]interface{}{
-					"repository": "ethereum/client-go",
+					"repository": gethRepo,
 					"tag":        "v1.10.25",
 				},
 				"tx": map[string]interface{}{

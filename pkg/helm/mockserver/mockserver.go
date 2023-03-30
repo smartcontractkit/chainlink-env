@@ -1,6 +1,9 @@
 package mockserver
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
@@ -68,6 +71,12 @@ func (m Chart) ExportData(e *environment.Environment) error {
 }
 
 func defaultProps() map[string]interface{} {
+	internalRepo := os.Getenv(config.EnvVarInternalDockerRepo)
+	mockserverRepo := "mockserver"
+	if internalRepo != "" {
+		mockserverRepo = fmt.Sprintf("%s/mockserver", internalRepo)
+	}
+
 	return map[string]interface{}{
 		"replicaCount": "1",
 		"service": map[string]interface{}{
@@ -92,7 +101,7 @@ func defaultProps() map[string]interface{} {
 			},
 		},
 		"image": map[string]interface{}{
-			"repository": "mockserver",
+			"repository": mockserverRepo,
 			"snapshot":   false,
 			"pullPolicy": "IfNotPresent",
 		},

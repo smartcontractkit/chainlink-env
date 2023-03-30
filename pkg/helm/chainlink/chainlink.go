@@ -91,6 +91,13 @@ func (m Chart) ExportData(e *environment.Environment) error {
 }
 
 func defaultProps() map[string]any {
+	internalRepo := os.Getenv(config.EnvVarInternalDockerRepo)
+	chainlinkImage := "public.ecr.aws/chainlink/chainlink"
+	postgresImage := "postgres"
+	if internalRepo != "" {
+		chainlinkImage = fmt.Sprintf("%s/chainlink", internalRepo)
+		postgresImage = fmt.Sprintf("%s/postgres", internalRepo)
+	}
 	env := map[string]any{
 		"CL_DATABASE_URL": "postgresql://postgres:verylongdatabasepassword@0.0.0.0/chainlink?sslmode=disable",
 	}
@@ -103,7 +110,7 @@ func defaultProps() map[string]any {
 		"env":      env,
 		"chainlink": map[string]any{
 			"image": map[string]any{
-				"image":   "795953128386.dkr.ecr.us-west-2.amazonaws.com/chainlink",
+				"image":   chainlinkImage,
 				"version": "develop",
 			},
 			"web_port": "6688",
@@ -121,7 +128,7 @@ func defaultProps() map[string]any {
 		},
 		"db": map[string]any{
 			"image": map[string]any{
-				"image":   "795953128386.dkr.ecr.us-west-2.amazonaws.com/postgres",
+				"image":   postgresImage,
 				"version": "11.15",
 			},
 			"stateful": false,

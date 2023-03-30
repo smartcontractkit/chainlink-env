@@ -1,6 +1,9 @@
 package ethereum
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/rs/zerolog/log"
 
 	"github.com/smartcontractkit/chainlink-env/client"
@@ -90,6 +93,11 @@ func (m Chart) ExportData(e *environment.Environment) error {
 }
 
 func defaultProps() *Props {
+	internalRepo := os.Getenv(config.EnvVarInternalDockerRepo)
+	gethImage := "ethereum/client-go"
+	if internalRepo != "" {
+		gethImage = fmt.Sprintf("%s/ethereum/client-go", internalRepo)
+	}
 	return &Props{
 		NetworkName: "Simulated Geth",
 		Simulated:   true,
@@ -97,7 +105,7 @@ func defaultProps() *Props {
 			"replicas": "1",
 			"geth": map[string]interface{}{
 				"image": map[string]interface{}{
-					"image":   "795953128386.dkr.ecr.us-west-2.amazonaws.com/ethereum/client-go",
+					"image":   gethImage,
 					"version": "v1.10.25",
 				},
 			},
