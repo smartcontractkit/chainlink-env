@@ -37,8 +37,9 @@ const (
 
 var (
 	defaultAnnotations = map[string]*string{
-		"prometheus.io/scrape":                           a.Str("true"),
-		"backyards.banzaicloud.io/image-registry-access": a.Str("true"),
+		"prometheus.io/scrape":                             a.Str("true"),
+		"backyards.banzaicloud.io/image-registry-access":   a.Str("true"),
+		"backyards.banzaicloud.io/public-dockerhub-access": a.Str("true"),
 	}
 )
 
