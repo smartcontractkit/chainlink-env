@@ -36,7 +36,10 @@ const (
 )
 
 var (
-	defaultAnnotations = map[string]*string{"prometheus.io/scrape": a.Str("true")}
+	defaultAnnotations = map[string]*string{
+		"prometheus.io/scrape":                           a.Str("true"),
+		"backyards.banzaicloud.io/image-registry-access": a.Str("true"),
+	}
 )
 
 // ConnectedChart interface to interact both with cdk8s apps and helm charts
@@ -198,7 +201,7 @@ func (m *Environment) initApp() {
 	m.App = cdk8s.NewApp(&cdk8s.AppProps{
 		YamlOutputType: cdk8s.YamlOutputType_FILE_PER_APP,
 	})
-	m.Cfg.Labels = append(m.Cfg.Labels, "generatedBy=cdk8s")
+	m.Cfg.Labels = append(m.Cfg.Labels, "app.kubernetes.io/managed-by=cdk8s")
 	owner := os.Getenv(config.EnvVarUser)
 	if owner == "" {
 		log.Fatal().Str(config.EnvVarUser, owner).Msg(fmt.Sprintf("missing owner environment variable, please set %s to your name or if you are seeing this in CI please set it to ${{ github.actor }}", config.EnvVarUser))
