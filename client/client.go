@@ -292,6 +292,7 @@ func (m *K8sClient) RolloutStatefulSets(namespace string) error {
 	return nil
 }
 
+// RolloutRestartBySelector rollouts and restarts object by selector
 func (m *K8sClient) RolloutRestartBySelector(namespace string, resource string, selector string) error {
 	cmd := fmt.Sprintf("kubectl --namespace %s rollout restart -l %s %s", namespace, selector, resource)
 	log.Info().Str("Command", cmd).Msg("rollout restart by selector")

@@ -407,6 +407,7 @@ func (m *Environment) Manifest() string {
 	return m.CurrentManifest
 }
 
+// Update current manifest based on the cdk8s app state
 func (m *Environment) UpdateManifest() {
 	config.JSIIGlobalMu.Lock()
 	m.CurrentManifest = *m.App.SynthYaml()
