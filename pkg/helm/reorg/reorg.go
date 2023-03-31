@@ -148,11 +148,31 @@ func defaultProps() *Props {
 					"service": map[string]interface{}{
 						"type": "ClusterIP",
 					},
+					"resources": map[string]interface{}{
+						"requests": map[string]interface{}{
+							"cpu":    "2000m",
+							"memory": "768Mi",
+						},
+						"limits": map[string]interface{}{
+							"cpu":    "3000m",
+							"memory": "768Mi",
+						},
+					},
 				},
 				"miner": map[string]interface{}{
 					"replicas": "2",
 					"account": map[string]interface{}{
 						"secret": "",
+					},
+					"resources": map[string]interface{}{
+						"requests": map[string]interface{}{
+							"cpu":    "2000m",
+							"memory": "768Mi",
+						},
+						"limits": map[string]interface{}{
+							"cpu":    "3000m",
+							"memory": "768Mi",
+						},
 					},
 				},
 				"genesis": map[string]interface{}{
