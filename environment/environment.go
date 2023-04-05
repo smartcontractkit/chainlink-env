@@ -31,7 +31,7 @@ const (
 )
 
 const (
-	ErrInvalidOCI string = "OCI chart url should be in format oci://$ECR_URL/$ECR_REGISTRY_NAME/$CHART_NAME, was %s"
+	ErrInvalidOCI string = "OCI chart url should be in format oci://$ECR_URL/$ECR_REGISTRY_NAME/$CHART_NAME:[?$CHART_VERSION], was %s"
 	ErrOCIPull    string = "failed to pull OCI repo: %s"
 )
 
@@ -320,7 +320,7 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	if chart.GetVersion() != "" {
 		helmFlags = append(helmFlags, a.Str("--version"), a.Str(chart.GetVersion()))
 	}
-	chartPath, err := m.getChartPath(chart)
+	chartPath, err := m.PullOCIChart(chart)
 	if err != nil {
 		panic(err)
 	}
@@ -334,10 +334,10 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	return m
 }
 
-// getChartPath handles working with OCI format repositories
+// PullOCIChart handles working with OCI format repositories
 // https://helm.sh/docs/topics/registries/
 // API is not compatible between helm repos and OCI repos, so we download and untar the chart
-func (m *Environment) getChartPath(chart ConnectedChart) (string, error) {
+func (m *Environment) PullOCIChart(chart ConnectedChart) (string, error) {
 	if !strings.HasPrefix(chart.GetPath(), "oci") {
 		return chart.GetPath(), nil
 	}
@@ -345,11 +345,28 @@ func (m *Environment) getChartPath(chart ConnectedChart) (string, error) {
 	if len(cp) != 5 {
 		return "", fmt.Errorf(ErrInvalidOCI, chart.GetPath())
 	}
+	sp := strings.Split(chart.GetPath(), ":")
+
+	var cmd string
+	var chartName string
+	chartName = cp[len(cp)-1]
 	chartDir := uuid.NewString()
-	if err := client.ExecCmd(fmt.Sprintf("helm pull %s --untar --untardir %s", chart.GetPath(), chartDir)); err != nil {
+	switch len(sp) {
+	case 2:
+		cmd = fmt.Sprintf("helm pull %s --untar --untardir %s", chart.GetPath(), chartDir)
+	case 3:
+		chartName = strings.Split(chartName, ":")[0]
+		cmd = fmt.Sprintf("helm pull %s --version %s --untar --untardir %s", fmt.Sprintf("%s:%s", sp[0], sp[1]), sp[2], chartDir)
+	default:
+		return "", fmt.Errorf(ErrInvalidOCI, chart.GetPath())
+	}
+	log.Info().Str("CMD", cmd).Msg("Running helm cmd")
+	if err := client.ExecCmd(cmd); err != nil {
 		return "", fmt.Errorf(ErrOCIPull, chart.GetPath())
 	}
-	return fmt.Sprintf("%s/%s/", chartDir, cp[len(cp)-1]), nil
+	localChartPath := fmt.Sprintf("%s/%s/", chartDir, chartName)
+	log.Info().Str("Path", localChartPath).Msg("Local chart path")
+	return localChartPath, nil
 }
 
 // PrintExportData prints export data
