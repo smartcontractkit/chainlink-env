@@ -40,8 +40,8 @@ var (
 		"prometheus.io/scrape":                             a.Str("true"),
 		"backyards.banzaicloud.io/image-registry-access":   a.Str("true"),
 		"backyards.banzaicloud.io/public-dockerhub-access": a.Str("true"),
-		"cluster-autoscaler.kubernetes.io/safe-to-evict":   a.Str("false"),
 	}
+	defaultPodAnnotations = map[string]string{"cluster-autoscaler.kubernetes.io~1safe-to-evict": "false"}
 )
 
 // ConnectedChart interface to interact both with cdk8s apps and helm charts
@@ -560,7 +560,10 @@ func (m *Environment) Deploy() error {
 	if err := m.Client.WaitPodsReady(m.Cfg.Namespace, m.Cfg.ReadyCheckData, expectedPodCount); err != nil {
 		return err
 	}
-	return m.enumerateApps()
+	if err := m.enumerateApps(); err != nil {
+		return err
+	}
+	return m.Client.AddPodsAnnotations(m.Cfg.Namespace, "", defaultPodAnnotations)
 }
 
 // RolloutStatefulSets applies "rollout statefulset" to all existing statefulsets in our namespace

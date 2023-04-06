@@ -130,9 +130,26 @@ func (m *K8sClient) LabelChaosGroupByLabels(namespace string, labels map[string]
 		return err
 	}
 	for _, pod := range podList.Items {
-		err = m.AddLabelByPod(namespace, pod, group, "1")
+		err = m.AddPodLabel(namespace, pod, group, "1")
 		if err != nil {
 			return err
+		}
+	}
+	return nil
+}
+
+// AddPodsAnnotations adds map of annotations to all pods selected by selector
+func (m *K8sClient) AddPodsAnnotations(namespace, labelSelector string, annotations map[string]string) error {
+	podList, err := m.ListPods(namespace, labelSelector)
+	if err != nil {
+		return err
+	}
+	for _, pod := range podList.Items {
+		for k, v := range annotations {
+			err = m.AddPodAnnotation(namespace, pod, k, v)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -159,9 +176,20 @@ func (m *K8sClient) UniqueLabels(namespace string, selector string) ([]string, e
 	return uniqueLabels, nil
 }
 
-// AddLabelByPod adds a label to a pod
-func (m *K8sClient) AddLabelByPod(namespace string, pod v1.Pod, key, value string) error {
+// AddPodLabel adds a label to a pod
+func (m *K8sClient) AddPodLabel(namespace string, pod v1.Pod, key, value string) error {
 	labelPatch := fmt.Sprintf(`[{"op":"add","path":"/metadata/labels/%s","value":"%s" }]`, key, value)
+	_, err := m.ClientSet.CoreV1().Pods(namespace).Patch(
+		context.Background(), pod.GetName(), types.JSONPatchType, []byte(labelPatch), metaV1.PatchOptions{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// AddPodAnnotation adds an annotation to a pod
+func (m *K8sClient) AddPodAnnotation(namespace string, pod v1.Pod, key, value string) error {
+	labelPatch := fmt.Sprintf(`[{"op":"add","path":"/metadata/annotations/%s","value":"%s" }]`, key, value)
 	_, err := m.ClientSet.CoreV1().Pods(namespace).Patch(
 		context.Background(), pod.GetName(), types.JSONPatchType, []byte(labelPatch), metaV1.PatchOptions{})
 	if err != nil {
@@ -177,7 +205,7 @@ func (m *K8sClient) EnumerateInstances(namespace string, selector string) error 
 		return err
 	}
 	for id, pod := range podList.Items {
-		if err := m.AddLabelByPod(namespace, pod, "instance", strconv.Itoa(id)); err != nil {
+		if err := m.AddPodLabel(namespace, pod, "instance", strconv.Itoa(id)); err != nil {
 			return err
 		}
 	}
