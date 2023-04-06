@@ -40,6 +40,7 @@ var (
 		"prometheus.io/scrape":                             a.Str("true"),
 		"backyards.banzaicloud.io/image-registry-access":   a.Str("true"),
 		"backyards.banzaicloud.io/public-dockerhub-access": a.Str("true"),
+		"cluster-autoscaler.kubernetes.io/safe-to-evict":   a.Str("false"),
 	}
 )
 
