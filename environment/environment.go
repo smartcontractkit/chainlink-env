@@ -443,11 +443,12 @@ func (m *Environment) Run() error {
 	}
 	if m.Cfg.JobImage != "" {
 		m.AddChart(NewRunner(&Props{
-			BaseName:        "remote-test-runner",
-			TargetNamespace: m.Cfg.Namespace,
-			Labels:          nil,
-			Image:           m.Cfg.JobImage,
-			EnvVars:         m.getEnvVarsMap(),
+			BaseName:         "remote-test-runner",
+			TargetNamespace:  m.Cfg.Namespace,
+			Labels:           nil,
+			Image:            m.Cfg.JobImage,
+			TestName:         m.Cfg.Test.Name(),
+			NoManifestUpdate: m.Cfg.NoManifestUpdate,
 		}))
 	}
 	m.UpdateManifest()
@@ -732,53 +733,4 @@ func (m *Environment) Shutdown() error {
 func (m *Environment) WillUseRemoteRunner() bool {
 	val, _ := os.LookupEnv(config.EnvVarJobImage)
 	return val != "" && m.Cfg.Test.Name() != ""
-}
-
-func (m *Environment) getEnvVarsMap() map[string]string {
-	env := make(map[string]string)
-	for _, e := range os.Environ() {
-		if i := strings.Index(e, "="); i >= 0 {
-			if strings.HasPrefix(e[:i], config.EnvVarPrefix) {
-				withoutPrefix := strings.Replace(e[:i], config.EnvVarPrefix, "", 1)
-				env[withoutPrefix] = e[i+1:]
-			}
-		}
-	}
-	// add important variables
-	lookups := []string{
-		config.EnvVarCLImage,
-		config.EnvVarCLTag,
-		config.EnvVarCLCommitSha,
-		config.EnvVarLogLevel,
-		config.EnvVarTestTrigger,
-		config.EnvVarToleration,
-		config.EnvVarSlackChannel,
-		config.EnvVarSlackKey,
-		config.EnvVarSlackUser,
-		config.EnvVarPyroscopeKey,
-		config.EnvVarPyroscopeEnvironment,
-		config.EnvVarPyroscopeServer,
-		config.EnvVarUser,
-		config.EnvVarNodeSelector,
-		config.EnvVarSelectedNetworks,
-		config.EnvVarDBURL,
-		config.EnvVarEVMKeys,
-		config.EnvVarInternalDockerRepo,
-		config.EnvVarEVMUrls,
-		config.EnvVarEVMHttpUrls,
-	}
-	for _, k := range lookups {
-		v, success := os.LookupEnv(k)
-		if success && len(v) > 0 {
-			log.Debug().Str(k, v).Msg("Forwarding Env Var")
-			env[k] = v
-		}
-	}
-
-	// add test name
-	env["TEST_NAME"] = m.Cfg.Test.Name()
-	env[config.EnvVarInsideK8s] = "true"
-	env[config.EnvVarNoManifestUpdate] = strconv.FormatBool(m.Cfg.NoManifestUpdate)
-
-	return env
 }
