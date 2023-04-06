@@ -763,6 +763,8 @@ func (m *Environment) getEnvVarsMap() map[string]string {
 		config.EnvVarDBURL,
 		config.EnvVarEVMKeys,
 		config.EnvVarInternalDockerRepo,
+		config.EnvVarEVMUrls,
+		config.EnvVarEVMHttpUrls,
 	}
 	for _, k := range lookups {
 		v, success := os.LookupEnv(k)

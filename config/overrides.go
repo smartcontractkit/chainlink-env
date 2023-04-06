@@ -102,6 +102,14 @@ const (
 	EnvVarInternalDockerRepo            = "INTERNAL_DOCKER_REPO"
 	EnvVarInternalDockerRepoDescription = "Use internal docker repository for some images"
 	EnvVarInternalDockerRepoExample     = "public.ecr.aws"
+
+	EnvVarEVMUrls                = "EVM_URLS"
+	EnvVarEVMUrlsUserDescription = "The RPC URLs used to connect to the chain"
+	EnvVarEVMUrlsExample         = "wss://mainnet.infura.io/ws/v3/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+	EnvVarEVMHttpUrls                = "EVM_HTTP_URLS"
+	EnvVarEVMHttpUrlsUserDescription = "The HTTP RPC URLs used to connect to the chain"
+	EnvVarEVMHttpUrlsExample         = "https://mainnet.infura.io/v3/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 )
 
 var (
