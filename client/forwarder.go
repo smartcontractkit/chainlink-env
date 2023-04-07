@@ -153,7 +153,10 @@ func (m *Forwarder) portRulesForPod(pod v1.Pod) []string {
 	return rules
 }
 
-func (m *Forwarder) Connect(namespaceName string, selector string, insideK8s bool) error {
+func (m *Forwarder) Connect(namespaceName string, selector string, insideK8s bool, reconnect bool) error {
+	if reconnect {
+		m.Info = make(map[string]interface{})
+	}
 	pods, err := m.Client.ListPods(namespaceName, selector)
 	if err != nil {
 		return err
