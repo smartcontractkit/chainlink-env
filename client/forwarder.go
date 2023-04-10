@@ -41,6 +41,12 @@ func (m *Forwarder) forwardPodPorts(pod v1.Pod, namespaceName string) error {
 		log.Debug().Str("Pod", pod.Name).Interface("Phase", pod.Status.Phase).Msg("Skipping pod for port forwarding")
 		return nil
 	}
+	if pod.Labels["app"] != "" {
+		if _, ok := m.Info[fmt.Sprintf("%s:%s", pod.Labels["app"], pod.Labels["instance"])]; ok {
+			log.Debug().Str("Pod", pod.Name).Msg("Skipping pod for port forwarding")
+			return nil
+		}
+	}
 	roundTripper, upgrader, err := spdy.RoundTripperFor(m.Client.RESTConfig)
 	if err != nil {
 		return err
@@ -147,8 +153,10 @@ func (m *Forwarder) portRulesForPod(pod v1.Pod) []string {
 	return rules
 }
 
-func (m *Forwarder) Connect(namespaceName string, selector string, insideK8s bool) error {
-	m.Info = make(map[string]interface{})
+func (m *Forwarder) Connect(namespaceName string, selector string, insideK8s bool, reconnect bool) error {
+	if reconnect {
+		m.Info = make(map[string]interface{})
+	}
 	pods, err := m.Client.ListPods(namespaceName, selector)
 	if err != nil {
 		return err

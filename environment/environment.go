@@ -492,7 +492,8 @@ func (m *Environment) Run() error {
 		}
 		m.Cfg.jobDeployed = true
 	} else {
-		if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s); err != nil {
+		reconnect := len(m.Chaos.ResourceByName) > 0
+		if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s, reconnect); err != nil {
 			return err
 		}
 		log.Info().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
