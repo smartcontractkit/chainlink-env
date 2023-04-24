@@ -151,6 +151,16 @@ func New(index int, props map[string]any) environment.ConnectedChart {
 	return NewVersioned(index, "", props)
 }
 
+// NewDeployment ensures that each chainlink node gets its own helm chart, and should be preferred over New
+// Avoid using replicas when using NewDeployment
+func NewDeployment(deploymentCount int, props map[string]any) []environment.ConnectedChart {
+	charts := make([]environment.ConnectedChart, 0)
+	for i := 0; i < deploymentCount; i++ {
+		charts = append(charts, New(i, props))
+	}
+	return charts
+}
+
 // NewVersioned enables you to select a specific helm chart version
 func NewVersioned(index int, helmVersion string, props map[string]any) environment.ConnectedChart {
 	dp := defaultProps()

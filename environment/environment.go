@@ -296,6 +296,15 @@ func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment
 	return m
 }
 
+// AddHelmCharts adds multiple helm charts to the testing environment
+func (m *Environment) AddHelmCharts(charts ...ConnectedChart) *Environment {
+	for _, c := range charts {
+		m.AddHelm(c)
+	}
+	return m
+}
+
+// AddHelm adds a helm chart to the testing environment
 func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
 		return m
