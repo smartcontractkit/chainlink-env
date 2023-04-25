@@ -124,17 +124,34 @@ func defaultEnvConfig() *Config {
 
 // Environment describes a launched test environment
 type Environment struct {
-	App             cdk8s.App
-	CurrentManifest string
-	root            cdk8s.Chart
-	Charts          []ConnectedChart  // All connected charts in the
-	Cfg             *Config           // The environment specific config
-	Client          *client.K8sClient // Client connecting to the K8s cluster
-	Fwd             *client.Forwarder // Used to forward ports from local machine to the K8s cluster
-	Artifacts       *Artifacts
-	Chaos           *client.Chaos
-	httpClient      *resty.Client
-	URLs            map[string][]string // General URLs of launched resources. Uses '_local' to delineate forwarded ports
+	App                  cdk8s.App
+	CurrentManifest      string
+	root                 cdk8s.Chart
+	Charts               []ConnectedChart  // All connected charts in the
+	Cfg                  *Config           // The environment specific config
+	Client               *client.K8sClient // Client connecting to the K8s cluster
+	Fwd                  *client.Forwarder // Used to forward ports from local machine to the K8s cluster
+	Artifacts            *Artifacts
+	Chaos                *client.Chaos
+	httpClient           *resty.Client
+	URLs                 map[string][]string    // General URLs of launched resources. Uses '_local' to delineate forwarded ports
+	ChainlinkNodeDetails []*ChainlinkNodeDetail // ChainlinkNodeDetails has convenient details for connecting to chainlink deployments
+}
+
+// ChainlinkNodeDetail contains details about a chainlink node deployment
+type ChainlinkNodeDetail struct {
+	// ChartName details the name of the Helm chart this node uses, handy for modifying deployment values
+	// Note: if you are using replicas of the same chart, this will be the same for all nodes
+	// Use NewDeployment function for Chainlink nodes to make use of this
+	ChartName string
+	// PodName is the name of the pod running the chainlink node
+	PodName string
+	// LocalURL is the URL to connect to the node from the local machine
+	LocalURL string
+	// InternalURL is the URL to connect to the node from inside the K8s cluster
+	InternalURL string
+	// DBLocalURL is the URL to connect to the node's database from the local machine
+	DBLocalURL string
 }
 
 // New creates new environment
@@ -297,7 +314,7 @@ func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment
 }
 
 // AddHelmCharts adds multiple helm charts to the testing environment
-func (m *Environment) AddHelmCharts(charts ...ConnectedChart) *Environment {
+func (m *Environment) AddHelmCharts(charts []ConnectedChart) *Environment {
 	for _, c := range charts {
 		m.AddHelm(c)
 	}
