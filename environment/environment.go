@@ -277,22 +277,35 @@ func (m *Environment) AddChart(f func(root cdk8s.Chart) ConnectedChart) *Environ
 	return m
 }
 
-func (m *Environment) removeChart(name string) {
-	for i, c := range m.Charts {
-		if c.GetName() == name {
-			m.Charts = append(m.Charts[:i], m.Charts[i+1:]...)
-		}
+func (m *Environment) removeChart(name string) error {
+	chartIndex, _, err := m.findChart(name)
+	if err != nil {
+		return err
 	}
+	m.Charts = append(m.Charts[:chartIndex], m.Charts[chartIndex+1:]...)
 	m.root.Node().TryRemoveChild(a.Str(name))
+	return nil
 }
 
-// ModifyHelm modifies helm chart in deployment
-func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment {
+// findChart finds a chart by name, returning the index of it in the Charts slice, and the chart itself
+func (m *Environment) findChart(name string) (index int, chart ConnectedChart, err error) {
+	for i, c := range m.Charts {
+		if c.GetName() == name {
+			return i, c, nil
+		}
+	}
+	return -1, nil, fmt.Errorf("chart %s not found", name)
+}
+
+// ModifyHelm entirely replaces a helm chart with a new one
+func (m *Environment) ModifyHelm(name string, chart ConnectedChart) (*Environment, error) {
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
-	m.removeChart(name)
+	if err := m.removeChart(name); err != nil {
+		return nil, err
+	}
 	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
-		return m
+		return m, fmt.Errorf("cannot modify helm chart '%s' that does not need deployment, it may be in a remote runner or detached mode", name)
 	}
 	log.Trace().
 		Str("Chart", chart.GetName()).
@@ -310,7 +323,18 @@ func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment
 		Values:      chart.GetValues(),
 	})
 	m.Charts = append(m.Charts, chart)
-	return m
+	return m, nil
+}
+
+// UpgradeHelm upgrades a helm chart with new values
+func (m *Environment) UpgradeHelm(name string, values map[string]any) (*Environment, error) {
+	config.JSIIGlobalMu.Lock()
+	defer config.JSIIGlobalMu.Unlock()
+	chartIndex, chart, err := m.findChart(name)
+	if err != nil {
+		return nil, err
+	}
+	m.Charts[chartIndex].
 }
 
 // AddHelmCharts adds multiple helm charts to the testing environment
