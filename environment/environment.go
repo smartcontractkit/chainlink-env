@@ -13,6 +13,7 @@ import (
 	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
+	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
@@ -57,9 +58,9 @@ type ConnectedChart interface {
 	// GetVersion gets the chart's version, empty string if none is specified
 	GetVersion() string
 	// GetProps get code props if it's typed environment
-	GetProps() interface{}
+	GetProps() any
 	// GetValues get values.yml props as map, if it's Helm
-	GetValues() *map[string]interface{}
+	GetValues() *map[string]any
 	// ExportData export deployment part data in the env
 	ExportData(e *Environment) error
 }
@@ -297,8 +298,9 @@ func (m *Environment) findChart(name string) (index int, chart ConnectedChart, e
 	return -1, nil, fmt.Errorf("chart %s not found", name)
 }
 
-// ModifyHelm entirely replaces a helm chart with a new one
-func (m *Environment) ModifyHelm(name string, chart ConnectedChart) (*Environment, error) {
+// ReplaceHelm entirely replaces an existing helm chart with a new one
+// Note: you need to call Run() after this to apply the changes
+func (m *Environment) ReplaceHelm(name string, chart ConnectedChart) (*Environment, error) {
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
 	if err := m.removeChart(name); err != nil {
@@ -326,15 +328,47 @@ func (m *Environment) ModifyHelm(name string, chart ConnectedChart) (*Environmen
 	return m, nil
 }
 
-// UpgradeHelm upgrades a helm chart with new values
-func (m *Environment) UpgradeHelm(name string, values map[string]any) (*Environment, error) {
+// ModifyHelm entirely replaces a helm chart with a new one
+//
+// Deprecated: use ReplaceHelm instead to avoid silent errors
+func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment {
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
-	chartIndex, chart, err := m.findChart(name)
+	if err := m.removeChart(name); err != nil {
+		return nil
+	}
+	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
+		return nil
+	}
+	log.Trace().
+		Str("Chart", chart.GetName()).
+		Str("Path", chart.GetPath()).
+		Interface("Props", chart.GetProps()).
+		Interface("Values", chart.GetValues()).
+		Msg("Chart deployment values")
+	cdk8s.NewHelm(m.root, a.Str(name), &cdk8s.HelmProps{
+		Chart: a.Str(chart.GetPath()),
+		HelmFlags: &[]*string{
+			a.Str("--namespace"),
+			a.Str(m.Cfg.Namespace),
+		},
+		ReleaseName: a.Str(name),
+		Values:      chart.GetValues(),
+	})
+	m.Charts = append(m.Charts, chart)
+	return m
+}
+
+// UpdateHelm update a helm chart with new values
+func (m *Environment) UpdateHelm(name string, values map[string]any) (*Environment, error) {
+	_, chart, err := m.findChart(name)
 	if err != nil {
 		return nil, err
 	}
-	m.Charts[chartIndex].
+	if err = mergo.Merge(chart.GetValues(), values, mergo.WithOverride); err != nil {
+		return nil, err
+	}
+	return m.ReplaceHelm(name, chart)
 }
 
 // AddHelmCharts adds multiple helm charts to the testing environment
