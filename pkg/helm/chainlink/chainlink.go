@@ -60,24 +60,24 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		return err
 	}
 	for i := 0; i < len(pods.Items); i++ {
-		localConnection, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
-			As(client.LocalConnection, client.HTTP)
-		if err != nil {
-			return err
-		}
-		e.URLs[NodesLocalURLsKey] = append(e.URLs[NodesLocalURLsKey], localConnection)
-		log.Info().Str("Deployment", m.Name).Int("Node", i).Str("URL", localConnection).Msg("Local connection")
-
-		remoteConnection, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
+		internalConnection, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
 			As(client.RemoteConnection, client.HTTP)
 		if err != nil {
 			return err
 		}
-		e.URLs[NodesInternalURLsKey] = append(e.URLs[NodesInternalURLsKey], remoteConnection)
+		e.URLs[NodesInternalURLsKey] = append(e.URLs[NodesInternalURLsKey], internalConnection)
+
+		var localConnection string
 		if e.Cfg.InsideK8s {
-			e.URLs[NodesLocalURLsKey] = e.URLs[NodesInternalURLsKey]
+			localConnection = internalConnection
+		} else {
+			localConnection, err = e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
+				As(client.LocalConnection, client.HTTP)
+			if err != nil {
+				return err
+			}
 		}
-		log.Info().Str("Deployment", m.Name).Int("Node", i).Str("URL", remoteConnection).Msg("Remote (in cluster) connection")
+		e.URLs[NodesLocalURLsKey] = append(e.URLs[NodesLocalURLsKey], localConnection)
 
 		dbLocalConnection, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "chainlink-db", "postgres").
 			As(client.LocalConnection, client.HTTP)
@@ -85,7 +85,21 @@ func (m Chart) ExportData(e *environment.Environment) error {
 			return err
 		}
 		e.URLs[DBsLocalURLsKey] = append(e.URLs[DBsLocalURLsKey], dbLocalConnection)
-		log.Info().Str("Deployment", m.Name).Int("Node", i).Str("URL", dbLocalConnection).Msg("DB local Connection")
+		log.Debug().
+			Str("Chart Name", m.Name).
+			Str("Local URL", localConnection).
+			Str("Local DB URL", dbLocalConnection).
+			Str("K8s Internal URL", internalConnection).
+			Msg("Chainlink Node Details")
+
+		nodeDetails := &environment.ChainlinkNodeDetail{
+			ChartName:   m.Name,
+			PodName:     pods.Items[i].Name,
+			LocalURL:    localConnection,
+			InternalURL: internalConnection,
+			DBLocalURL:  dbLocalConnection,
+		}
+		e.ChainlinkNodeDetails = append(e.ChainlinkNodeDetails, nodeDetails)
 	}
 	return nil
 }
@@ -149,6 +163,19 @@ func defaultProps() map[string]any {
 
 func New(index int, props map[string]any) environment.ConnectedChart {
 	return NewVersioned(index, "", props)
+}
+
+// NewDeployment ensures that each chainlink node gets its own helm chart, and should be preferred over New
+// Avoid using replicas when using NewDeployment
+func NewDeployment(deploymentCount int, props map[string]any) ([]environment.ConnectedChart, error) {
+	if props["replicas"] != nil && props["replicas"] != "1" {
+		return nil, fmt.Errorf("don't use replicas with NewDeployment")
+	}
+	charts := make([]environment.ConnectedChart, 0)
+	for i := 0; i < deploymentCount; i++ {
+		charts = append(charts, New(i, props))
+	}
+	return charts, nil
 }
 
 // NewVersioned enables you to select a specific helm chart version

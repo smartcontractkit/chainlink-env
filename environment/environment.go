@@ -13,6 +13,7 @@ import (
 	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
+	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
@@ -57,9 +58,9 @@ type ConnectedChart interface {
 	// GetVersion gets the chart's version, empty string if none is specified
 	GetVersion() string
 	// GetProps get code props if it's typed environment
-	GetProps() interface{}
+	GetProps() any
 	// GetValues get values.yml props as map, if it's Helm
-	GetValues() *map[string]interface{}
+	GetValues() *map[string]any
 	// ExportData export deployment part data in the env
 	ExportData(e *Environment) error
 }
@@ -124,17 +125,34 @@ func defaultEnvConfig() *Config {
 
 // Environment describes a launched test environment
 type Environment struct {
-	App             cdk8s.App
-	CurrentManifest string
-	root            cdk8s.Chart
-	Charts          []ConnectedChart  // All connected charts in the
-	Cfg             *Config           // The environment specific config
-	Client          *client.K8sClient // Client connecting to the K8s cluster
-	Fwd             *client.Forwarder // Used to forward ports from local machine to the K8s cluster
-	Artifacts       *Artifacts
-	Chaos           *client.Chaos
-	httpClient      *resty.Client
-	URLs            map[string][]string // General URLs of launched resources. Uses '_local' to delineate forwarded ports
+	App                  cdk8s.App
+	CurrentManifest      string
+	root                 cdk8s.Chart
+	Charts               []ConnectedChart  // All connected charts in the
+	Cfg                  *Config           // The environment specific config
+	Client               *client.K8sClient // Client connecting to the K8s cluster
+	Fwd                  *client.Forwarder // Used to forward ports from local machine to the K8s cluster
+	Artifacts            *Artifacts
+	Chaos                *client.Chaos
+	httpClient           *resty.Client
+	URLs                 map[string][]string    // General URLs of launched resources. Uses '_local' to delineate forwarded ports
+	ChainlinkNodeDetails []*ChainlinkNodeDetail // ChainlinkNodeDetails has convenient details for connecting to chainlink deployments
+}
+
+// ChainlinkNodeDetail contains details about a chainlink node deployment
+type ChainlinkNodeDetail struct {
+	// ChartName details the name of the Helm chart this node uses, handy for modifying deployment values
+	// Note: if you are using replicas of the same chart, this will be the same for all nodes
+	// Use NewDeployment function for Chainlink nodes to make use of this
+	ChartName string
+	// PodName is the name of the pod running the chainlink node
+	PodName string
+	// LocalURL is the URL to connect to the node from the local machine
+	LocalURL string
+	// InternalURL is the URL to connect to the node from inside the K8s cluster
+	InternalURL string
+	// DBLocalURL is the URL to connect to the node's database from the local machine
+	DBLocalURL string
 }
 
 // New creates new environment
@@ -260,22 +278,67 @@ func (m *Environment) AddChart(f func(root cdk8s.Chart) ConnectedChart) *Environ
 	return m
 }
 
-func (m *Environment) removeChart(name string) {
-	for i, c := range m.Charts {
-		if c.GetName() == name {
-			m.Charts = append(m.Charts[:i], m.Charts[i+1:]...)
-		}
+func (m *Environment) removeChart(name string) error {
+	chartIndex, _, err := m.findChart(name)
+	if err != nil {
+		return err
 	}
+	m.Charts = append(m.Charts[:chartIndex], m.Charts[chartIndex+1:]...)
 	m.root.Node().TryRemoveChild(a.Str(name))
+	return nil
 }
 
-// ModifyHelm modifies helm chart in deployment
+// findChart finds a chart by name, returning the index of it in the Charts slice, and the chart itself
+func (m *Environment) findChart(name string) (index int, chart ConnectedChart, err error) {
+	for i, c := range m.Charts {
+		if c.GetName() == name {
+			return i, c, nil
+		}
+	}
+	return -1, nil, fmt.Errorf("chart %s not found", name)
+}
+
+// ReplaceHelm entirely replaces an existing helm chart with a new one
+// Note: you need to call Run() after this to apply the changes
+func (m *Environment) ReplaceHelm(name string, chart ConnectedChart) (*Environment, error) {
+	config.JSIIGlobalMu.Lock()
+	defer config.JSIIGlobalMu.Unlock()
+	if err := m.removeChart(name); err != nil {
+		return nil, err
+	}
+	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
+		return m, fmt.Errorf("cannot modify helm chart '%s' that does not need deployment, it may be in a remote runner or detached mode", name)
+	}
+	log.Trace().
+		Str("Chart", chart.GetName()).
+		Str("Path", chart.GetPath()).
+		Interface("Props", chart.GetProps()).
+		Interface("Values", chart.GetValues()).
+		Msg("Chart deployment values")
+	cdk8s.NewHelm(m.root, a.Str(name), &cdk8s.HelmProps{
+		Chart: a.Str(chart.GetPath()),
+		HelmFlags: &[]*string{
+			a.Str("--namespace"),
+			a.Str(m.Cfg.Namespace),
+		},
+		ReleaseName: a.Str(name),
+		Values:      chart.GetValues(),
+	})
+	m.Charts = append(m.Charts, chart)
+	return m, nil
+}
+
+// ModifyHelm entirely replaces a helm chart with a new one
+//
+// Deprecated: use ReplaceHelm instead to avoid silent errors
 func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment {
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
-	m.removeChart(name)
+	if err := m.removeChart(name); err != nil {
+		return nil
+	}
 	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
-		return m
+		return nil
 	}
 	log.Trace().
 		Str("Chart", chart.GetName()).
@@ -296,6 +359,27 @@ func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment
 	return m
 }
 
+// UpdateHelm update a helm chart with new values
+func (m *Environment) UpdateHelm(name string, values map[string]any) (*Environment, error) {
+	_, chart, err := m.findChart(name)
+	if err != nil {
+		return nil, err
+	}
+	if err = mergo.Merge(chart.GetValues(), values, mergo.WithOverride); err != nil {
+		return nil, err
+	}
+	return m.ReplaceHelm(name, chart)
+}
+
+// AddHelmCharts adds multiple helm charts to the testing environment
+func (m *Environment) AddHelmCharts(charts []ConnectedChart) *Environment {
+	for _, c := range charts {
+		m.AddHelm(c)
+	}
+	return m
+}
+
+// AddHelm adds a helm chart to the testing environment
 func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
 		return m
