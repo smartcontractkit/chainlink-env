@@ -147,12 +147,12 @@ type ChainlinkNodeDetail struct {
 	ChartName string
 	// PodName is the name of the pod running the chainlink node
 	PodName string
-	// LocalURL is the URL to connect to the node from the local machine
-	LocalURL string
-	// InternalURL is the URL to connect to the node from inside the K8s cluster
-	InternalURL string
-	// DBLocalURL is the URL to connect to the node's database from the local machine
-	DBLocalURL string
+	// LocalIP is the URL to connect to the node from the local machine
+	LocalIP string
+	// InternalIP is the URL to connect to the node from inside the K8s cluster
+	InternalIP string
+	// DBLocalIP is the URL to connect to the node's database from the local machine
+	DBLocalIP string
 }
 
 // New creates new environment
