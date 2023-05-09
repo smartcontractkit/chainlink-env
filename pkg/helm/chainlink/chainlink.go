@@ -87,17 +87,17 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		e.URLs[DBsLocalURLsKey] = append(e.URLs[DBsLocalURLsKey], dbLocalConnection)
 		log.Debug().
 			Str("Chart Name", m.Name).
-			Str("Local URL", localConnection).
-			Str("Local DB URL", dbLocalConnection).
-			Str("K8s Internal URL", internalConnection).
+			Str("Local IP", localConnection).
+			Str("Local DB IP", dbLocalConnection).
+			Str("K8s Internal IP", internalConnection).
 			Msg("Chainlink Node Details")
 
 		nodeDetails := &environment.ChainlinkNodeDetail{
-			ChartName:   m.Name,
-			PodName:     pods.Items[i].Name,
-			LocalURL:    localConnection,
-			InternalURL: internalConnection,
-			DBLocalURL:  dbLocalConnection,
+			ChartName:  m.Name,
+			PodName:    pods.Items[i].Name,
+			LocalIP:    localConnection,
+			InternalIP: internalConnection,
+			DBLocalIP:  dbLocalConnection,
 		}
 		e.ChainlinkNodeDetails = append(e.ChainlinkNodeDetails, nodeDetails)
 	}
