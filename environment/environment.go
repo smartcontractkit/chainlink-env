@@ -88,7 +88,7 @@ type Config struct {
 	// checking that all pods are ready by default with 8 minutes timeout
 	//	&client.ReadyCheckData{
 	//		ReadinessProbeCheckSelector: "",
-	//		Timeout:                     8 * time.Minute,
+	//		Timeout:                     15 * time.Minute,
 	//	}
 	ReadyCheckData *client.ReadyCheckData
 	// DryRun if true, app will just generate a manifest in local dir
@@ -118,7 +118,7 @@ func defaultEnvConfig() *Config {
 		UpdateWaitInterval: 1 * time.Second,
 		ReadyCheckData: &client.ReadyCheckData{
 			ReadinessProbeCheckSelector: "",
-			Timeout:                     8 * time.Minute,
+			Timeout:                     15 * time.Minute,
 		},
 	}
 }

@@ -1,4 +1,4 @@
-## How to create environments
+# How to create environments
 
 - [Getting started](#getting-started)
 - [Connect to environment](#connect-to-environment)
@@ -11,8 +11,8 @@
   - [Modifying environment from code](#modifying-environment-from-code)
   - [Modifying environment part from code](#modifying-environment-part-from-code)
 - [Configuring](#configuring)
-    - [Environment variables](#environment-variables)
-    - [Environment config](#environment-config)
+  - [Environment variables](#environment-variables)
+  - [Environment config](#environment-config)
 - [Utilities](#utilities)
   - [Collecting logs](#collecting-logs)
   - [Resources summary](#resources-summary)
@@ -20,13 +20,14 @@
 - [Coverage](#coverage)
 - [Remote run](./REMOTE_RUN.md)
 
-
 ## Getting started
+
 Read [here](KUBERNETES.md) about how to spin up a local cluster if you don't have one
 
 Let's create a simple environment by combining different deployment parts
 
 Create `examples/simple/env.go`
+
 ```golang
 package main
 
@@ -52,14 +53,17 @@ func main() {
 	}
 }
 ```
+
 Then run `go run examples/simple/env.go`
 
 Now you have your environment running, you can [connect](#connect-to-environment) to it later
 
 ## Connect to environment
+
 We've already created an environment [previously](#getting-started), now we can connect
 
 If you are planning to use environment locally not in tests and keep connection, modify `KeepConnection` in `environment.Config` we used
+
 ```
       KeepConnection:    true,
 ```
@@ -71,7 +75,9 @@ You can get the namespace name from logs on creation time
 # Creating environments
 
 ## Debugging a new integration environment
+
 You can spin up environment and block on forwarder if you'd like to run some other code
+
 ```golang
 package main
 
@@ -96,10 +102,13 @@ func main() {
 	}
 }
 ```
+
 Send any signal to remove the namespace then, for example `Ctrl+C` `SIGINT`
 
 ## Creating a new deployment part in Helm
+
 Let's add a new [deployment part](examples/deployment_part/sol.go), it should implement an interface
+
 ```golang
 // ConnectedChart interface to interact both with cdk8s apps and helm charts
 type ConnectedChart interface {
@@ -121,6 +130,7 @@ type ConnectedChart interface {
 ```
 
 When creating new deployment part, you can use any public Helm chart or a local path in Helm props
+
 ```golang
 func New(props *Props) environment.ConnectedChart {
 	if props == nil {
@@ -138,6 +148,7 @@ func New(props *Props) environment.ConnectedChart {
 ```
 
 Now let's tie them together
+
 ```golang
 package main
 
@@ -177,10 +188,13 @@ func main() {
 	}
 }
 ```
+
 Then run it `examples/deployment_part/cmd/env.go`
 
 ## Creating a new deployment part in cdk8s
+
 Let's add a new [deployment part](examples/deployment_part/sol.go), it should implement the same interface
+
 ```golang
 // ConnectedChart interface to interact both with cdk8s apps and helm charts
 type ConnectedChart interface {
@@ -201,6 +215,7 @@ type ConnectedChart interface {
 }
 ```
 Now let's tie them together
+
 ```golang
 package main
 
@@ -223,11 +238,12 @@ func main() {
   }
   e.Shutdown()
 }
-
 ```
+
 Then run it `examples/deployment_part_cdk8s/cmd/env.go`
 
 ## Using multi-stage environment
+
 You can split [environment](examples/multistage/env.go) deployment in several parts if you need to first copy something into a pod or use connected clients first
 
 ```golang
@@ -280,9 +296,11 @@ func main() {
 # Modifying environments
 
 ## Modifying environment from code
+
 In case you need to [modify](examples/modify_cdk8s/env.go) environment in tests you can always construct manifest again and apply it
 
 That's working for `cdk8s` components too
+
 ```golang
 package main
 
@@ -328,7 +346,9 @@ func main() {
 ```
 
 ## Modifying environment part from code
+
 We can [modify](examples/modify_helm/env.go) only a part of environment
+
 ```golang
 package main
 
@@ -371,7 +391,9 @@ func main() {
 # Configuring
 
 ## Environment variables
+
 List of environment variables available
+
 ```golang
 const (
 	EnvVarNamespace            = "ENV_NAMESPACE"
@@ -416,6 +438,7 @@ const (
 )
 ```
 ### Environment config
+
 ```golang
 // Config is an environment common configuration, labels, annotations, connection types, readiness check, etc.
 type Config struct {
@@ -432,7 +455,7 @@ type Config struct {
 	// checking that all pods are ready by default with 8 minutes timeout
 	//	&client.ReadyCheckData{
 	//		ReadinessProbeCheckSelector: "",
-	//		Timeout:                     8 * time.Minute,
+	//		Timeout:                     15 * time.Minute,
 	//	}
 	ReadyCheckData    *client.ReadyCheckData
 	// DryRun if true, app will just generate a manifest in local dir
@@ -449,7 +472,9 @@ type Config struct {
 # Utilities
 
 ## Collecting logs
+
 You can collect the [logs](examples/dump/env.go) while running tests, or if you have created an enrionment [already](#connect-to-environment)
+
 ```golang
 package main
 
@@ -473,7 +498,9 @@ func main() {
 ```
 
 ## Resources summary
+
 It can be useful to get current env [resources](examples/resources/env.go) summary for test reporting
+
 ```golang
 package main
 
@@ -507,10 +534,13 @@ func main() {
 ```
 
 # Chaos
+
 Check our [tests](https://github.com/smartcontractkit/chainlink/blob/develop/integration-tests/chaos/chaos_test.go) to see how we using Chaosmesh
 
 # Coverage
+
 Build your target image with those 2 steps to allow automatic coverage discovery
+
 ```Dockerfile
 FROM ...
 
@@ -523,6 +553,7 @@ RUN goc build -o my_service . --center http://goc:7777
 CMD ["./my_service"]
 ```
 Add `goc` to your deployment, check example with `dummy` service deployment:
+
 ```golang
 package main
 
@@ -553,4 +584,5 @@ func main() {
 }
 
 ```
+
 After tests are finished, coverage is collected for every service, check `cover` directory

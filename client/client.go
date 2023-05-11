@@ -216,7 +216,7 @@ func (m *K8sClient) EnumerateInstances(namespace string, selector string) error 
 func (m *K8sClient) waitForPodsExist(ns string, expectedPodCount int) error {
 	log.Debug().Int("ExpectedCount", expectedPodCount).Msg("Waiting for pods to exist")
 	var exitErr error
-	if err := wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+	if err := wait.PollImmediate(2*time.Second, 15*time.Minute, func() (bool, error) {
 		apps, err2 := m.UniqueLabels(ns, "app")
 		if err2 != nil {
 			exitErr = err2
