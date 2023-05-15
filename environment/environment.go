@@ -634,6 +634,15 @@ func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckDat
 	return nil
 }
 
+// RunUpdated runs the environment and checks for pods with `updated=true` label
+func (m *Environment) RunUpdated(podCount int) error {
+	conds := &client.ReadyCheckData{
+		ReadinessProbeCheckSelector: "updated=true",
+		Timeout:                     10 * time.Minute,
+	}
+	return m.RunCustomReadyConditions(conds, podCount)
+}
+
 // Run deploys or connects to already created environment
 func (m *Environment) Run() error {
 	return m.RunCustomReadyConditions(nil, 0)
