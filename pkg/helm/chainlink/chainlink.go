@@ -186,7 +186,7 @@ func NewVersioned(index int, helmVersion string, props map[string]any) environme
 	return Chart{
 		Index:   index,
 		Name:    fmt.Sprintf("%s-%d", AppName, index),
-		Path:    "chainlink-qa/chainlink",
+		Path:    "/Users/adamhamrick/Projects/qa-charts/charts/chainlink",
 		Version: helmVersion,
 		Values:  &dp,
 	}
