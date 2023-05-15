@@ -150,12 +150,12 @@ func defaultProps() *Props {
 					},
 					"resources": map[string]interface{}{
 						"requests": map[string]interface{}{
-							"cpu":    "2",
-							"memory": "2Gi",
+							"cpu":    "2000m",
+							"memory": "768Mi",
 						},
 						"limits": map[string]interface{}{
-							"cpu":    "2",
-							"memory": "2Gi",
+							"cpu":    "3000m",
+							"memory": "768Mi",
 						},
 					},
 				},
@@ -166,12 +166,12 @@ func defaultProps() *Props {
 					},
 					"resources": map[string]interface{}{
 						"requests": map[string]interface{}{
-							"cpu":    "2",
-							"memory": "2Gi",
+							"cpu":    "2000m",
+							"memory": "768Mi",
 						},
 						"limits": map[string]interface{}{
-							"cpu":    "2",
-							"memory": "2Gi",
+							"cpu":    "3000m",
+							"memory": "768Mi",
 						},
 					},
 				},
