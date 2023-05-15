@@ -88,7 +88,7 @@ type Config struct {
 	// checking that all pods are ready by default with 8 minutes timeout
 	//	&client.ReadyCheckData{
 	//		ReadinessProbeCheckSelector: "",
-	//		Timeout:                     8 * time.Minute,
+	//		Timeout:                     15 * time.Minute,
 	//	}
 	ReadyCheckData *client.ReadyCheckData
 	// DryRun if true, app will just generate a manifest in local dir
@@ -118,7 +118,7 @@ func defaultEnvConfig() *Config {
 		UpdateWaitInterval: 1 * time.Second,
 		ReadyCheckData: &client.ReadyCheckData{
 			ReadinessProbeCheckSelector: "",
-			Timeout:                     8 * time.Minute,
+			Timeout:                     15 * time.Minute,
 		},
 	}
 }
@@ -198,7 +198,9 @@ func New(cfg *Config) *Environment {
 
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
-	e.initApp()
+	if err := e.initApp(); err != nil {
+		log.Fatal().Err(err).Msg("failed to create ns and service account")
+	}
 	e.Chaos = client.NewChaos(c, e.Cfg.Namespace)
 
 	// setup test cleanup if this is using a remote runner
@@ -216,7 +218,7 @@ func New(cfg *Config) *Environment {
 	return e
 }
 
-func (m *Environment) initApp() {
+func (m *Environment) initApp() error {
 	var err error
 	m.App = cdk8s.NewApp(&cdk8s.AppProps{
 		YamlOutputType: cdk8s.YamlOutputType_FILE_PER_APP,
@@ -268,6 +270,20 @@ func (m *Environment) initApp() {
 			Annotations: &defaultAnnotations,
 		},
 	})
+	k8s.NewKubeServiceAccount(m.root, a.Str("docker-creds-svc-acc"), &k8s.KubeServiceAccountProps{
+		AutomountServiceAccountToken: nil,
+		ImagePullSecrets: &[]*k8s.LocalObjectReference{
+			{
+				Name: a.Str("docker-creds"),
+			},
+		},
+		Metadata: &k8s.ObjectMeta{
+			Name:      a.Str("default"),
+			Namespace: a.Str(m.Cfg.Namespace),
+		},
+	})
+	m.CurrentManifest = *m.App.SynthYaml()
+	return m.Client.Apply(m.CurrentManifest)
 }
 
 // AddChart adds a chart to the deployment
@@ -513,7 +529,9 @@ func (m *Environment) ResourcesSummary(selector string) (map[string]map[string]s
 // ClearCharts recreates cdk8s app
 func (m *Environment) ClearCharts() {
 	m.Charts = make([]ConnectedChart, 0)
-	m.initApp()
+	if err := m.initApp(); err != nil {
+		log.Fatal().Err(err).Msg("failed to create ns and service account")
+	}
 }
 
 func (m *Environment) Manifest() string {
@@ -583,8 +601,7 @@ func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckDat
 		}
 		m.Cfg.jobDeployed = true
 	} else {
-		reconnect := len(m.Chaos.ResourceByName) > 0
-		if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s, reconnect); err != nil {
+		if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s); err != nil {
 			return err
 		}
 		log.Info().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
