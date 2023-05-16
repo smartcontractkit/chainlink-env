@@ -315,7 +315,8 @@ func (m *Environment) findChart(name string) (index int, chart ConnectedChart, e
 }
 
 // ReplaceHelm entirely replaces an existing helm chart with a new one
-// Note: you need to call Run() after this to apply the changes
+// Note: you need to call Run() after this to apply the changes. If you're modifying ConfigMap values, you'll probably
+// need to use RollOutStatefulSets to apply the changes to the pods. https://stackoverflow.com/questions/57356521/rollingupdate-for-stateful-set-doesnt-restart-pods-and-changes-from-updated-con
 func (m *Environment) ReplaceHelm(name string, chart ConnectedChart) (*Environment, error) {
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
@@ -375,12 +376,18 @@ func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment
 	return m
 }
 
-// UpdateHelm update a helm chart with new values
+// UpdateHelm update a helm chart with new values. The pod will launch with an `updated=true` label if it's a Chainlink node.
+// Note: If you're modifying ConfigMap values, you'll probably need to use RollOutStatefulSets to apply the changes to the pods.
+// https://stackoverflow.com/questions/57356521/rollingupdate-for-stateful-set-doesnt-restart-pods-and-changes-from-updated-con
 func (m *Environment) UpdateHelm(name string, values map[string]any) (*Environment, error) {
 	_, chart, err := m.findChart(name)
 	if err != nil {
 		return nil, err
 	}
+	if _, labelsExist := values["labels"]; !labelsExist {
+		values["labels"] = make(map[string]*string)
+	}
+	values["labels"].(map[string]*string)["updated"] = a.Str("true")
 	if err = mergo.Merge(chart.GetValues(), values, mergo.WithOverride); err != nil {
 		return nil, err
 	}
@@ -538,8 +545,8 @@ func (m *Environment) UpdateManifest() {
 	config.JSIIGlobalMu.Unlock()
 }
 
-// Run deploys or connects to already created environment
-func (m *Environment) Run() error {
+// RunCustomReadyConditions Runs the environment with custom ready conditions for a supplied pod count
+func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckData, podCount int) error {
 	if m.Cfg.jobDeployed {
 		return nil
 	}
@@ -554,6 +561,7 @@ func (m *Environment) Run() error {
 		}))
 	}
 	m.UpdateManifest()
+	m.ChainlinkNodeDetails = []*ChainlinkNodeDetail{} // Resets potentially old details if re-deploying
 	if m.Cfg.DryRun {
 		log.Info().Msg("Dry-run mode, manifest synthesized and saved as tmp-manifest.yaml")
 		return nil
@@ -568,7 +576,7 @@ func (m *Environment) Run() error {
 	}
 	log.Info().Bool("ManifestUpdate", !m.Cfg.NoManifestUpdate).Msg("Update mode")
 	if !m.Cfg.NoManifestUpdate || m.Cfg.JobImage != "" {
-		if err := m.Deploy(); err != nil {
+		if err := m.DeployCustomReadyConditions(customCheck, podCount); err != nil {
 			log.Error().Err(err).Msg("Error deploying environment")
 			_ = m.Shutdown()
 			return err
@@ -627,6 +635,20 @@ func (m *Environment) Run() error {
 	return nil
 }
 
+// RunUpdated runs the environment and checks for pods with `updated=true` label
+func (m *Environment) RunUpdated(podCount int) error {
+	conds := &client.ReadyCheckData{
+		ReadinessProbeCheckSelector: "updated=true",
+		Timeout:                     10 * time.Minute,
+	}
+	return m.RunCustomReadyConditions(conds, podCount)
+}
+
+// Run deploys or connects to already created environment
+func (m *Environment) Run() error {
+	return m.RunCustomReadyConditions(nil, 0)
+}
+
 func (m *Environment) enumerateApps() error {
 	apps, err := m.Client.UniqueLabels(m.Cfg.Namespace, "app")
 	if err != nil {
@@ -640,8 +662,8 @@ func (m *Environment) enumerateApps() error {
 	return nil
 }
 
-// Deploy deploy current manifest and check logs for readiness
-func (m *Environment) Deploy() error {
+// DeployCustomReadyConditions deploy current manifest with added custom readiness checks
+func (m *Environment) DeployCustomReadyConditions(customCheck *client.ReadyCheckData, customPodCount int) error {
 	log.Info().Str("Namespace", m.Cfg.Namespace).Msg("Deploying namespace")
 
 	if m.Cfg.DryRun {
@@ -662,10 +684,20 @@ func (m *Environment) Deploy() error {
 	if err := m.Client.WaitPodsReady(m.Cfg.Namespace, m.Cfg.ReadyCheckData, expectedPodCount); err != nil {
 		return err
 	}
+	if customCheck != nil {
+		if err := m.Client.WaitPodsReady(m.Cfg.Namespace, customCheck, customPodCount); err != nil {
+			return err
+		}
+	}
 	if err := m.enumerateApps(); err != nil {
 		return err
 	}
 	return m.Client.AddPodsAnnotations(m.Cfg.Namespace, "", defaultPodAnnotations)
+}
+
+// Deploy deploy current manifest and check logs for readiness
+func (m *Environment) Deploy() error {
+	return m.DeployCustomReadyConditions(nil, 0)
 }
 
 // RolloutStatefulSets applies "rollout statefulset" to all existing statefulsets in our namespace

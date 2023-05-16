@@ -97,7 +97,13 @@ func (m *K8sClient) AddLabel(namespace string, selector string, label string) er
 	}
 	for _, pod := range podList.Items {
 		labelPatch := fmt.Sprintf(`[{"op":"add","path":"/metadata/labels/%s","value":"%s" }]`, l[0], l[1])
-		_, err := m.ClientSet.CoreV1().Pods(namespace).Patch(context.Background(), pod.GetName(), types.JSONPatchType, []byte(labelPatch), metaV1.PatchOptions{})
+		_, err := m.ClientSet.CoreV1().Pods(namespace).Patch(
+			context.Background(),
+			pod.GetName(),
+			types.JSONPatchType,
+			[]byte(labelPatch),
+			metaV1.PatchOptions{},
+		)
 		if err != nil {
 			return errors.Wrapf(err, "failed to update labels %s for pod %s", labelPatch, pod.Name)
 		}
