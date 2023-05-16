@@ -110,6 +110,14 @@ const (
 	EnvVarEVMHttpUrls                = "EVM_HTTP_URLS"
 	EnvVarEVMHttpUrlsUserDescription = "The HTTP RPC URLs used to connect to the chain"
 	EnvVarEVMHttpUrlsExample         = "https://mainnet.infura.io/v3/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+	EnvVarTestUpgradeImage            = "TEST_UPGRADE_IMAGE"
+	EnvVarTestUpgradeImageDescription = "Used in node version migration tests to specify the image to upgrade to"
+	EnvVarTestUpgradeImageExample     = "public.ecr.aws/chainlink/chainlink"
+
+	EnvVarTestUpgradeVersion            = "TEST_UPGRADE_VERSION"
+	EnvVarTestUpgradeVersionDescription = "Used in node version migration tests to specify the version to upgrade to"
+	EnvVarTestUpgradeVersionExample     = "2.0.0"
 )
 
 var (

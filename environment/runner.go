@@ -187,6 +187,8 @@ func jobEnvVars(props *Props) *[]*k8s.EnvVar {
 		config.EnvVarInternalDockerRepo,
 		config.EnvVarEVMUrls,
 		config.EnvVarEVMHttpUrls,
+		config.EnvVarTestUpgradeImage,
+		config.EnvVarTestUpgradeVersion,
 	}
 	for _, k := range lookups {
 		v, success := os.LookupEnv(k)
