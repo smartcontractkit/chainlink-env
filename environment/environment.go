@@ -424,6 +424,7 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	helmFlags := []*string{
 		a.Str("--namespace"),
 		a.Str(m.Cfg.Namespace),
+		a.Str("--skip-tests"),
 	}
 	if chart.GetVersion() != "" {
 		helmFlags = append(helmFlags, a.Str("--version"), a.Str(chart.GetVersion()))
