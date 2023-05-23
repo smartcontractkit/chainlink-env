@@ -43,6 +43,7 @@ var (
 		"backyards.banzaicloud.io/public-dockerhub-access": a.Str("true"),
 	}
 	defaultPodAnnotations = map[string]string{"cluster-autoscaler.kubernetes.io~1safe-to-evict": "false"}
+	defaultPodLabels      = map[string]string{"clenv": "true"}
 )
 
 // ConnectedChart interface to interact both with cdk8s apps and helm charts
@@ -280,6 +281,21 @@ func (m *Environment) initApp() error {
 		Metadata: &k8s.ObjectMeta{
 			Name:      a.Str("default"),
 			Namespace: a.Str(m.Cfg.Namespace),
+		},
+	})
+	zero := float64(0)
+	k8s.NewKubePodDisruptionBudget(m.root, a.Str("pdb"), &k8s.KubePodDisruptionBudgetProps{
+		Metadata: &k8s.ObjectMeta{
+			Name:      a.Str("clenv-pdb"),
+			Namespace: a.Str(m.Cfg.Namespace),
+		},
+		Spec: &k8s.PodDisruptionBudgetSpec{
+			MaxUnavailable: k8s.IntOrString_FromNumber(&zero),
+			Selector: &k8s.LabelSelector{
+				MatchLabels: &map[string]*string{
+					pkg.NamespaceLabelKey: a.Str(m.Cfg.Namespace),
+				},
+			},
 		},
 	})
 	m.CurrentManifest = *m.App.SynthYaml()
@@ -693,7 +709,16 @@ func (m *Environment) DeployCustomReadyConditions(customCheck *client.ReadyCheck
 	if err := m.enumerateApps(); err != nil {
 		return err
 	}
-	return m.Client.AddPodsAnnotations(m.Cfg.Namespace, "", defaultPodAnnotations)
+	podList, err := m.Client.ListPods(m.Cfg.Namespace, "")
+	if err != nil {
+		return err
+	}
+	defaultPodLabels[pkg.NamespaceLabelKey] = m.Cfg.Namespace
+	if err := m.Client.AddPodsLabels(m.Cfg.Namespace, podList, defaultPodLabels); err != nil {
+		return err
+	}
+
+	return m.Client.AddPodsAnnotations(m.Cfg.Namespace, podList, defaultPodAnnotations)
 }
 
 // Deploy deploy current manifest and check logs for readiness
