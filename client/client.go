@@ -144,15 +144,24 @@ func (m *K8sClient) LabelChaosGroupByLabels(namespace string, labels map[string]
 	return nil
 }
 
-// AddPodsAnnotations adds map of annotations to all pods selected by selector
-func (m *K8sClient) AddPodsAnnotations(namespace, labelSelector string, annotations map[string]string) error {
-	podList, err := m.ListPods(namespace, labelSelector)
-	if err != nil {
-		return err
+// AddPodsLabels adds map of labels to all pods in list
+func (m *K8sClient) AddPodsLabels(namespace string, podList *v1.PodList, labels map[string]string) error {
+	for _, pod := range podList.Items {
+		for k, v := range labels {
+			err := m.AddPodLabel(namespace, pod, k, v)
+			if err != nil {
+				return err
+			}
+		}
 	}
+	return nil
+}
+
+// AddPodsAnnotations adds map of annotations to all pods in list
+func (m *K8sClient) AddPodsAnnotations(namespace string, podList *v1.PodList, annotations map[string]string) error {
 	for _, pod := range podList.Items {
 		for k, v := range annotations {
-			err = m.AddPodAnnotation(namespace, pod, k, v)
+			err := m.AddPodAnnotation(namespace, pod, k, v)
 			if err != nil {
 				return err
 			}

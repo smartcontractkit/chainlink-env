@@ -4,7 +4,8 @@ import a "github.com/smartcontractkit/chainlink-env/pkg/alias"
 
 // Common labels for k8s envs
 const (
-	TTLLabelKey = "janitor/ttl"
+	TTLLabelKey       = "janitor/ttl"
+	NamespaceLabelKey = "namespace"
 )
 
 // Environment types, envs got selected by having a label of that type
