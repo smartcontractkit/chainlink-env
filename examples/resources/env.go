@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg"
@@ -10,12 +11,16 @@ import (
 )
 
 func main() {
+	chainlinkChart, err := chainlink.New(0, nil)
+	if err != nil {
+		panic(err)
+	}
 	e := environment.New(&environment.Config{
 		Labels: []string{fmt.Sprintf("envType=%s", pkg.EnvTypeEVM5)},
 	}).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, nil))
-	err := e.Run()
+		AddHelm(chainlinkChart)
+	err = e.Run()
 	if err != nil {
 		panic(err)
 	}

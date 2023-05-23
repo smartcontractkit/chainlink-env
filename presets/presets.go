@@ -11,41 +11,53 @@ import (
 )
 
 // EVMOneNode local development Chainlink deployment
-func EVMOneNode(config *environment.Config) *environment.Environment {
+func EVMOneNode(config *environment.Config) (*environment.Environment, error) {
+	chainlinkChart, err := chainlink.New(0, nil)
+	if err != nil {
+		return nil, err
+	}
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, nil))
+		AddHelm(chainlinkChart), nil
 }
 
 // EVMMinimalLocalBS local development Chainlink deployment,
 // 1 bootstrap + 4 oracles (minimal requirements for OCR) + Blockscout
-func EVMMinimalLocalBS(config *environment.Config) *environment.Environment {
+func EVMMinimalLocalBS(config *environment.Config) (*environment.Environment, error) {
+	chainlinkChart, err := chainlink.New(0, map[string]interface{}{
+		"replicas": 5,
+	})
+	if err != nil {
+		return nil, err
+	}
 	return environment.New(config).
 		AddChart(blockscout.New(&blockscout.Props{})).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, map[string]interface{}{
-			"replicas": 5,
-		}))
+		AddHelm(chainlinkChart), nil
 }
 
 // EVMMinimalLocal local development Chainlink deployment,
 // 1 bootstrap + 4 oracles (minimal requirements for OCR)
-func EVMMinimalLocal(config *environment.Config) *environment.Environment {
+func EVMMinimalLocal(config *environment.Config) (*environment.Environment, error) {
+	chainlinkChart, err := chainlink.New(0, map[string]interface{}{
+		"replicas": 5,
+	})
+	if err != nil {
+		return nil, err
+	}
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, map[string]interface{}{
-			"replicas": 5,
-		}))
+		AddHelm(chainlinkChart), nil
 }
 
 // EVMReorg deployment for two Ethereum networks re-org test
-func EVMReorg(config *environment.Config) *environment.Environment {
+func EVMReorg(config *environment.Config) (*environment.Environment, error) {
 	var clToml = `[[EVM]]
 ChainID = '1337'
 FinalityDepth = 200
@@ -57,6 +69,13 @@ HTTPURL = 'http://geth-ethereum-geth:8544'
 
 [EVM.HeadTracker]
 HistoryDepth = 400`
+	chainlinkChart, err := chainlink.New(0, map[string]interface{}{
+		"replicas": 5,
+		"toml":     clToml,
+	})
+	if err != nil {
+		return nil, err
+	}
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
@@ -82,14 +101,43 @@ HistoryDepth = 400`
 				},
 			},
 		})).
-		AddHelm(chainlink.New(0, map[string]interface{}{
-			"replicas": 5,
-			"toml":     clToml,
-		}))
+		AddHelm(chainlinkChart), nil
 }
 
 // EVMSoak deployment for a long running soak tests
-func EVMSoak(config *environment.Config) *environment.Environment {
+func EVMSoak(config *environment.Config) (*environment.Environment, error) {
+	chainlinkChart, err := chainlink.New(0, map[string]interface{}{
+		"replicas": 5,
+		"db": map[string]interface{}{
+			"stateful": true,
+			"capacity": "1Gi",
+			"resources": map[string]interface{}{
+				"requests": map[string]interface{}{
+					"cpu":    "250m",
+					"memory": "256Mi",
+				},
+				"limits": map[string]interface{}{
+					"cpu":    "250m",
+					"memory": "256Mi",
+				},
+			},
+		},
+		"chainlink": map[string]interface{}{
+			"resources": map[string]interface{}{
+				"requests": map[string]interface{}{
+					"cpu":    "1000m",
+					"memory": "2048Mi",
+				},
+				"limits": map[string]interface{}{
+					"cpu":    "1000m",
+					"memory": "2048Mi",
+				},
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
@@ -108,33 +156,5 @@ func EVMSoak(config *environment.Config) *environment.Environment {
 				},
 			},
 		})).
-		AddHelm(chainlink.New(0, map[string]interface{}{
-			"replicas": 5,
-			"db": map[string]interface{}{
-				"stateful": true,
-				"capacity": "1Gi",
-				"resources": map[string]interface{}{
-					"requests": map[string]interface{}{
-						"cpu":    "250m",
-						"memory": "256Mi",
-					},
-					"limits": map[string]interface{}{
-						"cpu":    "250m",
-						"memory": "256Mi",
-					},
-				},
-			},
-			"chainlink": map[string]interface{}{
-				"resources": map[string]interface{}{
-					"requests": map[string]interface{}{
-						"cpu":    "1000m",
-						"memory": "2048Mi",
-					},
-					"limits": map[string]interface{}{
-						"cpu":    "1000m",
-						"memory": "2048Mi",
-					},
-				},
-			},
-		}))
+		AddHelm(chainlinkChart), nil
 }

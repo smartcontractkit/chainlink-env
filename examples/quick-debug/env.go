@@ -7,14 +7,18 @@ import (
 )
 
 func main() {
-	err := environment.New(&environment.Config{
+	chainlinkChart, err := chainlink.New(0, nil)
+	if err != nil {
+		panic(err)
+	}
+	err = environment.New(&environment.Config{
 		Labels:            []string{"type=construction-in-progress"},
 		NamespacePrefix:   "new-environment",
 		KeepConnection:    true,
 		RemoveOnInterrupt: true,
 	}).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, nil)).
+		AddHelm(chainlinkChart).
 		Run()
 	if err != nil {
 		panic(err)

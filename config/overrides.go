@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/imdario/mergo"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -116,13 +115,11 @@ var (
 	JSIIGlobalMu = &sync.Mutex{}
 )
 
-func MustMerge(targetVars interface{}, codeVars interface{}) {
-	if err := mergo.Merge(targetVars, codeVars, mergo.WithOverride); err != nil {
-		log.Fatal().Err(err).Send()
-	}
+func MustMerge(targetVars interface{}, codeVars interface{}) error {
+	return mergo.Merge(targetVars, codeVars, mergo.WithOverride)
 }
 
-func MustEnvOverrideVersion(target interface{}) {
+func MustEnvOverrideVersion(target interface{}) error {
 	image := os.Getenv(EnvVarCLImage)
 	tag := os.Getenv(EnvVarCLTag)
 	if image != "" && tag != "" {
@@ -134,7 +131,8 @@ func MustEnvOverrideVersion(target interface{}) {
 				},
 			},
 		}, mergo.WithOverride); err != nil {
-			log.Fatal().Err(err).Send()
+			return err
 		}
 	}
+	return nil
 }

@@ -47,8 +47,10 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 	// we adding the same chart with different index and executing multi-stage deployment
 	// connections should be renewed
 	e := environment.New(testEnvConfig)
-	err := e.AddHelm(ethChart).
-		AddHelm(chainlink.New(0, nil)).
+	chainlinkChart, err := chainlink.New(0, nil)
+	require.NoError(t, err)
+	err = e.AddHelm(ethChart).
+		AddHelm(chainlinkChart).
 		Run()
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
@@ -62,7 +64,9 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 	require.Len(t, e.URLs[chainlink.DBsLocalURLsKey], 1)
 	require.Len(t, e.URLs, 7)
 
-	err = e.AddHelm(chainlink.New(1, nil)).
+	chainlinkChart2, err := chainlink.New(0, nil)
+	require.NoError(t, err)
+	err = e.AddHelm(chainlinkChart2).
 		Run()
 	require.NoError(t, err)
 	require.Len(t, e.URLs[chainlink.NodesLocalURLsKey], 2)
@@ -101,11 +105,13 @@ func TestConnectWithoutManifest(t *testing.T) {
 		t.Log("Existing Env Namespace", existingEnv.Cfg.Namespace)
 		// deploy environment to use as an existing one for the test
 		existingEnv.Cfg.JobImage = ""
+		chainlinkChart, err := chainlink.New(0, map[string]interface{}{
+			"replicas": 1,
+		})
+		require.NoError(t, err)
 		existingEnv.AddHelm(ethereum.New(nil)).
-			AddHelm(chainlink.New(0, map[string]interface{}{
-				"replicas": 1,
-			}))
-		err := existingEnv.Run()
+			AddHelm(chainlinkChart)
+		err = existingEnv.Run()
 		require.NoError(t, err)
 		// propagate the existing environment to the remote runner
 		t.Setenv(fmt.Sprintf("TEST_%s", existingEnvAlreadySetupVar), "abc")
@@ -123,10 +129,12 @@ func TestConnectWithoutManifest(t *testing.T) {
 	testEnvConfig.NoManifestUpdate = true
 	testEnv := environment.New(testEnvConfig)
 	t.Log("Testing Env Namespace", testEnv.Cfg.Namespace)
-	err := testEnv.AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, map[string]interface{}{
-			"replicas": 1,
-		})).
+	chainlinkChart, err := chainlink.New(0, map[string]interface{}{
+		"replicas": 1,
+	})
+	require.NoError(t, err)
+	err = testEnv.AddHelm(ethereum.New(nil)).
+		AddHelm(chainlinkChart).
 		Run()
 	require.NoError(t, err)
 	if testEnv.WillUseRemoteRunner() {
@@ -159,8 +167,9 @@ func TestConnectWithoutManifest(t *testing.T) {
 func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
-	e := presets.EVMSoak(testEnvConfig)
-	err := e.Run()
+	e, err := presets.EVMSoak(testEnvConfig)
+	require.NoError(t, err)
+	err = e.Run()
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		assert.NoError(t, e.Shutdown())
@@ -170,8 +179,9 @@ func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
 func TestWithSingleNodeEnv(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
-	e := presets.EVMOneNode(testEnvConfig)
-	err := e.Run()
+	e, err := presets.EVMOneNode(testEnvConfig)
+	require.NoError(t, err)
+	err = e.Run()
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
 		return
@@ -184,8 +194,9 @@ func TestWithSingleNodeEnv(t *testing.T) {
 func TestMinResources5NodesEnv(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
-	e := presets.EVMMinimalLocal(testEnvConfig)
-	err := e.Run()
+	e, err := presets.EVMMinimalLocal(testEnvConfig)
+	require.NoError(t, err)
+	err = e.Run()
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
 		return
@@ -198,8 +209,9 @@ func TestMinResources5NodesEnv(t *testing.T) {
 func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
-	e := presets.EVMMinimalLocalBS(testEnvConfig)
-	err := e.Run()
+	e, err := presets.EVMMinimalLocalBS(testEnvConfig)
+	require.NoError(t, err)
+	err = e.Run()
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
 		return
@@ -212,8 +224,9 @@ func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
 func Test5NodesPlus2MiningGethsReorgEnv(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
-	e := presets.EVMReorg(testEnvConfig)
-	err := e.Run()
+	e, err := presets.EVMReorg(testEnvConfig)
+	require.NoError(t, err)
+	err = e.Run()
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
 		return
@@ -226,11 +239,15 @@ func Test5NodesPlus2MiningGethsReorgEnv(t *testing.T) {
 func TestMultipleInstancesOfTheSameType(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
+	chainlinkChart1, err := chainlink.New(0, nil)
+	require.NoError(t, err)
+	chainlinkChart2, err := chainlink.New(1, nil)
+	require.NoError(t, err)
 	e := environment.New(testEnvConfig).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, nil)).
-		AddHelm(chainlink.New(1, nil))
-	err := e.Run()
+		AddHelm(chainlinkChart1).
+		AddHelm(chainlinkChart2)
+	err = e.Run()
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
 		return
@@ -255,12 +272,14 @@ func TestWithChaos(t *testing.T) {
 		},
 	}
 	testEnvConfig := GetTestEnvConfig(t)
+	chainlinkChart, err := chainlink.New(0, map[string]interface{}{
+		"replicas": 1,
+	})
+	require.NoError(t, err)
 	e := environment.New(testEnvConfig).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, map[string]interface{}{
-			"replicas": 1,
-		}))
-	err := e.Run()
+		AddHelm(chainlinkChart)
+	err = e.Run()
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
 		return

@@ -60,15 +60,15 @@ func GetLocalK8sDeps() (*kubernetes.Clientset, *rest.Config, error) {
 }
 
 // NewK8sClient creates a new k8s client with a REST config
-func NewK8sClient() *K8sClient {
+func NewK8sClient() (*K8sClient, error) {
 	cs, cfg, err := GetLocalK8sDeps()
 	if err != nil {
-		log.Fatal().Err(err).Send()
+		return nil, err
 	}
 	return &K8sClient{
 		ClientSet:  cs,
 		RESTConfig: cfg,
-	}
+	}, nil
 }
 
 // ListPods lists pods for a namespace and selector

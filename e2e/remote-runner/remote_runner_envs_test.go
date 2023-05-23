@@ -57,8 +57,9 @@ func TestWithChaos(t *testing.T) {
 func TestFundReturnShutdownLogic(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := common.GetTestEnvConfig(t)
-	e := presets.EVMMinimalLocal(testEnvConfig)
-	err := e.Run()
+	e, err := presets.EVMMinimalLocal(testEnvConfig)
+	require.NoError(t, err)
+	err = e.Run()
 	if e.WillUseRemoteRunner() {
 		require.Error(t, err, "Should return an error")
 		return
@@ -74,14 +75,16 @@ func TestRemoteRunnerOneSetupWithMultipeTests(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := common.GetTestEnvConfig(t)
 	ethChart := ethereum.New(nil)
+	chainlinkChart, err := chainlink.New(0, map[string]interface{}{
+		"replicas": 5,
+	})
+	require.NoError(t, err)
 	e := environment.New(testEnvConfig).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethChart).
-		AddHelm(chainlink.New(0, map[string]interface{}{
-			"replicas": 5,
-		}))
-	err := e.Run()
+		AddHelm(chainlinkChart)
+	err = e.Run()
 	t.Cleanup(func() {
 		assert.NoError(t, e.Shutdown())
 	})
@@ -109,8 +112,9 @@ func TestRemoteRunnerOneSetupWithMultipeTests(t *testing.T) {
 		test1EnvConfig := common.GetTestEnvConfig(t1)
 		test1EnvConfig.Namespace = e.Cfg.Namespace
 		test1EnvConfig.NoManifestUpdate = true
-		e1 := presets.EVMMinimalLocal(test1EnvConfig)
-		err := e1.Run()
+		e1, err := presets.EVMMinimalLocal(test1EnvConfig)
+		require.NoError(t1, err)
+		err = e1.Run()
 		require.NoError(t1, err)
 		log.Info().Str("Test", "One").Msg("Inside test")
 		time.Sleep(1 * time.Second)
