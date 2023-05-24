@@ -449,11 +449,14 @@ func (m *Environment) AddHelmCharts(charts []ConnectedChart) *Environment {
 
 // AddHelm adds a helm chart to the testing environment
 func (m *Environment) AddHelm(chart ConnectedChart, chartError error) *Environment {
+	if m.err != nil {
+		return m
+	}
 	if chartError != nil {
 		m.err = chartError
 		return m
 	}
-	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() || m.err != nil {
+	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
 		return m
 	}
 	config.JSIIGlobalMu.Lock()

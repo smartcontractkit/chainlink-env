@@ -88,7 +88,7 @@ import (
 )
 
 func main() {
-	err = environment.New(&environment.Config{
+	err := environment.New(&environment.Config{
 		Labels:            []string{"type=construction-in-progress"},
 		NamespacePrefix:   "new-environment",
 		KeepConnection:    true,
