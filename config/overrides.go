@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/imdario/mergo"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -118,7 +117,7 @@ var (
 
 func MustMerge(targetVars interface{}, codeVars interface{}) {
 	if err := mergo.Merge(targetVars, codeVars, mergo.WithOverride); err != nil {
-		log.Fatal().Err(err).Send()
+		panic(err)
 	}
 }
 
@@ -134,7 +133,7 @@ func MustEnvOverrideVersion(target interface{}) {
 				},
 			},
 		}, mergo.WithOverride); err != nil {
-			log.Fatal().Err(err).Send()
+			panic(err)
 		}
 	}
 }

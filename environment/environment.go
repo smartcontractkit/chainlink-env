@@ -138,6 +138,7 @@ type Environment struct {
 	httpClient           *resty.Client
 	URLs                 map[string][]string    // General URLs of launched resources. Uses '_local' to delineate forwarded ports
 	ChainlinkNodeDetails []*ChainlinkNodeDetail // ChainlinkNodeDetails has convenient details for connecting to chainlink deployments
+	err                  error
 }
 
 // ChainlinkNodeDetail contains details about a chainlink node deployment
@@ -183,7 +184,10 @@ func New(cfg *Config) *Environment {
 		targetCfg.InsideK8s, _ = strconv.ParseBool(os.Getenv(config.EnvVarInsideK8s))
 	}
 
-	c := client.NewK8sClient()
+	c, err := client.NewK8sClient()
+	if err != nil {
+		return &Environment{err: err}
+	}
 	e := &Environment{
 		URLs:   make(map[string][]string),
 		Charts: make([]ConnectedChart, 0),
@@ -193,14 +197,16 @@ func New(cfg *Config) *Environment {
 	}
 	arts, err := NewArtifacts(e.Client, e.Cfg.Namespace)
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to create artifacts client")
+		log.Error().Err(err).Msg("failed to create artifacts client")
+		return &Environment{err: err}
 	}
 	e.Artifacts = arts
 
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
 	if err := e.initApp(); err != nil {
-		log.Fatal().Err(err).Msg("failed to create ns and service account")
+		log.Error().Err(err).Msg("failed to create ns and service account")
+		return &Environment{err: err}
 	}
 	e.Chaos = client.NewChaos(c, e.Cfg.Namespace)
 
@@ -227,7 +233,7 @@ func (m *Environment) initApp() error {
 	m.Cfg.Labels = append(m.Cfg.Labels, "app.kubernetes.io/managed-by=cdk8s")
 	owner := os.Getenv(config.EnvVarUser)
 	if owner == "" {
-		log.Fatal().Str(config.EnvVarUser, owner).Msg(fmt.Sprintf("missing owner environment variable, please set %s to your name or if you are seeing this in CI please set it to ${{ github.actor }}", config.EnvVarUser))
+		return fmt.Errorf("missing owner environment variable, please set %s to your name or if you are seeing this in CI please set it to ${{ github.actor }}", config.EnvVarUser)
 	}
 	m.Cfg.Labels = append(m.Cfg.Labels, fmt.Sprintf("owner=%s", owner))
 
@@ -257,7 +263,7 @@ func (m *Environment) initApp() error {
 
 	m.Cfg.nsLabels, err = a.ConvertLabels(m.Cfg.Labels)
 	if err != nil {
-		log.Fatal().Err(err).Send()
+		return err
 	}
 	defaultAnnotations[pkg.TTLLabelKey] = a.ShortDur(m.Cfg.TTL)
 	m.root = cdk8s.NewChart(m.App, a.Str(fmt.Sprintf("root-chart-%s", m.Cfg.Namespace)), &cdk8s.ChartProps{
@@ -304,6 +310,9 @@ func (m *Environment) initApp() error {
 
 // AddChart adds a chart to the deployment
 func (m *Environment) AddChart(f func(root cdk8s.Chart) ConnectedChart) *Environment {
+	if m.err != nil {
+		return m
+	}
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
 	m.Charts = append(m.Charts, f(m.root))
@@ -334,6 +343,9 @@ func (m *Environment) findChart(name string) (index int, chart ConnectedChart, e
 // Note: you need to call Run() after this to apply the changes. If you're modifying ConfigMap values, you'll probably
 // need to use RollOutStatefulSets to apply the changes to the pods. https://stackoverflow.com/questions/57356521/rollingupdate-for-stateful-set-doesnt-restart-pods-and-changes-from-updated-con
 func (m *Environment) ReplaceHelm(name string, chart ConnectedChart) (*Environment, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
 	if err := m.removeChart(name); err != nil {
@@ -365,6 +377,9 @@ func (m *Environment) ReplaceHelm(name string, chart ConnectedChart) (*Environme
 //
 // Deprecated: use ReplaceHelm instead to avoid silent errors
 func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment {
+	if m.err != nil {
+		return m
+	}
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
 	if err := m.removeChart(name); err != nil {
@@ -396,6 +411,9 @@ func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment
 // Note: If you're modifying ConfigMap values, you'll probably need to use RollOutStatefulSets to apply the changes to the pods.
 // https://stackoverflow.com/questions/57356521/rollingupdate-for-stateful-set-doesnt-restart-pods-and-changes-from-updated-con
 func (m *Environment) UpdateHelm(name string, values map[string]any) (*Environment, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
 	_, chart, err := m.findChart(name)
 	if err != nil {
 		return nil, err
@@ -412,6 +430,9 @@ func (m *Environment) UpdateHelm(name string, values map[string]any) (*Environme
 
 // AddHelmCharts adds multiple helm charts to the testing environment
 func (m *Environment) AddHelmCharts(charts []ConnectedChart) *Environment {
+	if m.err != nil {
+		return m
+	}
 	for _, c := range charts {
 		m.AddHelm(c)
 	}
@@ -420,6 +441,9 @@ func (m *Environment) AddHelmCharts(charts []ConnectedChart) *Environment {
 
 // AddHelm adds a helm chart to the testing environment
 func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
+	if m.err != nil {
+		return m
+	}
 	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
 		return m
 	}
@@ -447,7 +471,8 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	}
 	chartPath, err := m.PullOCIChart(chart)
 	if err != nil {
-		panic(err)
+		m.err = err
+		return m
 	}
 	cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
 		Chart:       a.Str(chartPath),
@@ -544,11 +569,13 @@ func (m *Environment) ResourcesSummary(selector string) (map[string]map[string]s
 }
 
 // ClearCharts recreates cdk8s app
-func (m *Environment) ClearCharts() {
+func (m *Environment) ClearCharts() error {
 	m.Charts = make([]ConnectedChart, 0)
 	if err := m.initApp(); err != nil {
-		log.Fatal().Err(err).Msg("failed to create ns and service account")
+		log.Error().Err(err).Msg("failed to create ns and service account")
+		return err
 	}
+	return nil
 }
 
 func (m *Environment) Manifest() string {
@@ -564,6 +591,9 @@ func (m *Environment) UpdateManifest() {
 
 // RunCustomReadyConditions Runs the environment with custom ready conditions for a supplied pod count
 func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckData, podCount int) error {
+	if m.err != nil {
+		return m.err
+	}
 	if m.Cfg.jobDeployed {
 		return nil
 	}
@@ -629,7 +659,8 @@ func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckDat
 		}
 		arts, err := NewArtifacts(m.Client, m.Cfg.Namespace)
 		if err != nil {
-			log.Fatal().Err(err).Msg("failed to create artifacts client")
+			log.Error().Err(err).Msg("failed to create artifacts client")
+			return err
 		}
 		m.Artifacts = arts
 		if len(m.URLs["goc"]) != 0 {
@@ -654,6 +685,9 @@ func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckDat
 
 // RunUpdated runs the environment and checks for pods with `updated=true` label
 func (m *Environment) RunUpdated(podCount int) error {
+	if m.err != nil {
+		return m.err
+	}
 	conds := &client.ReadyCheckData{
 		ReadinessProbeCheckSelector: "updated=true",
 		Timeout:                     10 * time.Minute,
@@ -663,6 +697,9 @@ func (m *Environment) RunUpdated(podCount int) error {
 
 // Run deploys or connects to already created environment
 func (m *Environment) Run() error {
+	if m.err != nil {
+		return m.err
+	}
 	return m.RunCustomReadyConditions(nil, 0)
 }
 
@@ -681,6 +718,9 @@ func (m *Environment) enumerateApps() error {
 
 // DeployCustomReadyConditions deploy current manifest with added custom readiness checks
 func (m *Environment) DeployCustomReadyConditions(customCheck *client.ReadyCheckData, customPodCount int) error {
+	if m.err != nil {
+		return m.err
+	}
 	log.Info().Str("Namespace", m.Cfg.Namespace).Msg("Deploying namespace")
 
 	if m.Cfg.DryRun {
@@ -728,6 +768,9 @@ func (m *Environment) Deploy() error {
 
 // RolloutStatefulSets applies "rollout statefulset" to all existing statefulsets in our namespace
 func (m *Environment) RolloutStatefulSets() error {
+	if m.err != nil {
+		return m.err
+	}
 	return m.Client.RolloutStatefulSets(m.Cfg.Namespace)
 }
 
