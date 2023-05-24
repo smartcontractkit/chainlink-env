@@ -132,7 +132,7 @@ type ConnectedChart interface {
 When creating new deployment part, you can use any public Helm chart or a local path in Helm props
 
 ```golang
-func New(props *Props) (environment.ConnectedChart, error) {
+func New(props *Props) environment.ConnectedChart {
 	if props == nil {
 		props = defaultProps()
 	}
@@ -143,7 +143,7 @@ func New(props *Props) (environment.ConnectedChart, error) {
 			Values: &props.Values,
 		},
 		Props: props,
-	}, nil
+	}
 }
 ```
 

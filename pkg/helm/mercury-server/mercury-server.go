@@ -112,16 +112,13 @@ func defaultProps() map[string]interface{} {
 	return map[string]interface{}{}
 }
 
-func New(path string, helmVersion string, props map[string]interface{}) (environment.ConnectedChart, error) {
+func New(path string, helmVersion string, props map[string]interface{}) environment.ConnectedChart {
 	dp := defaultProps()
-	err := config.MustMerge(&dp, props)
-	if err != nil {
-		return nil, err
-	}
+	config.MustMerge(&dp, props)
 	return Chart{
 		Name:    "mercury-server",
 		Path:    path,
 		Values:  &dp,
 		Version: helmVersion,
-	}, nil
+	}
 }

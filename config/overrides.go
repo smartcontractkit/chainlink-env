@@ -115,11 +115,13 @@ var (
 	JSIIGlobalMu = &sync.Mutex{}
 )
 
-func MustMerge(targetVars interface{}, codeVars interface{}) error {
-	return mergo.Merge(targetVars, codeVars, mergo.WithOverride)
+func MustMerge(targetVars interface{}, codeVars interface{}) {
+	if err := mergo.Merge(targetVars, codeVars, mergo.WithOverride); err != nil {
+		panic(err)
+	}
 }
 
-func MustEnvOverrideVersion(target interface{}) error {
+func MustEnvOverrideVersion(target interface{}) {
 	image := os.Getenv(EnvVarCLImage)
 	tag := os.Getenv(EnvVarCLTag)
 	if image != "" && tag != "" {
@@ -131,8 +133,7 @@ func MustEnvOverrideVersion(target interface{}) error {
 				},
 			},
 		}, mergo.WithOverride); err != nil {
-			return err
+			panic(err)
 		}
 	}
-	return nil
 }

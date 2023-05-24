@@ -1,11 +1,10 @@
 package main
 
 import (
-	"time"
-
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/examples/deployment_part"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
+	"time"
 )
 
 func main() {

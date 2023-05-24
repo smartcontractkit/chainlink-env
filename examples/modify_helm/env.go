@@ -27,14 +27,10 @@ func main() {
 	}
 	e.Cfg.KeepConnection = true
 	e.Cfg.RemoveOnInterrupt = true
-	chainlinkChart2, err := chainlink.New(0, map[string]interface{}{
-		"replicas": 2,
-	})
-	if err != nil {
-		panic(err)
-	}
 	err = e.
-		ModifyHelm("chainlink-0", chainlinkChart2).Run()
+		ModifyHelm("chainlink-0", chainlink.New(0, map[string]interface{}{
+			"replicas": 2,
+		})).Run()
 	if err != nil {
 		panic(err)
 	}

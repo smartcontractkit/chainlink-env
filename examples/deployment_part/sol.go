@@ -96,7 +96,7 @@ func defaultProps() *Props {
 	}
 }
 
-func New(props *Props) (environment.ConnectedChart, error) {
+func New(props *Props) environment.ConnectedChart {
 	if props == nil {
 		props = defaultProps()
 	}
@@ -107,5 +107,5 @@ func New(props *Props) (environment.ConnectedChart, error) {
 			Values: &props.Values,
 		},
 		Props: props,
-	}, nil
+	}
 }

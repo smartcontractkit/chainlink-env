@@ -183,26 +183,20 @@ func defaultProps() *Props {
 	}
 }
 
-func New(props *Props) (environment.ConnectedChart, error) {
+func New(props *Props) environment.ConnectedChart {
 	return NewVersioned("", props)
 }
 
 // NewVersioned enables choosing a specific helm chart version
-func NewVersioned(helmVersion string, props *Props) (environment.ConnectedChart, error) {
+func NewVersioned(helmVersion string, props *Props) environment.ConnectedChart {
 	targetProps := defaultProps()
-	err := config.MustMerge(targetProps, props)
-	if err != nil {
-		return nil, err
-	}
-	err = config.MustMerge(&targetProps.Values, props.Values)
-	if err != nil {
-		return nil, err
-	}
+	config.MustMerge(targetProps, props)
+	config.MustMerge(&targetProps.Values, props.Values)
 	return Chart{
 		Name:    targetProps.NetworkName,
 		Path:    "chainlink-qa/ethereum",
 		Values:  &targetProps.Values,
 		Props:   targetProps,
 		Version: helmVersion,
-	}, nil
+	}
 }

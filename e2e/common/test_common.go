@@ -41,14 +41,13 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
 
-	ethChart, err := ethereum.New(nil)
-	require.NoError(t, err)
+	ethChart := ethereum.New(nil)
 	ethNetworkName := ethChart.GetProps().(*ethereum.Props).NetworkName
 
 	// we adding the same chart with different index and executing multi-stage deployment
 	// connections should be renewed
 	e := environment.New(testEnvConfig)
-	err = e.AddHelm(ethChart, nil).
+	err := e.AddHelm(ethChart).
 		AddHelm(chainlink.New(0, nil)).
 		Run()
 	require.NoError(t, err)

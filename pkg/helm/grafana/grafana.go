@@ -65,21 +65,18 @@ func defaultProps() map[string]interface{} {
 	}
 }
 
-func New(props map[string]interface{}) (environment.ConnectedChart, error) {
+func New(props map[string]interface{}) environment.ConnectedChart {
 	return NewVersioned("", props)
 }
 
 // NewVersioned enables choosing a specific helm chart version
-func NewVersioned(helmVersion string, props map[string]interface{}) (environment.ConnectedChart, error) {
+func NewVersioned(helmVersion string, props map[string]interface{}) environment.ConnectedChart {
 	dp := defaultProps()
-	err := config.MustMerge(&dp, props)
-	if err != nil {
-		return nil, err
-	}
+	config.MustMerge(&dp, props)
 	return Chart{
 		Name:    "grafana",
 		Path:    "grafana/grafana",
 		Values:  &dp,
 		Version: helmVersion,
-	}, nil
+	}
 }

@@ -41,8 +41,8 @@ func (m Chart) ExportData(e *environment.Environment) error {
 	return nil
 }
 
-func New() func(root cdk8s.Chart) (environment.ConnectedChart, error) {
-	return func(root cdk8s.Chart) (environment.ConnectedChart, error) {
+func New() func(root cdk8s.Chart) environment.ConnectedChart {
+	return func(root cdk8s.Chart) environment.ConnectedChart {
 		c := &Chart{}
 		vars := vars{
 			Labels: &map[string]*string{
@@ -54,7 +54,7 @@ func New() func(root cdk8s.Chart) (environment.ConnectedChart, error) {
 		}
 		service(root, vars)
 		deployment(root, vars)
-		return c, nil
+		return c
 	}
 }
 

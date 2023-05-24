@@ -161,7 +161,7 @@ func defaultProps() map[string]any {
 	}
 }
 
-func New(index int, props map[string]any) (environment.ConnectedChart, error) {
+func New(index int, props map[string]any) environment.ConnectedChart {
 	return NewVersioned(index, "", props)
 }
 
@@ -173,31 +173,21 @@ func NewDeployment(deploymentCount int, props map[string]any) ([]environment.Con
 	}
 	charts := make([]environment.ConnectedChart, 0)
 	for i := 0; i < deploymentCount; i++ {
-		chart, err := New(i, props)
-		if err != nil {
-			return nil, err
-		}
-		charts = append(charts, chart)
+		charts = append(charts, New(i, props))
 	}
 	return charts, nil
 }
 
 // NewVersioned enables you to select a specific helm chart version
-func NewVersioned(index int, helmVersion string, props map[string]any) (environment.ConnectedChart, error) {
+func NewVersioned(index int, helmVersion string, props map[string]any) environment.ConnectedChart {
 	dp := defaultProps()
-	err := config.MustEnvOverrideVersion(&dp)
-	if err != nil {
-		return Chart{}, err
-	}
-	err = config.MustMerge(&dp, props)
-	if err != nil {
-		return Chart{}, err
-	}
+	config.MustEnvOverrideVersion(&dp)
+	config.MustMerge(&dp, props)
 	return Chart{
 		Index:   index,
 		Name:    fmt.Sprintf("%s-%d", AppName, index),
 		Path:    "chainlink-qa/chainlink",
 		Version: helmVersion,
 		Values:  &dp,
-	}, nil
+	}
 }

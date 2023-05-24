@@ -52,8 +52,7 @@ func TestOverrideCodeEnv(t *testing.T) {
 		}
 		t.Setenv(EnvVarCLImage, "abc")
 		t.Setenv(EnvVarCLTag, "def")
-		err := MustEnvOverrideVersion(&defaultCodeProps)
-		require.NoError(t, err)
+		MustEnvOverrideVersion(&defaultCodeProps)
 		require.Equal(t, "abc", defaultCodeProps["chainlink"].(map[string]interface{})["image"].(map[string]interface{})["image"])
 		require.Equal(t, "def", defaultCodeProps["chainlink"].(map[string]interface{})["image"].(map[string]interface{})["version"])
 	})

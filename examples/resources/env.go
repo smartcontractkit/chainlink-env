@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-
 	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg"

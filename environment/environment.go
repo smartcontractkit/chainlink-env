@@ -164,10 +164,7 @@ func New(cfg *Config) *Environment {
 		cfg = &Config{}
 	}
 	targetCfg := defaultEnvConfig()
-	err := config.MustMerge(targetCfg, cfg)
-	if err != nil {
-		return &Environment{err: err}
-	}
+	config.MustMerge(targetCfg, cfg)
 	ns := os.Getenv(config.EnvVarNamespace)
 	if ns != "" {
 		cfg.Namespace = ns
@@ -312,18 +309,13 @@ func (m *Environment) initApp() error {
 }
 
 // AddChart adds a chart to the deployment
-func (m *Environment) AddChart(f func(root cdk8s.Chart) (ConnectedChart, error)) *Environment {
+func (m *Environment) AddChart(f func(root cdk8s.Chart) ConnectedChart) *Environment {
 	if m.err != nil {
 		return m
 	}
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
-	chart, err := f(m.root)
-	if err != nil {
-		m.err = err
-		return m
-	}
-	m.Charts = append(m.Charts, chart)
+	m.Charts = append(m.Charts, f(m.root))
 	return m
 }
 
@@ -442,18 +434,14 @@ func (m *Environment) AddHelmCharts(charts []ConnectedChart) *Environment {
 		return m
 	}
 	for _, c := range charts {
-		m.AddHelm(c, nil)
+		m.AddHelm(c)
 	}
 	return m
 }
 
 // AddHelm adds a helm chart to the testing environment
-func (m *Environment) AddHelm(chart ConnectedChart, chartError error) *Environment {
+func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	if m.err != nil {
-		return m
-	}
-	if chartError != nil {
-		m.err = chartError
 		return m
 	}
 	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
@@ -466,11 +454,7 @@ func (m *Environment) AddHelm(chart ConnectedChart, chartError error) *Environme
 		"tolerations":  m.Cfg.Tolerations,
 		"nodeSelector": m.Cfg.NodeSelector,
 	}
-	err := config.MustMerge(values, chart.GetValues())
-	if err != nil {
-		m.err = err
-		return m
-	}
+	config.MustMerge(values, chart.GetValues())
 	log.Trace().
 		Str("Chart", chart.GetName()).
 		Str("Path", chart.GetPath()).

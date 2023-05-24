@@ -100,12 +100,12 @@ func defaultProps() *Props {
 	}
 }
 
-func New(props *Props) (environment.ConnectedChart, error) {
+func New(props *Props) environment.ConnectedChart {
 	return NewVersioned("", props)
 }
 
 // NewVersioned enables choosing a specific helm chart version
-func NewVersioned(helmVersion string, props *Props) (environment.ConnectedChart, error) {
+func NewVersioned(helmVersion string, props *Props) environment.ConnectedChart {
 	if props == nil {
 		props = defaultProps()
 	}
@@ -117,5 +117,5 @@ func NewVersioned(helmVersion string, props *Props) (environment.ConnectedChart,
 			Version: helmVersion,
 		},
 		Props: props,
-	}, nil
+	}
 }

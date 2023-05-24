@@ -73,16 +73,15 @@ func TestFundReturnShutdownLogic(t *testing.T) {
 func TestRemoteRunnerOneSetupWithMultipeTests(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := common.GetTestEnvConfig(t)
-	ethChart, err := ethereum.New(nil)
-	require.NoError(t, err)
+	ethChart := ethereum.New(nil)
 	e := environment.New(testEnvConfig).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
-		AddHelm(ethChart, nil).
+		AddHelm(ethChart).
 		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 5,
 		}))
-	err = e.Run()
+	err := e.Run()
 	t.Cleanup(func() {
 		assert.NoError(t, e.Shutdown())
 	})
@@ -111,7 +110,7 @@ func TestRemoteRunnerOneSetupWithMultipeTests(t *testing.T) {
 		test1EnvConfig.Namespace = e.Cfg.Namespace
 		test1EnvConfig.NoManifestUpdate = true
 		e1 := presets.EVMMinimalLocal(test1EnvConfig)
-		err = e1.Run()
+		err := e1.Run()
 		require.NoError(t1, err)
 		log.Info().Str("Test", "One").Msg("Inside test")
 		time.Sleep(1 * time.Second)
