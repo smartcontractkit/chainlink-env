@@ -475,7 +475,8 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	}
 	chartPath, err := m.PullOCIChart(chart)
 	if err != nil {
-		panic(err)
+		m.err = err
+		return m
 	}
 	cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
 		Chart:       a.Str(chartPath),

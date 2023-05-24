@@ -11,22 +11,25 @@ import (
 )
 
 func TestOCIChart(t *testing.T) {
+	t.Parallel()
 	url := "oci://my-erc/my-repo"
 	ver := "v1.0.8"
 	t.Run("invalid URL", func(t *testing.T) {
-		require.PanicsWithError(t, fmt.Sprintf(environment.ErrInvalidOCI, url), func() {
-			_ = environment.New(nil).
-				AddHelm(mercury_server.New(url, ver, nil)).
-				Run()
-		}, "The code did not panic")
+		t.Parallel()
+		err := environment.New(nil).
+			AddHelm(mercury_server.New(url, ver, nil)).
+			Run()
+		require.Error(t, err)
+		require.ErrorContains(t, err, fmt.Sprintf(environment.ErrInvalidOCI, url), "The error is not ErrInvalidOCI")
 	})
 	t.Run("failed to pull a valid URL", func(t *testing.T) {
+		t.Parallel()
 		url := "oci://my-erc/my-repo/my-chart"
-		require.PanicsWithError(t, fmt.Sprintf(environment.ErrOCIPull, url), func() {
-			_ = environment.New(nil).
-				AddHelm(mercury_server.New(url, ver, nil)).
-				Run()
-		}, "The code did not panic")
+		err := environment.New(nil).
+			AddHelm(mercury_server.New(url, ver, nil)).
+			Run()
+		require.Error(t, err)
+		require.ErrorContains(t, err, fmt.Sprintf(environment.ErrOCIPull, url), "The error is not ErrInvalidOCI")
 	})
 }
 

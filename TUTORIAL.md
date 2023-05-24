@@ -41,12 +41,16 @@ import (
 )
 
 func main() {
-	err := environment.New(&environment.Config{
+	chainlinkChart, err := chainlink.New(0, nil)
+	if err != nil {
+		panic(err)
+	}
+	err = environment.New(&environment.Config{
       KeepConnection:    false,
       RemoveOnInterrupt: false,
     }).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, nil)).
+		AddHelm(chainlinkChart).
 		Run()
 	if err != nil {
 		panic(err)
@@ -88,14 +92,18 @@ import (
 )
 
 func main() {
-	err := environment.New(&environment.Config{
+	chainlinkChart, err := chainlink.New(0, nil)
+	if err != nil {
+		panic(err)
+	}
+	err = environment.New(&environment.Config{
 		Labels:            []string{"type=construction-in-progress"},
 		NamespacePrefix:   "new-environment",
 		KeepConnection:    true,
 		RemoveOnInterrupt: true,
 	}).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, nil)).
+		AddHelm(chainlinkChart).
 		Run()
 	if err != nil {
 		panic(err)
@@ -160,14 +168,7 @@ import (
 )
 
 func main() {
-	e := environment.New(&environment.Config{
-		NamespacePrefix:   "adding-new-deployment-part",
-		TTL:               3 * time.Hour,
-		KeepConnection:    true,
-		RemoveOnInterrupt: true,
-	}).
-		AddHelm(deployment_part.New(nil)).
-		AddHelm(chainlink.New(0, map[string]interface{}{
+	chainlinkChart, err := chainlink.New(0, map[string]interface{}{
 			"replicas": 5,
 			"env": map[string]interface{}{
 				"SOLANA_ENABLED":              "true",
@@ -182,7 +183,18 @@ func main() {
 				"P2PV2_DELTA_RECONCILE":       "5s",
 				"p2p_listen_port":             "0",
 			},
-		}))
+		})
+	if err != nil {
+		panic(err)
+	}
+	e := environment.New(&environment.Config{
+		NamespacePrefix:   "adding-new-deployment-part",
+		TTL:               3 * time.Hour,
+		KeepConnection:    true,
+		RemoveOnInterrupt: true,
+	}).
+		AddHelm(deployment_part.New(nil)).
+		AddHelm(chainlinkChart)
 	if err := e.Run(); err != nil {
 		panic(err)
 	}

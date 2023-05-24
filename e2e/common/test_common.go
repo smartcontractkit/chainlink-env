@@ -64,7 +64,7 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 	require.Len(t, e.URLs[chainlink.DBsLocalURLsKey], 1)
 	require.Len(t, e.URLs, 7)
 
-	chainlinkChart2, err := chainlink.New(0, nil)
+	chainlinkChart2, err := chainlink.New(1, nil)
 	require.NoError(t, err)
 	err = e.AddHelm(chainlinkChart2).
 		Run()
