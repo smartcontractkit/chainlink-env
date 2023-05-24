@@ -484,10 +484,7 @@ func (m *K8sClient) ExecuteInPod(namespace, podName, containerName string, comma
 		Stdout: &stdout,
 		Stderr: &stderr,
 	})
-	if err != nil {
-		return []byte{}, []byte{}, err
-	}
-	return stdout.Bytes(), stderr.Bytes(), nil
+	return stdout.Bytes(), stderr.Bytes(), err
 }
 
 func podNames(podItems *v1.PodList) []string {
