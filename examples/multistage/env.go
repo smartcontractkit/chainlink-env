@@ -11,26 +11,18 @@ import (
 )
 
 func main() {
-	chainlinkChart, err := chainlink.New(0, nil)
-	if err != nil {
-		panic(err)
-	}
 	e := environment.New(&environment.Config{TTL: 20 * time.Minute})
-	err = e.
+	err := e.
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlinkChart).
+		AddHelm(chainlink.New(0, nil)).
 		Run()
 	if err != nil {
 		panic(err)
 	}
 	// deploy another part
 	e.Cfg.KeepConnection = true
-	chainlinkChart2, err := chainlink.New(1, nil)
-	if err != nil {
-		panic(err)
-	}
 	err = e.
-		AddHelm(chainlinkChart2).
+		AddHelm(chainlink.New(1, nil)).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		Run()

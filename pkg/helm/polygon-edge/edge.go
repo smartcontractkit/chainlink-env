@@ -87,18 +87,24 @@ func defaultProps() *Props {
 	}
 }
 
-func New(props *Props) environment.ConnectedChart {
+func New(props *Props) (environment.ConnectedChart, error) {
 	return NewVersioned("", props)
 }
 
 // NewVersioned enables choosing a specific helm chart version
-func NewVersioned(helmVersion string, props *Props) environment.ConnectedChart {
+func NewVersioned(helmVersion string, props *Props) (environment.ConnectedChart, error) {
 	targetProps := defaultProps()
 	if props == nil {
 		props = targetProps
 	}
-	config.MustMerge(targetProps, props)
-	config.MustMerge(&targetProps.Values, props.Values)
+	err := config.MustMerge(targetProps, props)
+	if err != nil {
+		return nil, err
+	}
+	err = config.MustMerge(&targetProps.Values, props.Values)
+	if err != nil {
+		return nil, err
+	}
 	targetProps.Simulated = props.Simulated // Mergo has issues with boolean merging for simulated networks
 	if targetProps.Simulated {
 		return Chart{
@@ -109,9 +115,9 @@ func NewVersioned(helmVersion string, props *Props) environment.ConnectedChart {
 				Version: helmVersion,
 			},
 			Props: targetProps,
-		}
+		}, nil
 	}
 	return Chart{
 		Props: targetProps,
-	}
+	}, nil
 }

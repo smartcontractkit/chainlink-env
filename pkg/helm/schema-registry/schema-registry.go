@@ -48,18 +48,21 @@ func defaultProps() map[string]interface{} {
 	return map[string]interface{}{}
 }
 
-func New(props map[string]interface{}) environment.ConnectedChart {
+func New(props map[string]interface{}) (environment.ConnectedChart, error) {
 	return NewVersioned("", props)
 }
 
 // NewVersioned enables choosing a specific helm chart version
-func NewVersioned(helmVersion string, props map[string]interface{}) environment.ConnectedChart {
+func NewVersioned(helmVersion string, props map[string]interface{}) (environment.ConnectedChart, error) {
 	dp := defaultProps()
-	config.MustMerge(&dp, props)
+	err := config.MustMerge(&dp, props)
+	if err != nil {
+		return nil, err
+	}
 	return Chart{
 		Name:    "cp-schema-registry",
 		Path:    "chainlink-qa/schema-registry",
 		Values:  &dp,
 		Version: helmVersion,
-	}
+	}, nil
 }

@@ -11,12 +11,6 @@ import (
 )
 
 func main() {
-	chainlinkChart, err := chainlink.New(0, map[string]interface{}{
-		"replicas": 1,
-	})
-	if err != nil {
-		panic(err)
-	}
 	e := environment.New(&environment.Config{
 		NamespacePrefix: "modified-env",
 		Labels:          []string{fmt.Sprintf("envType=Modified")},
@@ -24,8 +18,10 @@ func main() {
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlinkChart)
-	err = e.Run()
+		AddHelm(chainlink.New(0, map[string]interface{}{
+			"replicas": 1,
+		}))
+	err := e.Run()
 	if err != nil {
 		panic(err)
 	}

@@ -45,14 +45,14 @@ func (m Chart) ExportData(e *Environment) error {
 	return nil
 }
 
-func NewRunner(props *Props) func(root cdk8s.Chart) ConnectedChart {
-	return func(root cdk8s.Chart) ConnectedChart {
+func NewRunner(props *Props) func(root cdk8s.Chart) (ConnectedChart, error) {
+	return func(root cdk8s.Chart) (ConnectedChart, error) {
 		c := &Chart{
 			Props: props,
 		}
 		role(root, props)
 		job(root, props)
-		return c
+		return c, nil
 	}
 }
 

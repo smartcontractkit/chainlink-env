@@ -11,16 +11,12 @@ import (
 )
 
 func main() {
-	chainlinkChart, err := chainlink.New(0, nil)
-	if err != nil {
-		panic(err)
-	}
 	e := environment.New(&environment.Config{
 		Labels: []string{fmt.Sprintf("envType=%s", pkg.EnvTypeEVM5)},
 	}).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlinkChart)
-	err = e.Run()
+		AddHelm(chainlink.New(0, nil))
+	err := e.Run()
 	if err != nil {
 		panic(err)
 	}

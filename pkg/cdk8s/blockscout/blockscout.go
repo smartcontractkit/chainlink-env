@@ -63,10 +63,13 @@ func (m Chart) ExportData(e *environment.Environment) error {
 	return nil
 }
 
-func New(props *Props) func(root cdk8s.Chart) environment.ConnectedChart {
-	return func(root cdk8s.Chart) environment.ConnectedChart {
+func New(props *Props) func(root cdk8s.Chart) (environment.ConnectedChart, error) {
+	return func(root cdk8s.Chart) (environment.ConnectedChart, error) {
 		dp := defaultProps()
-		config.MustMerge(dp, props)
+		err := config.MustMerge(dp, props)
+		if err != nil {
+			return nil, err
+		}
 		c := &Chart{
 			Props: dp,
 		}
@@ -81,7 +84,7 @@ func New(props *Props) func(root cdk8s.Chart) environment.ConnectedChart {
 		}
 		service(root, vars)
 		deployment(root, vars)
-		return c
+		return c, nil
 	}
 }
 

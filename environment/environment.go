@@ -312,13 +312,18 @@ func (m *Environment) initApp() error {
 }
 
 // AddChart adds a chart to the deployment
-func (m *Environment) AddChart(f func(root cdk8s.Chart) ConnectedChart) *Environment {
+func (m *Environment) AddChart(f func(root cdk8s.Chart) (ConnectedChart, error)) *Environment {
 	if m.err != nil {
 		return m
 	}
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
-	m.Charts = append(m.Charts, f(m.root))
+	chart, err := f(m.root)
+	if err != nil {
+		m.err = err
+		return m
+	}
+	m.Charts = append(m.Charts, chart)
 	return m
 }
 
@@ -437,13 +442,17 @@ func (m *Environment) AddHelmCharts(charts []ConnectedChart) *Environment {
 		return m
 	}
 	for _, c := range charts {
-		m.AddHelm(c)
+		m.AddHelm(c, nil)
 	}
 	return m
 }
 
 // AddHelm adds a helm chart to the testing environment
-func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
+func (m *Environment) AddHelm(chart ConnectedChart, chartError error) *Environment {
+	if chartError != nil {
+		m.err = chartError
+		return m
+	}
 	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() || m.err != nil {
 		return m
 	}

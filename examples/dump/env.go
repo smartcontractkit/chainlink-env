@@ -7,13 +7,9 @@ import (
 )
 
 func main() {
-	chainlinkChart, err := chainlink.New(0, nil)
-	if err != nil {
-		panic(err)
-	}
 	e := environment.New(nil).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlinkChart)
+		AddHelm(chainlink.New(0, nil))
 	if err := e.Run(); err != nil {
 		panic(err)
 	}

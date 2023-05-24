@@ -41,16 +41,12 @@ import (
 )
 
 func main() {
-	chainlinkChart, err := chainlink.New(0, nil)
-	if err != nil {
-		panic(err)
-	}
-	err = environment.New(&environment.Config{
+	err := environment.New(&environment.Config{
       KeepConnection:    false,
       RemoveOnInterrupt: false,
     }).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlinkChart).
+		AddHelm(chainlink.New(0, nil)).
 		Run()
 	if err != nil {
 		panic(err)
@@ -92,10 +88,6 @@ import (
 )
 
 func main() {
-	chainlinkChart, err := chainlink.New(0, nil)
-	if err != nil {
-		panic(err)
-	}
 	err = environment.New(&environment.Config{
 		Labels:            []string{"type=construction-in-progress"},
 		NamespacePrefix:   "new-environment",
@@ -103,7 +95,7 @@ func main() {
 		RemoveOnInterrupt: true,
 	}).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlinkChart).
+		AddHelm(chainlink.New(0, nil)).
 		Run()
 	if err != nil {
 		panic(err)
@@ -140,7 +132,7 @@ type ConnectedChart interface {
 When creating new deployment part, you can use any public Helm chart or a local path in Helm props
 
 ```golang
-func New(props *Props) environment.ConnectedChart {
+func New(props *Props) (environment.ConnectedChart, error) {
 	if props == nil {
 		props = defaultProps()
 	}
@@ -151,7 +143,7 @@ func New(props *Props) environment.ConnectedChart {
 			Values: &props.Values,
 		},
 		Props: props,
-	}
+	}, nil
 }
 ```
 
@@ -168,7 +160,14 @@ import (
 )
 
 func main() {
-	chainlinkChart, err := chainlink.New(0, map[string]interface{}{
+	e := environment.New(&environment.Config{
+		NamespacePrefix:   "adding-new-deployment-part",
+		TTL:               3 * time.Hour,
+		KeepConnection:    true,
+		RemoveOnInterrupt: true,
+	}).
+		AddHelm(deployment_part.New(nil)).
+		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 5,
 			"env": map[string]interface{}{
 				"SOLANA_ENABLED":              "true",
@@ -183,18 +182,7 @@ func main() {
 				"P2PV2_DELTA_RECONCILE":       "5s",
 				"p2p_listen_port":             "0",
 			},
-		})
-	if err != nil {
-		panic(err)
-	}
-	e := environment.New(&environment.Config{
-		NamespacePrefix:   "adding-new-deployment-part",
-		TTL:               3 * time.Hour,
-		KeepConnection:    true,
-		RemoveOnInterrupt: true,
-	}).
-		AddHelm(deployment_part.New(nil)).
-		AddHelm(chainlinkChart)
+		}))
 	if err := e.Run(); err != nil {
 		panic(err)
 	}
