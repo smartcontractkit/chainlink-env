@@ -13,7 +13,7 @@ require (
 	github.com/onsi/gomega v1.20.1
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.4
 	golang.org/x/sync v0.1.0
 	k8s.io/api v0.25.4
 	k8s.io/apimachinery v0.25.4
