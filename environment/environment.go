@@ -908,7 +908,7 @@ func (m *Environment) Shutdown() error {
 		return nil
 	}
 
-	keepEnvs := os.Getenv("KEEP_ENVIRONMENTS")
+	keepEnvs := os.Getenv(config.EnvVarKeepEnvironments)
 	if keepEnvs == "" {
 		keepEnvs = "NEVER"
 	}

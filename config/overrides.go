@@ -14,6 +14,10 @@ const (
 	EnvVarNoManifestUpdateDescription = "Skip updating manifest when connecting to the namespace"
 	EnvVarNoManifestUpdateExample     = "false"
 
+	EnvVarKeepEnvironments            = "KEEP_ENVIRONMENTS"
+	EnvVarKeepEnvironmentsDescription = "Should we keep environments on test completion"
+	EnvVarKeepEnvironmentsExample     = "NEVER|ALWAYS|ON_FAILURE"
+
 	EnvVarNamespace            = "ENV_NAMESPACE"
 	EnvVarNamespaceDescription = "Namespace name to connect to"
 	EnvVarNamespaceExample     = "chainlink-test-epic"
