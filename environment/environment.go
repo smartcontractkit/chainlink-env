@@ -598,10 +598,11 @@ func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckDat
 		return nil
 	}
 	if m.Cfg.JobImage != "" {
+		rrSelector := map[string]*string{"remote-type": a.Str("test")}
 		m.AddChart(NewRunner(&Props{
-			BaseName:         "remote-test-runner",
+			BaseName:         REMOTE_RUNNER_NAME,
 			TargetNamespace:  m.Cfg.Namespace,
-			Labels:           nil,
+			Labels:           &rrSelector,
 			Image:            m.Cfg.JobImage,
 			TestName:         m.Cfg.Test.Name(),
 			NoManifestUpdate: m.Cfg.NoManifestUpdate,

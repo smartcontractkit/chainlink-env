@@ -417,6 +417,16 @@ func (m *K8sClient) DryRun(manifest string) error {
 // CopyToPod copies src to a particular container. Destination should be in the form of a proper K8s destination path
 // NAMESPACE/POD_NAME:folder/FILE_NAME
 func (m *K8sClient) CopyToPod(namespace, src, destination, containername string) (*bytes.Buffer, *bytes.Buffer, *bytes.Buffer, error) {
+	return m.copyToOrFromPod(namespace, src, destination, containername, true)
+}
+
+// CopyFromPod copies src from a particular container. Source should be in the form of a proper K8s source path
+// NAMESPACE/POD_NAME:folder/FILE_NAME
+func (m *K8sClient) CopyFromPod(namespace, src, destination, containername string) (*bytes.Buffer, *bytes.Buffer, *bytes.Buffer, error) {
+	return m.copyToOrFromPod(namespace, src, destination, containername, false)
+}
+
+func (m *K8sClient) copyToOrFromPod(namespace, src, destination, containername string, toPod bool) (*bytes.Buffer, *bytes.Buffer, *bytes.Buffer, error) {
 	m.RESTConfig.APIPath = "/api"
 	m.RESTConfig.GroupVersion = &schema.GroupVersion{Version: "v1"} // this targets the core api groups so the url path will be /api/v1
 	m.RESTConfig.NegotiatedSerializer = serializer.WithoutConversionCodecFactory{CodecFactory: scheme.Codecs}
@@ -435,12 +445,16 @@ func (m *K8sClient) CopyToPod(namespace, src, destination, containername string)
 	copyOptions.Container = containername
 	copyOptions.Namespace = namespace
 
-	formatted, err := regexp.MatchString(".*?\\/.*?\\:.*", destination)
+	srcToCheck := destination
+	if !toPod {
+		srcToCheck = src
+	}
+	formatted, err := regexp.MatchString(".*?\\/.*?\\:.*", srcToCheck)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("could not run copy operation: %v", err)
+		return nil, nil, nil, fmt.Errorf("could not parse the pod location: %v", err)
 	}
 	if !formatted {
-		return nil, nil, nil, fmt.Errorf("destination string improperly formatted, see reference 'NAMESPACE/POD_NAME:folder/FILE_NAME'")
+		return nil, nil, nil, fmt.Errorf("pod location string improperly formatted, see reference 'NAMESPACE/POD_NAME:folder/FILE_NAME'")
 	}
 
 	log.Info().
