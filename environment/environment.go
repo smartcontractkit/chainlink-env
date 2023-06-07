@@ -949,7 +949,16 @@ func (m *Environment) WillUseRemoteRunner() bool {
 }
 
 func DefaultJobLogFunction(e *Environment, message string) {
-	log.Debug().Msg(message)
+	// Match the underlying log level so they can be filtered out
+	if strings.Contains(message, "INF") {
+		log.Info().Msg(message)
+	} else if strings.Contains(message, "WRN") {
+		log.Warn().Msg(message)
+	} else if strings.Contains(message, "ERR") {
+		log.Error().Msg(message)
+	} else {
+		log.Debug().Msg(message)
+	}
 	found := strings.Contains(message, FAILED_FUND_RETURN)
 	if found {
 		e.Cfg.fundReturnFailed = true
