@@ -11,7 +11,7 @@ import (
 
 func ExecCmd(command string) error {
 	return ExecCmdWithOptions(command, func(m string) {
-		log.Info().Str("Text", m).Msg("Std Pipe")
+		log.Debug().Str("Text", m).Msg("Std Pipe")
 	})
 }
 

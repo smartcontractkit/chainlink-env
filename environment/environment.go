@@ -630,7 +630,7 @@ func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckDat
 		}
 		m.Cfg.NoManifestUpdate = mu
 	}
-	log.Info().Bool("ManifestUpdate", !m.Cfg.NoManifestUpdate).Msg("Update mode")
+	log.Debug().Bool("ManifestUpdate", !m.Cfg.NoManifestUpdate).Msg("Update mode")
 	if !m.Cfg.NoManifestUpdate || m.Cfg.JobImage != "" {
 		if err := m.DeployCustomReadyConditions(customCheck, podCount); err != nil {
 			log.Error().Err(err).Msg("Error deploying environment")
@@ -661,7 +661,7 @@ func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckDat
 		if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s); err != nil {
 			return err
 		}
-		log.Info().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
+		log.Debug().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
 		m.Fwd.PrintLocalPorts()
 		if err := m.PrintExportData(); err != nil {
 			return err
@@ -952,14 +952,23 @@ func (m *Environment) WillUseRemoteRunner() bool {
 
 func DefaultJobLogFunction(e *Environment, message string) {
 	// Match the underlying log level so they can be filtered out
-	if strings.Contains(message, "INF") {
-		log.Info().Msg(message)
-	} else if strings.Contains(message, "WRN") {
-		log.Warn().Msg(message)
-	} else if strings.Contains(message, "ERR") {
-		log.Error().Msg(message)
+	// also trim the timestamp off the front of the message so it isn't duplicated
+	if strings.Contains(message, "INF ") {
+		idx := strings.Index(message, "INF ")
+		log.Info().Msg(message[idx+4:])
+	} else if strings.Contains(message, "WRN ") {
+		idx := strings.Index(message, "WRN ")
+		log.Warn().Msg(message[idx+4:])
+	} else if strings.Contains(message, "ERR ") {
+		idx := strings.Index(message, "ERR ")
+		log.Error().Msg(message[idx+4:])
 	} else {
-		log.Debug().Msg(message)
+		idx := strings.Index(message, "DBG ")
+		if idx == -1 {
+			log.Debug().Msg(message)
+		} else {
+			log.Debug().Msg(message[idx+4:])
+		}
 	}
 	found := strings.Contains(message, FAILED_FUND_RETURN)
 	if found {

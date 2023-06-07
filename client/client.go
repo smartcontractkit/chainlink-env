@@ -257,7 +257,7 @@ func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData, expectedPodCou
 		return err
 	}
 
-	// Wait for pods to be ready
+	log.Info().Msg("Waiting for pods to be ready")
 	timeout := time.NewTimer(rcd.Timeout)
 	defer timeout.Stop()
 	for {
@@ -384,7 +384,7 @@ func (m *K8sClient) Apply(manifest string) error {
 		return err
 	}
 	cmd := fmt.Sprintf("kubectl apply -f %s", manifestFile)
-	log.Info().Str("cmd", cmd).Msg("Apply command")
+	log.Debug().Str("cmd", cmd).Msg("Apply command")
 	return ExecCmd(cmd)
 }
 
