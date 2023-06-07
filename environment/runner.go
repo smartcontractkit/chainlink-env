@@ -13,6 +13,8 @@ import (
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
 )
 
+const REMOTE_RUNNER_NAME = "remote-test-runner"
+
 type Chart struct {
 	Props *Props
 }
@@ -22,7 +24,7 @@ func (m Chart) IsDeploymentNeeded() bool {
 }
 
 func (m Chart) GetName() string {
-	return "remote-test-runner"
+	return REMOTE_RUNNER_NAME
 }
 
 func (m Chart) GetProps() interface{} {

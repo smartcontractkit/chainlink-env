@@ -70,17 +70,12 @@ type ConnectedChart interface {
 type Config struct {
 	// TTL is time to live for the environment, used with kube-janitor
 	TTL time.Duration
-	// JobImage an image to run environment as a job inside k8s
-	JobImage string
-	// jobDeployed used to limit us to 1 remote runner deploy
-	jobDeployed bool
 	// NamespacePrefix is a static namespace prefix
 	NamespacePrefix string
 	// Namespace is full namespace name
 	Namespace string
 	// Labels is a set of labels applied to the namespace in a format of "key=value"
-	Labels   []string
-	nsLabels *map[string]*string
+	Labels []string
 	// Allow deployment to nodes with these olerances
 	Tolerations []map[string]string
 	// Restrict deployment to only nodes matching a particular node role
@@ -98,18 +93,26 @@ type Config struct {
 	InsideK8s bool
 	// NoManifestUpdate is a flag to skip manifest updating when connecting
 	NoManifestUpdate bool
-	// DetachRunner should we detach the remote runner after starting the test
-	detachRunner bool
 	// KeepConnection keeps connection until interrupted with a signal, useful when prototyping and debugging a new env
 	KeepConnection bool
 	// RemoveOnInterrupt automatically removes an environment on interrupt
 	RemoveOnInterrupt bool
 	// UpdateWaitInterval an interval to wait for deployment update started
 	UpdateWaitInterval time.Duration
-	// fundReturnFailed the status of a fund return
-	fundReturnFailed bool
+
+	// Remote Runner Specific Variables //
+	// JobImage an image to run environment as a job inside k8s
+	JobImage string
+	// JobLogFunction a function that will be run on each log
+	JobLogFunction func(*Environment, string)
 	// Test the testing library current Test struct
 	Test *testing.T
+	// jobDeployed used to limit us to 1 remote runner deploy
+	jobDeployed bool
+	// detachRunner should we detach the remote runner after starting the test
+	detachRunner bool
+	// fundReturnFailed the status of a fund return
+	fundReturnFailed bool
 }
 
 func defaultEnvConfig() *Config {
@@ -159,10 +162,10 @@ type ChainlinkNodeDetail struct {
 
 // New creates new environment
 func New(cfg *Config) *Environment {
-	logging.Init()
 	if cfg == nil {
 		cfg = &Config{}
 	}
+	logging.Init(cfg.Test)
 	targetCfg := defaultEnvConfig()
 	config.MustMerge(targetCfg, cfg)
 	ns := os.Getenv(config.EnvVarNamespace)
@@ -261,19 +264,19 @@ func (m *Environment) initApp() error {
 		}
 	}
 
-	m.Cfg.nsLabels, err = a.ConvertLabels(m.Cfg.Labels)
+	nsLabels, err := a.ConvertLabels(m.Cfg.Labels)
 	if err != nil {
 		return err
 	}
 	defaultAnnotations[pkg.TTLLabelKey] = a.ShortDur(m.Cfg.TTL)
 	m.root = cdk8s.NewChart(m.App, a.Str(fmt.Sprintf("root-chart-%s", m.Cfg.Namespace)), &cdk8s.ChartProps{
-		Labels:    m.Cfg.nsLabels,
+		Labels:    nsLabels,
 		Namespace: a.Str(m.Cfg.Namespace),
 	})
 	k8s.NewKubeNamespace(m.root, a.Str("namespace"), &k8s.KubeNamespaceProps{
 		Metadata: &k8s.ObjectMeta{
 			Name:        a.Str(m.Cfg.Namespace),
-			Labels:      m.Cfg.nsLabels,
+			Labels:      nsLabels,
 			Annotations: &defaultAnnotations,
 		},
 	})
@@ -598,10 +601,14 @@ func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckDat
 		return nil
 	}
 	if m.Cfg.JobImage != "" {
+		if m.Cfg.Test == nil {
+			return errors.New("Test must be configured in the environment when using the remote runner")
+		}
+		rrSelector := map[string]*string{"remote-type": a.Str("test")}
 		m.AddChart(NewRunner(&Props{
-			BaseName:         "remote-test-runner",
+			BaseName:         REMOTE_RUNNER_NAME,
 			TargetNamespace:  m.Cfg.Namespace,
-			Labels:           nil,
+			Labels:           &rrSelector,
 			Image:            m.Cfg.JobImage,
 			TestName:         m.Cfg.Test.Name(),
 			NoManifestUpdate: m.Cfg.NoManifestUpdate,
@@ -621,7 +628,7 @@ func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckDat
 		}
 		m.Cfg.NoManifestUpdate = mu
 	}
-	log.Info().Bool("ManifestUpdate", !m.Cfg.NoManifestUpdate).Msg("Update mode")
+	log.Debug().Bool("ManifestUpdate", !m.Cfg.NoManifestUpdate).Msg("Update mode")
 	if !m.Cfg.NoManifestUpdate || m.Cfg.JobImage != "" {
 		if err := m.DeployCustomReadyConditions(customCheck, podCount); err != nil {
 			log.Error().Err(err).Msg("Error deploying environment")
@@ -636,10 +643,10 @@ func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckDat
 			return nil
 		}
 		if err := m.Client.WaitForJob(m.Cfg.Namespace, "remote-test-runner", func(message string) {
-			m.Cfg.Test.Log(message)
-			found := strings.Contains(message, FAILED_FUND_RETURN)
-			if found {
-				m.Cfg.fundReturnFailed = true
+			if m.Cfg.JobLogFunction != nil {
+				m.Cfg.JobLogFunction(m, message)
+			} else {
+				DefaultJobLogFunction(m, message)
 			}
 		}); err != nil {
 			return err
@@ -652,7 +659,7 @@ func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckDat
 		if err := m.Fwd.Connect(m.Cfg.Namespace, "", m.Cfg.InsideK8s); err != nil {
 			return err
 		}
-		log.Info().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
+		log.Debug().Interface("Ports", m.Fwd.Info).Msg("Forwarded ports")
 		m.Fwd.PrintLocalPorts()
 		if err := m.PrintExportData(); err != nil {
 			return err
@@ -907,7 +914,7 @@ func (m *Environment) Shutdown() error {
 		return nil
 	}
 
-	keepEnvs := os.Getenv("KEEP_ENVIRONMENTS")
+	keepEnvs := os.Getenv(config.EnvVarKeepEnvironments)
 	if keepEnvs == "" {
 		keepEnvs = "NEVER"
 	}
@@ -939,4 +946,30 @@ func (m *Environment) Shutdown() error {
 func (m *Environment) WillUseRemoteRunner() bool {
 	val, _ := os.LookupEnv(config.EnvVarJobImage)
 	return val != "" && m.Cfg.Test.Name() != ""
+}
+
+func DefaultJobLogFunction(e *Environment, message string) {
+	// Match the underlying log level so they can be filtered out
+	// also trim off all duplicted timestamps and log levels that are duplicated
+	if strings.Contains(message, "[32mINF") {
+		idx := strings.Index(message, "[32mINF")
+		log.Info().Msg(message[idx+12:])
+	} else if strings.Contains(message, "[31mWRN") {
+		idx := strings.Index(message, "[31mWRN")
+		log.Warn().Msg(message[idx+12:])
+	} else if strings.Contains(message, "[31mERR") {
+		idx := strings.Index(message, "[31mERR")
+		log.Error().Msg(message[idx+16:])
+	} else {
+		idx := strings.Index(message, "[33mDBG")
+		if idx == -1 {
+			log.Debug().Msg(message)
+		} else {
+			log.Debug().Msg(message[idx+12:])
+		}
+	}
+	found := strings.Contains(message, FAILED_FUND_RETURN)
+	if found {
+		e.Cfg.fundReturnFailed = true
+	}
 }

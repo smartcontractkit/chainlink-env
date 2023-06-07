@@ -257,7 +257,7 @@ func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData, expectedPodCou
 		return err
 	}
 
-	// Wait for pods to be ready
+	log.Info().Msg("Waiting for pods to be ready")
 	timeout := time.NewTimer(rcd.Timeout)
 	defer timeout.Stop()
 	for {
@@ -384,7 +384,7 @@ func (m *K8sClient) Apply(manifest string) error {
 		return err
 	}
 	cmd := fmt.Sprintf("kubectl apply -f %s", manifestFile)
-	log.Info().Str("cmd", cmd).Msg("Apply command")
+	log.Debug().Str("cmd", cmd).Msg("Apply command")
 	return ExecCmd(cmd)
 }
 
@@ -437,10 +437,10 @@ func (m *K8sClient) CopyToPod(namespace, src, destination, containername string)
 
 	formatted, err := regexp.MatchString(".*?\\/.*?\\:.*", destination)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("could not run copy operation: %v", err)
+		return nil, nil, nil, fmt.Errorf("could not parse the pod destination: %v", err)
 	}
 	if !formatted {
-		return nil, nil, nil, fmt.Errorf("destination string improperly formatted, see reference 'NAMESPACE/POD_NAME:folder/FILE_NAME'")
+		return nil, nil, nil, fmt.Errorf("pod destination string improperly formatted, see reference 'NAMESPACE/POD_NAME:folder/FILE_NAME'")
 	}
 
 	log.Info().
