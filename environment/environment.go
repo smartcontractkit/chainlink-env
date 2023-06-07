@@ -165,7 +165,7 @@ func New(cfg *Config) *Environment {
 	if cfg == nil {
 		cfg = &Config{}
 	}
-	logging.Init(cfg.Test, true)
+	logging.Init(cfg.Test)
 	targetCfg := defaultEnvConfig()
 	config.MustMerge(targetCfg, cfg)
 	ns := os.Getenv(config.EnvVarNamespace)
@@ -185,8 +185,6 @@ func New(cfg *Config) *Environment {
 		targetCfg.detachRunner, _ = strconv.ParseBool(os.Getenv(config.EnvVarDetachRunner))
 	} else {
 		targetCfg.InsideK8s, _ = strconv.ParseBool(os.Getenv(config.EnvVarInsideK8s))
-		// change how timestamps are used in logs based on whether we are in k8s or not
-		logging.Init(cfg.Test, !cfg.InsideK8s)
 	}
 
 	c, err := client.NewK8sClient()
