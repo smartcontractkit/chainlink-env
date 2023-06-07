@@ -280,18 +280,21 @@ func (m *Environment) initApp() error {
 			Annotations: &defaultAnnotations,
 		},
 	})
-	k8s.NewKubeServiceAccount(m.root, a.Str("docker-creds-svc-acc"), &k8s.KubeServiceAccountProps{
-		AutomountServiceAccountToken: nil,
-		ImagePullSecrets: &[]*k8s.LocalObjectReference{
-			{
-				Name: a.Str("docker-creds"),
+	// CI is always set to true in github workflows as per https://docs.github.com/en/actions/learn-github-actions/variables
+	if os.Getenv("CI") != "" {
+		k8s.NewKubeServiceAccount(m.root, a.Str("docker-creds-svc-acc"), &k8s.KubeServiceAccountProps{
+			AutomountServiceAccountToken: nil,
+			ImagePullSecrets: &[]*k8s.LocalObjectReference{
+				{
+					Name: a.Str("docker-creds"),
+				},
 			},
-		},
-		Metadata: &k8s.ObjectMeta{
-			Name:      a.Str("default"),
-			Namespace: a.Str(m.Cfg.Namespace),
-		},
-	})
+			Metadata: &k8s.ObjectMeta{
+				Name:      a.Str("default"),
+				Namespace: a.Str(m.Cfg.Namespace),
+			},
+		})
+	}
 	zero := float64(0)
 	k8s.NewKubePodDisruptionBudget(m.root, a.Str("pdb"), &k8s.KubePodDisruptionBudgetProps{
 		Metadata: &k8s.ObjectMeta{
