@@ -75,8 +75,7 @@ type Config struct {
 	// Namespace is full namespace name
 	Namespace string
 	// Labels is a set of labels applied to the namespace in a format of "key=value"
-	Labels   []string
-	nsLabels *map[string]*string
+	Labels []string
 	// Allow deployment to nodes with these olerances
 	Tolerations []map[string]string
 	// Restrict deployment to only nodes matching a particular node role
@@ -163,10 +162,10 @@ type ChainlinkNodeDetail struct {
 
 // New creates new environment
 func New(cfg *Config) *Environment {
-	logging.Init()
 	if cfg == nil {
 		cfg = &Config{}
 	}
+	logging.Init(cfg.Test)
 	targetCfg := defaultEnvConfig()
 	config.MustMerge(targetCfg, cfg)
 	ns := os.Getenv(config.EnvVarNamespace)
@@ -265,19 +264,19 @@ func (m *Environment) initApp() error {
 		}
 	}
 
-	m.Cfg.nsLabels, err = a.ConvertLabels(m.Cfg.Labels)
+	nsLabels, err := a.ConvertLabels(m.Cfg.Labels)
 	if err != nil {
 		return err
 	}
 	defaultAnnotations[pkg.TTLLabelKey] = a.ShortDur(m.Cfg.TTL)
 	m.root = cdk8s.NewChart(m.App, a.Str(fmt.Sprintf("root-chart-%s", m.Cfg.Namespace)), &cdk8s.ChartProps{
-		Labels:    m.Cfg.nsLabels,
+		Labels:    nsLabels,
 		Namespace: a.Str(m.Cfg.Namespace),
 	})
 	k8s.NewKubeNamespace(m.root, a.Str("namespace"), &k8s.KubeNamespaceProps{
 		Metadata: &k8s.ObjectMeta{
 			Name:        a.Str(m.Cfg.Namespace),
-			Labels:      m.Cfg.nsLabels,
+			Labels:      nsLabels,
 			Annotations: &defaultAnnotations,
 		},
 	})
@@ -602,6 +601,9 @@ func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckDat
 		return nil
 	}
 	if m.Cfg.JobImage != "" {
+		if m.Cfg.Test == nil {
+			return errors.New("Test must be configured in the environment when using the remote runner")
+		}
 		rrSelector := map[string]*string{"remote-type": a.Str("test")}
 		m.AddChart(NewRunner(&Props{
 			BaseName:         REMOTE_RUNNER_NAME,
@@ -947,7 +949,7 @@ func (m *Environment) WillUseRemoteRunner() bool {
 }
 
 func DefaultJobLogFunction(e *Environment, message string) {
-	e.Cfg.Test.Log(message)
+	log.Debug().Msg(message)
 	found := strings.Contains(message, FAILED_FUND_RETURN)
 	if found {
 		e.Cfg.fundReturnFailed = true
