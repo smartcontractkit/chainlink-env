@@ -444,10 +444,6 @@ func (m *Environment) AddHelmCharts(charts []ConnectedChart) *Environment {
 
 // AddHelm adds a helm chart to the testing environment
 func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
-	log.Error().Msg("TATETEST")
-	log.Info().Msg("TATETEST")
-	log.Warn().Msg("TATETEST")
-	log.Debug().Msg("TATETEST")
 	if m.err != nil {
 		return m
 	}
@@ -954,16 +950,16 @@ func (m *Environment) WillUseRemoteRunner() bool {
 
 func DefaultJobLogFunction(e *Environment, message string) {
 	// Match the underlying log level so they can be filtered out
-	// also trim the timestamp off the front of the message so it isn't duplicated
-	if strings.Contains(message, "[33mINF") {
-		idx := strings.Index(message, "[33mINF")
+	// also trim off all duplicted timestamps and log levels that are duplicated
+	if strings.Contains(message, "[32mINF") {
+		idx := strings.Index(message, "[32mINF")
 		log.Info().Msg(message[idx+12:])
-	} else if strings.Contains(message, "[33mWRN") {
-		idx := strings.Index(message, "[33mWRN")
+	} else if strings.Contains(message, "[31mWRN") {
+		idx := strings.Index(message, "[31mWRN")
 		log.Warn().Msg(message[idx+12:])
-	} else if strings.Contains(message, "[33mERR") {
-		idx := strings.Index(message, "[33mERR")
-		log.Error().Msg(message[idx+12:])
+	} else if strings.Contains(message, "[31mERR") {
+		idx := strings.Index(message, "[31mERR")
+		log.Error().Msg(message[idx+16:])
 	} else {
 		idx := strings.Index(message, "[33mDBG")
 		if idx == -1 {
