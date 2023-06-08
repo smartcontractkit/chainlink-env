@@ -331,6 +331,13 @@ func (m *K8sClient) RolloutStatefulSets(namespace string) error {
 		if err := ExecCmd(cmd); err != nil {
 			return err
 		}
+
+		// wait for the rollout to be complete
+		scmd := fmt.Sprintf("kubectl rollout status statefulset %s --namespace %s", s.Name, namespace)
+		log.Info().Str("Command", scmd).Msg("Waiting for StatefulSet rollout to finish")
+		if err := ExecCmd(scmd); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -339,7 +346,13 @@ func (m *K8sClient) RolloutStatefulSets(namespace string) error {
 func (m *K8sClient) RolloutRestartBySelector(namespace string, resource string, selector string) error {
 	cmd := fmt.Sprintf("kubectl --namespace %s rollout restart -l %s %s", namespace, selector, resource)
 	log.Info().Str("Command", cmd).Msg("rollout restart by selector")
-	return ExecCmd(cmd)
+	if err := ExecCmd(cmd); err != nil {
+		return err
+	}
+	// wait for the rollout to be complete
+	scmd := fmt.Sprintf("kubectl --namespace %s rollout status -l %s %s", namespace, selector, resource)
+	log.Info().Str("Command", scmd).Msg("Waiting for StatefulSet rollout to finish")
+	return ExecCmd(scmd)
 }
 
 // ReadyCheckData data to check if selected pods are running and all containers are ready ( readiness check ) are ready

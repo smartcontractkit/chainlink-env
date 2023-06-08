@@ -45,3 +45,11 @@ func TestWithChaos(t *testing.T) {
 func TestEmptyEnvironmentStartup(t *testing.T) {
 	common.TestEmptyEnvironmentStartup(t)
 }
+
+func TestRolloutRestartUpdate(t *testing.T) {
+	common.TestRolloutRestart(t, true)
+}
+
+func TestRolloutRestartBySelector(t *testing.T) {
+	common.TestRolloutRestart(t, false)
+}

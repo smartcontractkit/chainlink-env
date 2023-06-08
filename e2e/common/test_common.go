@@ -315,3 +315,37 @@ func TestEmptyEnvironmentStartup(t *testing.T) {
 		assert.NoError(t, e.Shutdown())
 	})
 }
+
+func TestRolloutRestart(t *testing.T, statefulSet bool) {
+	t.Parallel()
+	testEnvConfig := GetTestEnvConfig(t)
+	cd, err := chainlink.NewDeployment(5, map[string]interface{}{
+		"db": map[string]interface{}{
+			"stateful": true,
+			"capacity": "1Gi",
+		},
+	})
+	require.NoError(t, err, "failed to create chainlink deployment")
+	e := environment.New(testEnvConfig).
+		AddHelm(ethereum.New(nil)).
+		AddHelmCharts(cd)
+	err = e.Run()
+	require.NoError(t, err)
+	if e.WillUseRemoteRunner() {
+		return
+	}
+	t.Cleanup(func() {
+		assert.NoError(t, e.Shutdown())
+	})
+
+	if statefulSet {
+		err = e.RolloutStatefulSets()
+		require.NoError(t, err, "failed to rollout statefulsets")
+	} else {
+		err = e.Client.RolloutRestartBySelector(e.Cfg.Namespace, "deployment", "envType=chainlink-env-test")
+		require.NoError(t, err, "failed to rollout restart deployment")
+	}
+
+	err = e.Run()
+	require.NoError(t, err, "failed to run environment")
+}
