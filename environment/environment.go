@@ -15,7 +15,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 
@@ -143,7 +142,6 @@ type Environment struct {
 	URLs                 map[string][]string    // General URLs of launched resources. Uses '_local' to delineate forwarded ports
 	ChainlinkNodeDetails []*ChainlinkNodeDetail // ChainlinkNodeDetails has convenient details for connecting to chainlink deployments
 	err                  error
-	log                  zerolog.Logger
 }
 
 // ChainlinkNodeDetail contains details about a chainlink node deployment
@@ -647,7 +645,6 @@ func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckDat
 		if m.Cfg.detachRunner {
 			return nil
 		}
-		m.log = logging.GetTestLogger(m.Cfg.Test)
 		if err := m.Client.WaitForJob(m.Cfg.Namespace, "remote-test-runner", func(message string) {
 			if m.Cfg.JobLogFunction != nil {
 				m.Cfg.JobLogFunction(m, message)
@@ -956,25 +953,7 @@ func (m *Environment) WillUseRemoteRunner() bool {
 }
 
 func DefaultJobLogFunction(e *Environment, message string) {
-	// Match the underlying log level so they can be filtered out
-	// also trim off all duplicted timestamps and log levels that are duplicated
-	if strings.Contains(message, "[32mINF") {
-		idx := strings.Index(message, "[32mINF")
-		e.log.Info().Msg(message[idx+12:])
-	} else if strings.Contains(message, "[31mWRN") {
-		idx := strings.Index(message, "[31mWRN")
-		e.log.Warn().Msg(message[idx+12:])
-	} else if strings.Contains(message, "[31mERR") {
-		idx := strings.Index(message, "[31mERR")
-		e.log.Error().Msg(message[idx+16:])
-	} else {
-		idx := strings.Index(message, "[33mDBG")
-		if idx == -1 {
-			e.log.Debug().Msg(message)
-		} else {
-			e.log.Debug().Msg(message[idx+12:])
-		}
-	}
+	e.Cfg.Test.Log(message)
 	found := strings.Contains(message, FAILED_FUND_RETURN)
 	if found {
 		e.Cfg.fundReturnFailed = true
