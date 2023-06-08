@@ -8,11 +8,11 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/onsi/gomega"
-	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/chaos"
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/environment"
+	"github.com/smartcontractkit/chainlink-env/logging"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
@@ -39,6 +39,7 @@ func GetTestEnvConfig(t *testing.T) *environment.Config {
 
 func TestMultiStageMultiManifestConnection(t *testing.T) {
 	t.Parallel()
+	l := logging.Init(t)
 	testEnvConfig := GetTestEnvConfig(t)
 
 	ethChart := ethereum.New(nil)
@@ -81,7 +82,7 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 
 	r := resty.New()
 	for _, u := range urls {
-		log.Info().Str("URL", u).Send()
+		l.Info().Str("URL", u).Send()
 		res, err := r.R().Get(u)
 		require.NoError(t, err)
 		require.Equal(t, "200 OK", res.Status())
@@ -89,6 +90,7 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 }
 
 func TestConnectWithoutManifest(t *testing.T) {
+	l := logging.Init(t)
 	existingEnvConfig := GetTestEnvConfig(t)
 	testEnvConfig := GetTestEnvConfig(t)
 	existingEnvAlreadySetupVar := "ENV_ALREADY_EXISTS"
@@ -98,7 +100,7 @@ func TestConnectWithoutManifest(t *testing.T) {
 	// needed for remote runner based tests to prevent duplicate envs from being created
 	if os.Getenv(existingEnvAlreadySetupVar) == "" {
 		existingEnv = environment.New(existingEnvConfig)
-		t.Log("Existing Env Namespace", existingEnv.Cfg.Namespace)
+		l.Info().Str("Namespace", existingEnvConfig.Namespace).Msg("Existing Env Namespace")
 		// deploy environment to use as an existing one for the test
 		existingEnv.Cfg.JobImage = ""
 		existingEnv.AddHelm(ethereum.New(nil)).
@@ -112,7 +114,7 @@ func TestConnectWithoutManifest(t *testing.T) {
 		// set the namespace to the existing one for local runs
 		testEnvConfig.Namespace = existingEnv.Cfg.Namespace
 	} else {
-		t.Log("Environment already exists, verfying it is correct")
+		l.Info().Msg("Environment already exists, verfying it is correct")
 		require.NotEmpty(t, os.Getenv(config.EnvVarNamespace))
 		noManifestUpdate, err := strconv.ParseBool(os.Getenv(config.EnvVarNoManifestUpdate))
 		require.NoError(t, err, "Failed to parse the no manifest update env var")
@@ -122,7 +124,7 @@ func TestConnectWithoutManifest(t *testing.T) {
 	// Now run an environment without a manifest like a normal test
 	testEnvConfig.NoManifestUpdate = true
 	testEnv := environment.New(testEnvConfig)
-	t.Log("Testing Env Namespace", testEnv.Cfg.Namespace)
+	l.Info().Msgf("Testing Env Namespace %s", testEnv.Cfg.Namespace)
 	err := testEnv.AddHelm(ethereum.New(nil)).
 		AddHelm(chainlink.New(0, map[string]interface{}{
 			"replicas": 1,
@@ -145,15 +147,15 @@ func TestConnectWithoutManifest(t *testing.T) {
 	urlGeth, err := testEnv.Fwd.FindPort("geth:0", "geth-network", "http-rpc").As(connection, client.HTTP)
 	require.NoError(t, err)
 	r := resty.New()
-	t.Log("getting", url)
+	l.Info().Msgf("getting url: %s", url)
 	res, err := r.R().Get(url)
 	require.NoError(t, err)
 	require.Equal(t, "200 OK", res.Status())
-	t.Log("getting", url)
+	l.Info().Msgf("getting url: %s", url)
 	res, err = r.R().Get(urlGeth)
 	require.NoError(t, err)
 	require.Equal(t, "200 OK", res.Status())
-	t.Log("done", url)
+	l.Info().Msgf("done getting url: %s", url)
 }
 
 func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
@@ -243,6 +245,7 @@ func TestMultipleInstancesOfTheSameType(t *testing.T) {
 // TestWithChaos runs a test with chaos injected into the environment.
 func TestWithChaos(t *testing.T) {
 	t.Parallel()
+	l := logging.Init(t)
 	appLabel := "chainlink-0"
 	testCase := struct {
 		chaosFunc  chaos.ManifestFunc
@@ -287,10 +290,10 @@ func TestWithChaos(t *testing.T) {
 	gom.Eventually(func(g gomega.Gomega) {
 		res, err = r.R().Get(url)
 		g.Expect(err).Should(gomega.HaveOccurred())
-		t.Log("Expected error was found")
+		l.Info().Msg("Expected error was found")
 	}, "1m", "3s").Should(gomega.Succeed())
 
-	t.Log("Waiting for Pod to start back up")
+	l.Info().Msg("Waiting for Pod to start back up")
 	err = e.Run()
 	require.NoError(t, err)
 
