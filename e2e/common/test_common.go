@@ -39,7 +39,7 @@ func GetTestEnvConfig(t *testing.T) *environment.Config {
 
 func TestMultiStageMultiManifestConnection(t *testing.T) {
 	t.Parallel()
-	l := logging.Init(t)
+	l := logging.GetTestLogger(t)
 	testEnvConfig := GetTestEnvConfig(t)
 
 	ethChart := ethereum.New(nil)
@@ -90,7 +90,7 @@ func TestMultiStageMultiManifestConnection(t *testing.T) {
 }
 
 func TestConnectWithoutManifest(t *testing.T) {
-	l := logging.Init(t)
+	l := logging.GetTestLogger(t)
 	existingEnvConfig := GetTestEnvConfig(t)
 	testEnvConfig := GetTestEnvConfig(t)
 	existingEnvAlreadySetupVar := "ENV_ALREADY_EXISTS"
@@ -245,7 +245,7 @@ func TestMultipleInstancesOfTheSameType(t *testing.T) {
 // TestWithChaos runs a test with chaos injected into the environment.
 func TestWithChaos(t *testing.T) {
 	t.Parallel()
-	l := logging.Init(t)
+	l := logging.GetTestLogger(t)
 	appLabel := "chainlink-0"
 	testCase := struct {
 		chaosFunc  chaos.ManifestFunc

@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 
@@ -142,6 +143,7 @@ type Environment struct {
 	URLs                 map[string][]string    // General URLs of launched resources. Uses '_local' to delineate forwarded ports
 	ChainlinkNodeDetails []*ChainlinkNodeDetail // ChainlinkNodeDetails has convenient details for connecting to chainlink deployments
 	err                  error
+	log                  zerolog.Logger
 }
 
 // ChainlinkNodeDetail contains details about a chainlink node deployment
@@ -162,10 +164,10 @@ type ChainlinkNodeDetail struct {
 
 // New creates new environment
 func New(cfg *Config) *Environment {
+	logging.Init()
 	if cfg == nil {
 		cfg = &Config{}
 	}
-	logging.Init(cfg.Test)
 	targetCfg := defaultEnvConfig()
 	config.MustMerge(targetCfg, cfg)
 	ns := os.Getenv(config.EnvVarNamespace)
@@ -645,6 +647,7 @@ func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckDat
 		if m.Cfg.detachRunner {
 			return nil
 		}
+		m.log = logging.GetTestLogger(m.Cfg.Test)
 		if err := m.Client.WaitForJob(m.Cfg.Namespace, "remote-test-runner", func(message string) {
 			if m.Cfg.JobLogFunction != nil {
 				m.Cfg.JobLogFunction(m, message)
@@ -957,19 +960,19 @@ func DefaultJobLogFunction(e *Environment, message string) {
 	// also trim off all duplicted timestamps and log levels that are duplicated
 	if strings.Contains(message, "[32mINF") {
 		idx := strings.Index(message, "[32mINF")
-		log.Info().Msg(message[idx+12:])
+		e.log.Info().Msg(message[idx+12:])
 	} else if strings.Contains(message, "[31mWRN") {
 		idx := strings.Index(message, "[31mWRN")
-		log.Warn().Msg(message[idx+12:])
+		e.log.Warn().Msg(message[idx+12:])
 	} else if strings.Contains(message, "[31mERR") {
 		idx := strings.Index(message, "[31mERR")
-		log.Error().Msg(message[idx+16:])
+		e.log.Error().Msg(message[idx+16:])
 	} else {
 		idx := strings.Index(message, "[33mDBG")
 		if idx == -1 {
-			log.Debug().Msg(message)
+			e.log.Debug().Msg(message)
 		} else {
-			log.Debug().Msg(message[idx+12:])
+			e.log.Debug().Msg(message[idx+12:])
 		}
 	}
 	found := strings.Contains(message, FAILED_FUND_RETURN)
