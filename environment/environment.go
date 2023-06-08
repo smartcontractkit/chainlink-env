@@ -162,10 +162,10 @@ type ChainlinkNodeDetail struct {
 
 // New creates new environment
 func New(cfg *Config) *Environment {
+	logging.Init()
 	if cfg == nil {
 		cfg = &Config{}
 	}
-	logging.Init(cfg.Test)
 	targetCfg := defaultEnvConfig()
 	config.MustMerge(targetCfg, cfg)
 	ns := os.Getenv(config.EnvVarNamespace)
@@ -953,25 +953,7 @@ func (m *Environment) WillUseRemoteRunner() bool {
 }
 
 func DefaultJobLogFunction(e *Environment, message string) {
-	// Match the underlying log level so they can be filtered out
-	// also trim off all duplicted timestamps and log levels that are duplicated
-	if strings.Contains(message, "[32mINF") {
-		idx := strings.Index(message, "[32mINF")
-		log.Info().Msg(message[idx+12:])
-	} else if strings.Contains(message, "[31mWRN") {
-		idx := strings.Index(message, "[31mWRN")
-		log.Warn().Msg(message[idx+12:])
-	} else if strings.Contains(message, "[31mERR") {
-		idx := strings.Index(message, "[31mERR")
-		log.Error().Msg(message[idx+16:])
-	} else {
-		idx := strings.Index(message, "[33mDBG")
-		if idx == -1 {
-			log.Debug().Msg(message)
-		} else {
-			log.Debug().Msg(message[idx+12:])
-		}
-	}
+	e.Cfg.Test.Log(message)
 	found := strings.Contains(message, FAILED_FUND_RETURN)
 	if found {
 		e.Cfg.fundReturnFailed = true
