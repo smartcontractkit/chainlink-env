@@ -777,6 +777,7 @@ func (m *Environment) Deploy() error {
 }
 
 // RolloutStatefulSets applies "rollout statefulset" to all existing statefulsets in our namespace
+// deprecated: use the Client.RolloutStatefulSets instead, this will be removed in the future since it is just a one line wrapper
 func (m *Environment) RolloutStatefulSets() error {
 	if m.err != nil {
 		return m.err
