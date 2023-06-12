@@ -8,6 +8,7 @@ import (
 
 	"github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2"
 	"github.com/rs/zerolog/log"
+
 	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/imports/k8s"
 	a "github.com/smartcontractkit/chainlink-env/pkg/alias"
@@ -87,6 +88,7 @@ func role(chart cdk8s.Chart, props *Props) {
 						a.Str("policy"),
 						a.Str("chaos-mesh.org"),
 						a.Str("monitoring.coreos.com"),
+						a.Str("rbac.authorization.k8s.io"),
 					},
 					Resources: &[]*string{
 						a.Str("*"),
