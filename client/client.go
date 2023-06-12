@@ -114,7 +114,7 @@ func (m *K8sClient) AddLabel(namespace string, selector string, label string) er
 
 func (m *K8sClient) LabelChaosGroup(namespace string, startInstance int, endInstance int, group string) error {
 	for i := startInstance; i <= endInstance; i++ {
-		err := m.AddLabel(namespace, fmt.Sprintf("instance=%d", i), fmt.Sprintf("%s=1", group))
+		err := m.AddLabel(namespace, fmt.Sprintf("app=chainlink-%d", i), fmt.Sprintf("%s=1", group))
 		if err != nil {
 			return err
 		}
@@ -123,20 +123,6 @@ func (m *K8sClient) LabelChaosGroup(namespace string, startInstance int, endInst
 }
 
 func (m *K8sClient) LabelChaosGroupByLabels(namespace string, labels map[string]string, group string) error {
-	pods, err := m.ListPodsWithLabels(namespace, labels)
-	if err != nil {
-		return err
-	}
-	for _, pod := range pods {
-		err = m.AddPodLabel(namespace, pod, group, "1")
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (m *K8sClient) ListPodsWithLabels(namespace string, labels map[string]string) ([]v1.Pod, error) {
 	labelSelector := ""
 	for key, value := range labels {
 		if labelSelector == "" {
@@ -145,16 +131,17 @@ func (m *K8sClient) ListPodsWithLabels(namespace string, labels map[string]strin
 			labelSelector = fmt.Sprintf("%s, %s=%s", labelSelector, key, value)
 		}
 	}
-	var items []v1.Pod
 	podList, err := m.ListPods(namespace, labelSelector)
 	if err != nil {
-		return items, err
+		return err
 	}
-	if podList == nil || len(podList.Items) == 0 {
-		return items, fmt.Errorf("no pods found for selector %s", labelSelector)
+	for _, pod := range podList.Items {
+		err = m.AddPodLabel(namespace, pod, group, "1")
+		if err != nil {
+			return err
+		}
 	}
-	items = podList.Items
-	return podList.Items, nil
+	return nil
 }
 
 // AddPodsLabels adds map of labels to all pods in list
