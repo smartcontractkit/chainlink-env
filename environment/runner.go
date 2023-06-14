@@ -131,7 +131,8 @@ func job(chart cdk8s.Chart, props *Props) {
 			Spec: &k8s.JobSpec{
 				Template: &k8s.PodTemplateSpec{
 					Metadata: &k8s.ObjectMeta{
-						Labels: props.Labels,
+						Labels:      props.Labels,
+						Annotations: a.ConvertAnnotations(defaultPodAnnotations),
 					},
 					Spec: &k8s.PodSpec{
 						ServiceAccountName: a.Str("default"),
