@@ -159,8 +159,14 @@ func (m *K8sClient) AddPodsLabels(namespace string, podList *v1.PodList, labels 
 
 // AddPodsAnnotations adds map of annotations to all pods in list
 func (m *K8sClient) AddPodsAnnotations(namespace string, podList *v1.PodList, annotations map[string]string) error {
+	// when applying annotations the key doesn't like `/` characters here but everywhere else it does
+	// replacing it here with ~1
+	fixedAnnotations := make(map[string]string)
+	for k, v := range annotations {
+		fixedAnnotations[strings.ReplaceAll(k, "/", "~1")] = v
+	}
 	for _, pod := range podList.Items {
-		for k, v := range annotations {
+		for k, v := range fixedAnnotations {
 			err := m.AddPodAnnotation(namespace, pod, k, v)
 			if err != nil {
 				return err

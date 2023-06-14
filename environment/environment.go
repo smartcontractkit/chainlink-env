@@ -772,11 +772,7 @@ func (m *Environment) DeployCustomReadyConditions(customCheck *client.ReadyCheck
 	// Attempt to apply default pod annotations even through they are applied in the manifest
 	// as an attempt to add them to any pods that did not have their charts setup to handle the
 	// podAnnotations in their templates.
-	// when applying annotations it doesn't like `/` characters here but everywhere else it does
-	annotations := defaultPodAnnotations
-	annotations["cluster-autoscaler.kubernetes.io~1safe-to-evict"] = annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"]
-	delete(annotations, "cluster-autoscaler.kubernetes.io/safe-to-evict")
-	return m.Client.AddPodsAnnotations(m.Cfg.Namespace, podList, annotations)
+	return m.Client.AddPodsAnnotations(m.Cfg.Namespace, podList, defaultPodAnnotations)
 }
 
 // Deploy deploy current manifest and check logs for readiness
