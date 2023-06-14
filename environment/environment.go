@@ -42,7 +42,7 @@ var (
 		"backyards.banzaicloud.io/image-registry-access":   a.Str("true"),
 		"backyards.banzaicloud.io/public-dockerhub-access": a.Str("true"),
 	}
-	defaultPodAnnotations = map[string]string{"cluster-autoscaler.kubernetes.io~1safe-to-evict": "false"}
+	defaultPodAnnotations = map[string]string{"cluster-autoscaler.kubernetes.io/safe-to-evict": "false"}
 	defaultPodLabels      = map[string]string{"clenv": "true"}
 )
 
@@ -76,7 +76,7 @@ type Config struct {
 	Namespace string
 	// Labels is a set of labels applied to the namespace in a format of "key=value"
 	Labels []string
-	// Allow deployment to nodes with these olerances
+	// Allow deployment to nodes with these tolerances
 	Tolerations []map[string]string
 	// Restrict deployment to only nodes matching a particular node role
 	NodeSelector map[string]string
@@ -457,8 +457,9 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	defer config.JSIIGlobalMu.Unlock()
 
 	values := &map[string]interface{}{
-		"tolerations":  m.Cfg.Tolerations,
-		"nodeSelector": m.Cfg.NodeSelector,
+		"tolerations":    m.Cfg.Tolerations,
+		"nodeSelector":   m.Cfg.NodeSelector,
+		"podAnnotations": defaultPodAnnotations,
 	}
 	config.MustMerge(values, chart.GetValues())
 	log.Trace().
@@ -768,7 +769,14 @@ func (m *Environment) DeployCustomReadyConditions(customCheck *client.ReadyCheck
 		return err
 	}
 
-	return m.Client.AddPodsAnnotations(m.Cfg.Namespace, podList, defaultPodAnnotations)
+	// Attempt to apply default pod annotations even through they are applied in the manifest
+	// as an attempt to add them to any pods that did not have their charts setup to handle the
+	// podAnnotations in their templates.
+	// when applying annotations it doesn't like `/` characters here but everywhere else it does
+	annotations := defaultPodAnnotations
+	annotations["cluster-autoscaler.kubernetes.io~1safe-to-evict"] = annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"]
+	delete(annotations, "cluster-autoscaler.kubernetes.io/safe-to-evict")
+	return m.Client.AddPodsAnnotations(m.Cfg.Namespace, podList, annotations)
 }
 
 // Deploy deploy current manifest and check logs for readiness
