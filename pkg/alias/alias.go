@@ -41,6 +41,15 @@ func ConvertLabels(labels []string) (*map[string]*string, error) {
 	return &cdk8sLabels, nil
 }
 
+// ConvertAnnotations converts a map[string]string to a *map[string]*string
+func ConvertAnnotations(annotations map[string]string) *map[string]*string {
+	a := make(map[string]*string)
+	for k, v := range annotations {
+		a[k] = Str(v)
+	}
+	return &a
+}
+
 // EnvVarStr quick shortcut for string/string key/value var
 func EnvVarStr(k, v string) *k8s.EnvVar {
 	return &k8s.EnvVar{
