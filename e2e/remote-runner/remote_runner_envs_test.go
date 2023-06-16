@@ -78,7 +78,7 @@ func TestRemoteRunnerOneSetupWithMultipeTests(t *testing.T) {
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethChart).
-		AddHelm(chainlink.New(0, map[string]interface{}{
+		AddHelm(chainlink.New(0, map[string]any{
 			"replicas": 5,
 		}))
 	err := e.Run()

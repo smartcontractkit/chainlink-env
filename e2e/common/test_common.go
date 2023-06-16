@@ -104,7 +104,7 @@ func TestConnectWithoutManifest(t *testing.T) {
 		// deploy environment to use as an existing one for the test
 		existingEnv.Cfg.JobImage = ""
 		existingEnv.AddHelm(ethereum.New(nil)).
-			AddHelm(chainlink.New(0, map[string]interface{}{
+			AddHelm(chainlink.New(0, map[string]any{
 				"replicas": 1,
 			}))
 		err := existingEnv.Run()
@@ -126,7 +126,7 @@ func TestConnectWithoutManifest(t *testing.T) {
 	testEnv := environment.New(testEnvConfig)
 	l.Info().Msgf("Testing Env Namespace %s", testEnv.Cfg.Namespace)
 	err := testEnv.AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, map[string]interface{}{
+		AddHelm(chainlink.New(0, map[string]any{
 			"replicas": 1,
 		})).
 		Run()
@@ -260,7 +260,7 @@ func TestWithChaos(t *testing.T) {
 	testEnvConfig := GetTestEnvConfig(t)
 	e := environment.New(testEnvConfig).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, map[string]interface{}{
+		AddHelm(chainlink.New(0, map[string]any{
 			"replicas": 1,
 		}))
 	err := e.Run()
@@ -322,8 +322,8 @@ func TestEmptyEnvironmentStartup(t *testing.T) {
 func TestRolloutRestart(t *testing.T, statefulSet bool) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
-	cd, err := chainlink.NewDeployment(5, map[string]interface{}{
-		"db": map[string]interface{}{
+	cd, err := chainlink.NewDeployment(5, map[string]any{
+		"db": map[string]any{
 			"stateful": true,
 			"capacity": "1Gi",
 		},
@@ -357,13 +357,13 @@ func TestReplaceHelm(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
 	cd, err := chainlink.NewDeployment(1, map[string]any{
-		"chainlink": map[string]interface{}{
-			"resources": map[string]interface{}{
-				"requests": map[string]interface{}{
-					"cpu": "1000m",
+		"chainlink": map[string]any{
+			"resources": map[string]any{
+				"requests": map[string]any{
+					"cpu": "350m",
 				},
-				"limits": map[string]interface{}{
-					"cpu": "1000m",
+				"limits": map[string]any{
+					"cpu": "350m",
 				},
 			},
 		},
@@ -380,13 +380,13 @@ func TestReplaceHelm(t *testing.T) {
 	})
 	require.NoError(t, err)
 	cd, err = chainlink.NewDeployment(1, map[string]any{
-		"chainlink": map[string]interface{}{
-			"resources": map[string]interface{}{
-				"requests": map[string]interface{}{
-					"cpu": "950m",
+		"chainlink": map[string]any{
+			"resources": map[string]any{
+				"requests": map[string]any{
+					"cpu": "345m",
 				},
-				"limits": map[string]interface{}{
-					"cpu": "950m",
+				"limits": map[string]any{
+					"cpu": "345m",
 				},
 			},
 		},
