@@ -265,6 +265,7 @@ func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData, expectedPodCou
 
 	log.Info().Msg("Waiting for pods to be ready")
 	timeout := time.NewTimer(rcd.Timeout)
+	readyCount := 0
 	defer timeout.Stop()
 	for {
 		select {
@@ -293,14 +294,21 @@ func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData, expectedPodCou
 					break
 				}
 				for _, c := range pod.Status.Conditions {
-					if c.Type == v1.ContainersReady && c.Status == "False" {
+					if c.Type == v1.ContainersReady && c.Status != "True" {
 						log.Debug().Str("Text", c.Message).Msg("Pod condition message")
 						allReady = false
 					}
 				}
 			}
 			if allReady {
-				return nil
+				readyCount++
+				// wait for it to be ready 3 times since there is no good way to know if an old pod
+				// was present but not yet decommisiond during a rollout
+				// usually there is just a very small blip that we can run into this and this will
+				// prevent that from happening
+				if readyCount == 3 {
+					return nil
+				}
 			}
 			time.Sleep(K8sStatePollInterval)
 		}
@@ -356,9 +364,9 @@ func (m *K8sClient) RolloutRestartBySelector(namespace string, resource string, 
 		return err
 	}
 	// wait for the rollout to be complete
-	scmd := fmt.Sprintf("kubectl --namespace %s rollout status -l %s %s", namespace, selector, resource)
-	log.Info().Str("Command", scmd).Msg("Waiting for StatefulSet rollout to finish")
-	return ExecCmd(scmd)
+	waitCmd := fmt.Sprintf("kubectl --namespace %s rollout status -l %s %s", namespace, selector, resource)
+	log.Info().Str("Command", waitCmd).Msg("Waiting for StatefulSet rollout to finish")
+	return ExecCmd(waitCmd)
 }
 
 // ReadyCheckData data to check if selected pods are running and all containers are ready ( readiness check ) are ready
@@ -395,8 +403,25 @@ func (m *K8sClient) WaitForJob(namespaceName string, jobName string, fundReturnS
 	return exitErr
 }
 
+func (m *K8sClient) WaitForDeploymentsAvailable(namespace string) error {
+	deployments, err := m.ClientSet.AppsV1().Deployments(namespace).List(context.Background(), metaV1.ListOptions{})
+	if err != nil {
+		return err
+	}
+	log.Info().Int("Number", len(deployments.Items)).Msg("Deployments found")
+	for _, d := range deployments.Items {
+		log.Info().Str("status", d.Status.String()).Msg("Deployment info")
+		waitCmd := fmt.Sprintf("kubectl rollout status -n %s deployment/%s", namespace, d.Name)
+		log.Debug().Str("cmd", waitCmd).Msg("wait for deployment to be available")
+		if err := ExecCmd(waitCmd); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Apply applying a manifest to a currently connected k8s context
-func (m *K8sClient) Apply(manifest string) error {
+func (m *K8sClient) Apply(manifest, namespace string) error {
 	manifestFile := fmt.Sprintf(TempDebugManifest, uuid.NewString())
 	log.Info().Str("File", manifestFile).Msg("Applying manifest")
 	if err := os.WriteFile(manifestFile, []byte(manifest), os.ModePerm); err != nil {
@@ -404,7 +429,10 @@ func (m *K8sClient) Apply(manifest string) error {
 	}
 	cmd := fmt.Sprintf("kubectl apply -f %s", manifestFile)
 	log.Debug().Str("cmd", cmd).Msg("Apply command")
-	return ExecCmd(cmd)
+	if err := ExecCmd(cmd); err != nil {
+		return err
+	}
+	return m.WaitForDeploymentsAvailable(namespace)
 }
 
 // DeleteResource deletes resource

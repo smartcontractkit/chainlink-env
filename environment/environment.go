@@ -315,7 +315,7 @@ func (m *Environment) initApp() error {
 		},
 	})
 	m.CurrentManifest = *m.App.SynthYaml()
-	return m.Client.Apply(m.CurrentManifest)
+	return m.Client.Apply(m.CurrentManifest, m.Cfg.Namespace)
 }
 
 // AddChart adds a chart to the deployment
@@ -710,7 +710,7 @@ func (m *Environment) DeployCustomReadyConditions(customCheck *client.ReadyCheck
 		}
 		return nil
 	}
-	if err := m.Client.Apply(m.CurrentManifest); err != nil {
+	if err := m.Client.Apply(m.CurrentManifest, m.Cfg.Namespace); err != nil {
 		return err
 	}
 	if int64(m.Cfg.UpdateWaitInterval) != 0 {

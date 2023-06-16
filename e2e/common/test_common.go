@@ -342,7 +342,7 @@ func TestRolloutRestart(t *testing.T, statefulSet bool) {
 	})
 
 	if statefulSet {
-		err = e.RolloutStatefulSets()
+		err = e.Client.RolloutStatefulSets(e.Cfg.Namespace)
 		require.NoError(t, err, "failed to rollout statefulsets")
 	} else {
 		err = e.Client.RolloutRestartBySelector(e.Cfg.Namespace, "deployment", "envType=chainlink-env-test")
