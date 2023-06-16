@@ -334,14 +334,14 @@ func (m *K8sClient) RolloutStatefulSets(namespace string) error {
 	for _, s := range sts.Items {
 		cmd := fmt.Sprintf("kubectl rollout restart statefulset %s --namespace %s", s.Name, namespace)
 		log.Info().Str("Command", cmd).Msg("Applying StatefulSet rollout")
-		if err := ExecCmd(cmd); err != nil {
+		if err := ExecCmd(context.Background(), cmd); err != nil {
 			return err
 		}
 
 		// wait for the rollout to be complete
 		scmd := fmt.Sprintf("kubectl rollout status statefulset %s --namespace %s", s.Name, namespace)
 		log.Info().Str("Command", scmd).Msg("Waiting for StatefulSet rollout to finish")
-		if err := ExecCmd(scmd); err != nil {
+		if err := ExecCmd(context.Background(), scmd); err != nil {
 			return err
 		}
 	}
@@ -352,13 +352,13 @@ func (m *K8sClient) RolloutStatefulSets(namespace string) error {
 func (m *K8sClient) RolloutRestartBySelector(namespace string, resource string, selector string) error {
 	cmd := fmt.Sprintf("kubectl --namespace %s rollout restart -l %s %s", namespace, selector, resource)
 	log.Info().Str("Command", cmd).Msg("rollout restart by selector")
-	if err := ExecCmd(cmd); err != nil {
+	if err := ExecCmd(context.Background(), cmd); err != nil {
 		return err
 	}
 	// wait for the rollout to be complete
 	scmd := fmt.Sprintf("kubectl --namespace %s rollout status -l %s %s", namespace, selector, resource)
 	log.Info().Str("Command", scmd).Msg("Waiting for StatefulSet rollout to finish")
-	return ExecCmd(scmd)
+	return ExecCmd(context.Background(), scmd)
 }
 
 // ReadyCheckData data to check if selected pods are running and all containers are ready ( readiness check ) are ready
@@ -371,7 +371,7 @@ type ReadyCheckData struct {
 func (m *K8sClient) WaitForJob(namespaceName string, jobName string, fundReturnStatus func(string)) error {
 	cmd := fmt.Sprintf("kubectl --namespace %s logs --follow job/%s", namespaceName, jobName)
 	log.Info().Str("Job", jobName).Str("cmd", cmd).Msg("Waiting for job to complete")
-	if err := ExecCmdWithOptions(cmd, fundReturnStatus); err != nil {
+	if err := ExecCmdWithOptions(context.Background(), cmd, fundReturnStatus); err != nil {
 		return err
 	}
 	var exitErr error
@@ -404,12 +404,12 @@ func (m *K8sClient) Apply(manifest string) error {
 	}
 	cmd := fmt.Sprintf("kubectl apply -f %s", manifestFile)
 	log.Debug().Str("cmd", cmd).Msg("Apply command")
-	return ExecCmd(cmd)
+	return ExecCmd(context.Background(), cmd)
 }
 
 // DeleteResource deletes resource
 func (m *K8sClient) DeleteResource(namespace string, resource string, instance string) error {
-	return ExecCmd(fmt.Sprintf("kubectl delete %s %s --namespace %s", resource, instance, namespace))
+	return ExecCmd(context.Background(), fmt.Sprintf("kubectl delete %s %s --namespace %s", resource, instance, namespace))
 }
 
 // Create creating a manifest to a currently connected k8s context
@@ -420,7 +420,7 @@ func (m *K8sClient) Create(manifest string) error {
 		return err
 	}
 	cmd := fmt.Sprintf("kubectl create -f %s", manifestFile)
-	return ExecCmd(cmd)
+	return ExecCmd(context.Background(), cmd)
 }
 
 // DryRun generates manifest and writes it in a file

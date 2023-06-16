@@ -1,6 +1,7 @@
 package environment
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -522,7 +523,7 @@ func (m *Environment) PullOCIChart(chart ConnectedChart) (string, error) {
 		return "", fmt.Errorf(ErrInvalidOCI, chart.GetPath())
 	}
 	log.Info().Str("CMD", cmd).Msg("Running helm cmd")
-	if err := client.ExecCmd(cmd); err != nil {
+	if err := client.ExecCmd(context.Background(), cmd); err != nil {
 		return "", fmt.Errorf(ErrOCIPull, chart.GetPath())
 	}
 	localChartPath := fmt.Sprintf("%s/%s/", chartDir, chartName)
