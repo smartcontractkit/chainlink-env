@@ -460,10 +460,10 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
 
-	values := &map[string]interface{}{
-		"tolerations":    m.Cfg.Tolerations,
-		"nodeSelector":   m.Cfg.NodeSelector,
-		"podAnnotations": defaultPodAnnotations,
+	values := &map[string]any{
+		"tolerations":    a.SliceMapStringStringToSliceMapStringAny(m.Cfg.Tolerations),
+		"nodeSelector":   a.MapStringStringToMapStringAny(m.Cfg.NodeSelector),
+		"podAnnotations": a.MapStringStringToMapStringAny(defaultPodAnnotations),
 	}
 	config.MustMerge(values, chart.GetValues())
 	log.Trace().

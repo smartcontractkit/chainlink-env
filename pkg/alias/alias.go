@@ -50,6 +50,24 @@ func ConvertAnnotations(annotations map[string]string) *map[string]*string {
 	return &a
 }
 
+// SliceMapStringStringToSliceMapStringAny converts a []map[string]string to a []map[string]any
+func SliceMapStringStringToSliceMapStringAny(originalSlice []map[string]string) []map[string]any {
+	newSlice := make([]map[string]any, len(originalSlice))
+	for i, m := range originalSlice {
+		newSlice[i] = MapStringStringToMapStringAny(m)
+	}
+	return newSlice
+}
+
+// MapStringStringToMapStringAny converts a map[string]string to a map[string]any
+func MapStringStringToMapStringAny(originalMap map[string]string) map[string]any {
+	newMap := make(map[string]any, len(originalMap))
+	for k, v := range originalMap {
+		newMap[k] = v
+	}
+	return newMap
+}
+
 // EnvVarStr quick shortcut for string/string key/value var
 func EnvVarStr(k, v string) *k8s.EnvVar {
 	return &k8s.EnvVar{
