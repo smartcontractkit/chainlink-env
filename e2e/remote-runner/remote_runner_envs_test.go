@@ -143,3 +143,7 @@ func TestRolloutRestartUpdate(t *testing.T) {
 func TestRolloutRestartBySelector(t *testing.T) {
 	common.TestRolloutRestart(t, false)
 }
+
+func TestReplaceHelm(t *testing.T) {
+	common.TestReplaceHelm(t)
+}
