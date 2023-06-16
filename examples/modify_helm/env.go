@@ -18,7 +18,7 @@ func main() {
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, map[string]interface{}{
+		AddHelm(chainlink.New(0, map[string]any{
 			"replicas": 1,
 		}))
 	err := e.Run()
@@ -27,10 +27,14 @@ func main() {
 	}
 	e.Cfg.KeepConnection = true
 	e.Cfg.RemoveOnInterrupt = true
-	err = e.
-		ModifyHelm("chainlink-0", chainlink.New(0, map[string]interface{}{
+	e, err = e.
+		ReplaceHelm("chainlink-0", chainlink.New(0, map[string]any{
 			"replicas": 2,
-		})).Run()
+		}))
+	if err != nil {
+		panic(err)
+	}
+	err = e.Run()
 	if err != nil {
 		panic(err)
 	}
