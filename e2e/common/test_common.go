@@ -253,7 +253,7 @@ func TestWithChaos(t *testing.T) {
 	}{
 		chaos.NewFailPods,
 		&chaos.Props{
-			LabelsSelector: &map[string]*string{"app": a.Str(appLabel)},
+			LabelsSelector: &map[string]*string{client.AppLabel: a.Str(appLabel)},
 			DurationStr:    "30s",
 		},
 	}

@@ -685,7 +685,7 @@ func (m *Environment) Run() error {
 }
 
 func (m *Environment) enumerateApps() error {
-	apps, err := m.Client.UniqueLabels(m.Cfg.Namespace, "app")
+	apps, err := m.Client.UniqueLabels(m.Cfg.Namespace, client.AppLabel)
 	if err != nil {
 		return err
 	}
@@ -795,7 +795,7 @@ func getReplicaCount(spec map[string]any) int {
 	if m == nil {
 		return 0
 	}
-	l := m["app"]
+	l := m[client.AppLabel]
 	if l == nil {
 		return 0
 	}

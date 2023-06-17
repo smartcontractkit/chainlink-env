@@ -238,7 +238,7 @@ func (m *K8sClient) waitForPodsExist(ns string, expectedPodCount int) error {
 	log.Debug().Int("ExpectedCount", expectedPodCount).Msg("Waiting for pods to exist")
 	var exitErr error
 	if err := wait.PollImmediate(2*time.Second, 15*time.Minute, func() (bool, error) {
-		apps, err2 := m.UniqueLabels(ns, "app")
+		apps, err2 := m.UniqueLabels(ns, AppLabel)
 		if err2 != nil {
 			exitErr = err2
 			return false, nil
@@ -300,6 +300,7 @@ func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData, expectedPodCou
 					}
 				}
 			}
+
 			if allReady {
 				readyCount++
 				// wait for it to be ready 3 times since there is no good way to know if an old pod
@@ -345,7 +346,9 @@ func (m *K8sClient) RolloutStatefulSets(namespace string) error {
 		if err := ExecCmd(cmd); err != nil {
 			return err
 		}
-
+	}
+	// wait for the statefulsets to be ready in a separate loop otherwise this can take a long time
+	for _, s := range sts.Items {
 		// wait for the rollout to be complete
 		scmd := fmt.Sprintf("kubectl rollout status statefulset %s --namespace %s", s.Name, namespace)
 		log.Info().Str("Command", scmd).Msg("Waiting for StatefulSet rollout to finish")

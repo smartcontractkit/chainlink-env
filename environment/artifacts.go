@@ -64,7 +64,7 @@ func (a *Artifacts) writePodArtifacts(testDir string) error {
 		log.Info().
 			Str("Pod", pod.Name).
 			Msg("Writing pod artifacts")
-		appName := pod.Labels["app"]
+		appName := pod.Labels[client.AppLabel]
 		instance := pod.Labels["instance"]
 		appDir := filepath.Join(testDir, fmt.Sprintf("%s_%s", appName, instance))
 		if err := MkdirIfNotExists(appDir); err != nil {
