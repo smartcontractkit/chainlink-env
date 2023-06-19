@@ -121,9 +121,9 @@ type ConnectedChart interface {
 	// GetPath get Helm chart path, repo or local path
 	GetPath() string
 	// GetProps get code props if it's typed environment
-	GetProps() interface{}
+	GetProps() any
 	// GetValues get values.yml props as map, if it's Helm
-	GetValues() *map[string]interface{}
+	GetValues() *map[string]any
 	// ExportData export deployment part data in the env
 	ExportData(e *Environment) error
 }
@@ -167,9 +167,9 @@ func main() {
 		RemoveOnInterrupt: true,
 	}).
 		AddHelm(deployment_part.New(nil)).
-		AddHelm(chainlink.New(0, map[string]interface{}{
+		AddHelm(chainlink.New(0, map[string]any{
 			"replicas": 5,
-			"env": map[string]interface{}{
+			"env": map[string]any{
 				"SOLANA_ENABLED":              "true",
 				"EVM_ENABLED":                 "false",
 				"EVM_RPC_ENABLED":             "false",
@@ -207,9 +207,9 @@ type ConnectedChart interface {
 	// GetPath get Helm chart path, repo or local path
 	GetPath() string
 	// GetProps get code props if it's typed environment
-	GetProps() interface{}
+	GetProps() any
 	// GetValues get values.yml props as map, if it's Helm
-	GetValues() *map[string]interface{}
+	GetValues() *map[string]any
 	// ExportData export deployment part data in the env
 	ExportData(e *Environment) error
 }
@@ -230,7 +230,7 @@ func main() {
   e := environment.New(nil).
     AddChart(deployment_part_cdk8s.New(&deployment_part_cdk8s.Props{})).
     AddHelm(ethereum.New(nil)).
-          AddHelm(chainlink.New(0, map[string]interface{}{
+          AddHelm(chainlink.New(0, map[string]any{
             "replicas": 2,
           }))
   if err := e.Run(); err != nil {
@@ -322,7 +322,7 @@ func main() {
 			HttpURL: "http://geth:8544",
 		})).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, map[string]interface{}{
+		AddHelm(chainlink.New(0, map[string]any{
 			"replicas": 1,
 		}))
 	err := e.Run()
@@ -335,7 +335,7 @@ func main() {
 			HttpURL: "http://geth:9000",
 		})).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, map[string]interface{}{
+		AddHelm(chainlink.New(0, map[string]any{
 			"replicas": 1,
 		})).
 		Run()
@@ -369,7 +369,7 @@ func main() {
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, map[string]interface{}{
+		AddHelm(chainlink.New(0, map[string]any{
 			"replicas": 1,
 		}))
 	err := e.Run()
@@ -378,10 +378,14 @@ func main() {
 	}
 	e.Cfg.KeepConnection = true
 	e.Cfg.RemoveOnInterrupt = true
-	err = e.
-		ModifyHelm("chainlink-0", chainlink.New(0, map[string]interface{}{
+	e, err = e.
+		ReplaceHelm("chainlink-0", chainlink.New(0, map[string]any{
 			"replicas": 2,
-		})).Run()
+		}))
+	if err != nil {
+		panic(err)
+	}
+	err = e.Run()
 	if err != nil {
 		panic(err)
 	}
