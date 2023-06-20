@@ -104,7 +104,7 @@ func TestConnectWithoutManifest(t *testing.T) {
 		// deploy environment to use as an existing one for the test
 		existingEnv.Cfg.JobImage = ""
 		existingEnv.AddHelm(ethereum.New(nil)).
-			AddHelm(chainlink.New(0, map[string]interface{}{
+			AddHelm(chainlink.New(0, map[string]any{
 				"replicas": 1,
 			}))
 		err := existingEnv.Run()
@@ -126,7 +126,7 @@ func TestConnectWithoutManifest(t *testing.T) {
 	testEnv := environment.New(testEnvConfig)
 	l.Info().Msgf("Testing Env Namespace %s", testEnv.Cfg.Namespace)
 	err := testEnv.AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, map[string]interface{}{
+		AddHelm(chainlink.New(0, map[string]any{
 			"replicas": 1,
 		})).
 		Run()
@@ -253,14 +253,14 @@ func TestWithChaos(t *testing.T) {
 	}{
 		chaos.NewFailPods,
 		&chaos.Props{
-			LabelsSelector: &map[string]*string{"app": a.Str(appLabel)},
+			LabelsSelector: &map[string]*string{client.AppLabel: a.Str(appLabel)},
 			DurationStr:    "30s",
 		},
 	}
 	testEnvConfig := GetTestEnvConfig(t)
 	e := environment.New(testEnvConfig).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, map[string]interface{}{
+		AddHelm(chainlink.New(0, map[string]any{
 			"replicas": 1,
 		}))
 	err := e.Run()
@@ -322,8 +322,8 @@ func TestEmptyEnvironmentStartup(t *testing.T) {
 func TestRolloutRestart(t *testing.T, statefulSet bool) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
-	cd, err := chainlink.NewDeployment(5, map[string]interface{}{
-		"db": map[string]interface{}{
+	cd, err := chainlink.NewDeployment(5, map[string]any{
+		"db": map[string]any{
 			"stateful": true,
 			"capacity": "1Gi",
 		},
@@ -342,7 +342,7 @@ func TestRolloutRestart(t *testing.T, statefulSet bool) {
 	})
 
 	if statefulSet {
-		err = e.RolloutStatefulSets()
+		err = e.Client.RolloutStatefulSets(e.Cfg.Namespace)
 		require.NoError(t, err, "failed to rollout statefulsets")
 	} else {
 		err = e.Client.RolloutRestartBySelector(e.Cfg.Namespace, "deployment", "envType=chainlink-env-test")
@@ -351,4 +351,50 @@ func TestRolloutRestart(t *testing.T, statefulSet bool) {
 
 	err = e.Run()
 	require.NoError(t, err, "failed to run environment")
+}
+
+func TestReplaceHelm(t *testing.T) {
+	t.Parallel()
+	testEnvConfig := GetTestEnvConfig(t)
+	cd, err := chainlink.NewDeployment(1, map[string]any{
+		"chainlink": map[string]any{
+			"resources": map[string]any{
+				"requests": map[string]any{
+					"cpu": "350m",
+				},
+				"limits": map[string]any{
+					"cpu": "350m",
+				},
+			},
+		},
+	})
+	require.NoError(t, err, "failed to create chainlink deployment")
+	e := environment.New(testEnvConfig).AddHelmCharts(cd)
+	err = e.Run()
+	require.NoError(t, err)
+	if e.WillUseRemoteRunner() {
+		return
+	}
+	t.Cleanup(func() {
+		assert.NoError(t, e.Shutdown())
+	})
+	require.NoError(t, err)
+	cd, err = chainlink.NewDeployment(1, map[string]any{
+		"chainlink": map[string]any{
+			"resources": map[string]any{
+				"requests": map[string]any{
+					"cpu": "345m",
+				},
+				"limits": map[string]any{
+					"cpu": "345m",
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+	e, err = e.
+		ReplaceHelm("chainlink-0", cd[0])
+	require.NoError(t, err)
+	err = e.Run()
+	require.NoError(t, err)
 }

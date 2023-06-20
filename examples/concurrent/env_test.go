@@ -24,10 +24,12 @@ func TestConcurrentEnvs(t *testing.T) {
 		defer e.Shutdown()
 		err := e.Run()
 		require.NoError(t, err)
-		err = e.
-			ModifyHelm("chainlink-0", chainlink.New(0, map[string]interface{}{
+		e, err = e.
+			ReplaceHelm("chainlink-0", chainlink.New(0, map[string]any{
 				"replicas": 2,
-			})).Run()
+			}))
+		require.NoError(t, err)
+		err = e.Run()
 		require.NoError(t, err)
 	})
 }

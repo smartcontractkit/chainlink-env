@@ -90,8 +90,8 @@ func (m *Forwarder) forwardPodPorts(pod v1.Pod, namespaceName string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	namedPorts := m.podPortsByName(pod, forwardedPorts)
-	if pod.Labels["app"] != "" {
-		m.Info[fmt.Sprintf("%s:%s", pod.Labels["app"], pod.Labels["instance"])] = namedPorts
+	if pod.Labels[AppLabel] != "" {
+		m.Info[fmt.Sprintf("%s:%s", pod.Labels[AppLabel], pod.Labels["instance"])] = namedPorts
 	}
 	return nil
 }
@@ -111,8 +111,8 @@ func (m *Forwarder) collectPodPorts(pod v1.Pod) error {
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if pod.Labels["app"] != "" {
-		m.Info[fmt.Sprintf("%s:%s", pod.Labels["app"], pod.Labels["instance"])] = namedPorts
+	if pod.Labels[AppLabel] != "" {
+		m.Info[fmt.Sprintf("%s:%s", pod.Labels[AppLabel], pod.Labels["instance"])] = namedPorts
 	}
 	return nil
 }
