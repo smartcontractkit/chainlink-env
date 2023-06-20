@@ -315,7 +315,7 @@ func (m *Environment) initApp() error {
 		},
 	})
 	m.CurrentManifest = *m.App.SynthYaml()
-	return m.Client.Apply(m.CurrentManifest)
+	return m.Client.Apply(m.CurrentManifest, m.Cfg.Namespace)
 }
 
 // AddChart adds a chart to the deployment
@@ -383,40 +383,6 @@ func (m *Environment) ReplaceHelm(name string, chart ConnectedChart) (*Environme
 	return m, nil
 }
 
-// ModifyHelm entirely replaces a helm chart with a new one
-//
-// Deprecated: use ReplaceHelm instead to avoid silent errors
-func (m *Environment) ModifyHelm(name string, chart ConnectedChart) *Environment {
-	if m.err != nil {
-		return m
-	}
-	config.JSIIGlobalMu.Lock()
-	defer config.JSIIGlobalMu.Unlock()
-	if err := m.removeChart(name); err != nil {
-		return nil
-	}
-	if m.Cfg.JobImage != "" || !chart.IsDeploymentNeeded() {
-		return nil
-	}
-	log.Trace().
-		Str("Chart", chart.GetName()).
-		Str("Path", chart.GetPath()).
-		Interface("Props", chart.GetProps()).
-		Interface("Values", chart.GetValues()).
-		Msg("Chart deployment values")
-	cdk8s.NewHelm(m.root, a.Str(name), &cdk8s.HelmProps{
-		Chart: a.Str(chart.GetPath()),
-		HelmFlags: &[]*string{
-			a.Str("--namespace"),
-			a.Str(m.Cfg.Namespace),
-		},
-		ReleaseName: a.Str(name),
-		Values:      chart.GetValues(),
-	})
-	m.Charts = append(m.Charts, chart)
-	return m
-}
-
 // UpdateHelm update a helm chart with new values. The pod will launch with an `updated=true` label if it's a Chainlink node.
 // Note: If you're modifying ConfigMap values, you'll probably need to use RollOutStatefulSets to apply the changes to the pods.
 // https://stackoverflow.com/questions/57356521/rollingupdate-for-stateful-set-doesnt-restart-pods-and-changes-from-updated-con
@@ -460,7 +426,7 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
 
-	values := &map[string]interface{}{
+	values := &map[string]any{
 		"tolerations":    m.Cfg.Tolerations,
 		"nodeSelector":   m.Cfg.NodeSelector,
 		"podAnnotations": defaultPodAnnotations,
@@ -719,7 +685,7 @@ func (m *Environment) Run() error {
 }
 
 func (m *Environment) enumerateApps() error {
-	apps, err := m.Client.UniqueLabels(m.Cfg.Namespace, "app")
+	apps, err := m.Client.UniqueLabels(m.Cfg.Namespace, client.AppLabel)
 	if err != nil {
 		return err
 	}
@@ -744,7 +710,7 @@ func (m *Environment) DeployCustomReadyConditions(customCheck *client.ReadyCheck
 		}
 		return nil
 	}
-	if err := m.Client.Apply(m.CurrentManifest); err != nil {
+	if err := m.Client.Apply(m.CurrentManifest, m.Cfg.Namespace); err != nil {
 		return err
 	}
 	if int64(m.Cfg.UpdateWaitInterval) != 0 {
@@ -805,11 +771,17 @@ func (m *Environment) findPodCountInDeploymentManifest() int {
 			continue
 		}
 		for _, j := range *json {
-			m := j.(map[string]interface{})
+			m := j.(map[string]any)
 			// if the kind is a deployment then we want to see if it has replicas to count towards the app count
+			if _, ok := m["kind"]; !ok {
+				continue
+			}
 			kind := m["kind"].(string)
 			if kind == "Deployment" || kind == "StatefulSet" {
-				podCount += getReplicaCount(m["spec"].(map[string]interface{}))
+				if _, ok := m["spec"]; !ok {
+					continue
+				}
+				podCount += getReplicaCount(m["spec"].(map[string]any))
 			}
 		}
 
@@ -817,26 +789,36 @@ func (m *Environment) findPodCountInDeploymentManifest() int {
 	return podCount
 }
 
-func getReplicaCount(spec map[string]interface{}) int {
+func getReplicaCount(spec map[string]any) int {
 	if spec == nil {
 		return 0
 	}
-	s := spec["selector"].(map[string]interface{})
+	if _, ok := spec["selector"]; !ok {
+		return 0
+	}
+	s := spec["selector"].(map[string]any)
 	if s == nil {
 		return 0
 	}
-	m := s["matchLabels"].(map[string]interface{})
+	if _, ok := s["matchLabels"]; !ok {
+		return 0
+	}
+	m := s["matchLabels"].(map[string]any)
 	if m == nil {
 		return 0
 	}
-	l := m["app"]
+	if _, ok := m[client.AppLabel]; !ok {
+		return 0
+	}
+	l := m[client.AppLabel]
 	if l == nil {
 		return 0
 	}
 
 	replicaCount := 0
-	replicas := spec["replicas"]
-	if replicas != nil {
+	var replicas any
+	replicas, ok := spec["replicas"]
+	if ok {
 		replicaCount += int(replicas.(float64))
 	} else {
 		replicaCount += 1
@@ -853,8 +835,8 @@ type CoverageProfileParams struct {
 	SkipFilePatterns  []string `form:"skipfile" json:"skipfile"`
 }
 
-func (m *Environment) getCoverageList() (map[string]interface{}, error) {
-	var servicesMap map[string]interface{}
+func (m *Environment) getCoverageList() (map[string]any, error) {
+	var servicesMap map[string]any
 	resp, err := m.httpClient.R().
 		SetResult(&servicesMap).
 		Get("v1/cover/list")
