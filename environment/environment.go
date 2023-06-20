@@ -773,8 +773,14 @@ func (m *Environment) findPodCountInDeploymentManifest() int {
 		for _, j := range *json {
 			m := j.(map[string]any)
 			// if the kind is a deployment then we want to see if it has replicas to count towards the app count
+			if _, ok := m["kind"]; !ok {
+				continue
+			}
 			kind := m["kind"].(string)
 			if kind == "Deployment" || kind == "StatefulSet" {
+				if _, ok := m["spec"]; !ok {
+					continue
+				}
 				podCount += getReplicaCount(m["spec"].(map[string]any))
 			}
 		}
@@ -787,12 +793,21 @@ func getReplicaCount(spec map[string]any) int {
 	if spec == nil {
 		return 0
 	}
+	if _, ok := spec["selector"]; !ok {
+		return 0
+	}
 	s := spec["selector"].(map[string]any)
 	if s == nil {
 		return 0
 	}
+	if _, ok := s["matchLabels"]; !ok {
+		return 0
+	}
 	m := s["matchLabels"].(map[string]any)
 	if m == nil {
+		return 0
+	}
+	if _, ok := m[client.AppLabel]; !ok {
 		return 0
 	}
 	l := m[client.AppLabel]
@@ -801,8 +816,9 @@ func getReplicaCount(spec map[string]any) int {
 	}
 
 	replicaCount := 0
-	replicas := spec["replicas"]
-	if replicas != nil {
+	var replicas any
+	replicas, ok := spec["replicas"]
+	if ok {
 		replicaCount += int(replicas.(float64))
 	} else {
 		replicaCount += 1
