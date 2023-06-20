@@ -94,7 +94,6 @@ jobs:
     env:
       TEST_SUITE: remote-runner
       TEST_TRIGGERED_BY: chainlink-env-remote-runner-ci
-      CI: false
     steps:
       - uses: actions/checkout@v3
       - name: Run Remote Runner Tests
