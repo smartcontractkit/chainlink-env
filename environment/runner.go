@@ -163,6 +163,12 @@ func container(props *Props) *k8s.Container {
 		ImagePullPolicy: a.Str("Always"),
 		Env:             jobEnvVars(props),
 		Resources:       a.ContainerResources(cpu, mem, cpu, mem),
+		Ports: &[]*k8s.ContainerPort{
+			{
+				ContainerPort: a.Num(420),
+				HostPort:      a.Num(420),
+			},
+		},
 	}
 }
 
