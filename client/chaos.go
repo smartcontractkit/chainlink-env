@@ -43,7 +43,7 @@ func (c *Chaos) Run(app cdk8s.App, id string, resource string) (string, error) {
 	config.JSIIGlobalMu.Unlock()
 	log.Trace().Str("Raw", manifest).Msg("Manifest")
 	c.ResourceByName[id] = resource
-	if err := c.Client.Apply(manifest, c.Namespace, context.Background()); err != nil {
+	if err := c.Client.Apply(context.Background(), manifest, c.Namespace); err != nil {
 		return id, err
 	}
 	if err := c.checkForPodsExistence(app); err != nil {

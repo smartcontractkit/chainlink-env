@@ -334,7 +334,7 @@ func (m *K8sClient) RemoveNamespace(namespace string) error {
 }
 
 // RolloutStatefulSets applies "rollout statefulset" to all existing statefulsets in that namespace
-func (m *K8sClient) RolloutStatefulSets(namespace string, ctx context.Context) error {
+func (m *K8sClient) RolloutStatefulSets(ctx context.Context, namespace string) error {
 	stsClient := m.ClientSet.AppsV1().StatefulSets(namespace)
 	sts, err := stsClient.List(context.Background(), metaV1.ListOptions{})
 	if err != nil {
@@ -360,7 +360,7 @@ func (m *K8sClient) RolloutStatefulSets(namespace string, ctx context.Context) e
 }
 
 // RolloutRestartBySelector rollouts and restarts object by selector
-func (m *K8sClient) RolloutRestartBySelector(namespace string, resource string, selector string, ctx context.Context) error {
+func (m *K8sClient) RolloutRestartBySelector(ctx context.Context, namespace, resource, selector string) error {
 	cmd := fmt.Sprintf("kubectl --namespace %s rollout restart -l %s %s", namespace, selector, resource)
 	log.Info().Str("Command", cmd).Msg("rollout restart by selector")
 	if err := ExecCmdWithContext(ctx, cmd); err != nil {
@@ -406,7 +406,7 @@ func (m *K8sClient) WaitForJob(namespaceName string, jobName string, fundReturnS
 	return exitErr
 }
 
-func (m *K8sClient) WaitForDeploymentsAvailable(namespace string, ctx context.Context) error {
+func (m *K8sClient) WaitForDeploymentsAvailable(ctx context.Context, namespace string) error {
 	deployments, err := m.ClientSet.AppsV1().Deployments(namespace).List(context.Background(), metaV1.ListOptions{})
 	if err != nil {
 		return err
@@ -424,7 +424,7 @@ func (m *K8sClient) WaitForDeploymentsAvailable(namespace string, ctx context.Co
 }
 
 // Apply applying a manifest to a currently connected k8s context
-func (m *K8sClient) Apply(manifest, namespace string, ctx context.Context) error {
+func (m *K8sClient) Apply(ctx context.Context, manifest, namespace string) error {
 	manifestFile := fmt.Sprintf(TempDebugManifest, uuid.NewString())
 	log.Info().Str("File", manifestFile).Msg("Applying manifest")
 	if err := os.WriteFile(manifestFile, []byte(manifest), os.ModePerm); err != nil {
@@ -435,7 +435,7 @@ func (m *K8sClient) Apply(manifest, namespace string, ctx context.Context) error
 	if err := ExecCmdWithContext(ctx, cmd); err != nil {
 		return err
 	}
-	return m.WaitForDeploymentsAvailable(namespace, ctx)
+	return m.WaitForDeploymentsAvailable(ctx, namespace)
 }
 
 // DeleteResource deletes resource

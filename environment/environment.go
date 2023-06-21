@@ -299,7 +299,7 @@ func (m *Environment) initApp() error {
 	m.CurrentManifest = *m.App.SynthYaml()
 	ctx, cancel := context.WithTimeout(context.Background(), m.Cfg.ReadyCheckData.Timeout)
 	defer cancel()
-	err = m.Client.Apply(m.CurrentManifest, m.Cfg.Namespace, ctx)
+	err = m.Client.Apply(ctx, m.CurrentManifest, m.Cfg.Namespace)
 	if ctx.Err() == context.DeadlineExceeded {
 		return fmt.Errorf("failed to apply manifest within %s", m.Cfg.ReadyCheckData.Timeout)
 	}
@@ -700,7 +700,7 @@ func (m *Environment) DeployCustomReadyConditions(customCheck *client.ReadyCheck
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), m.Cfg.ReadyCheckData.Timeout)
 	defer cancel()
-	err := m.Client.Apply(m.CurrentManifest, m.Cfg.Namespace, ctx)
+	err := m.Client.Apply(ctx, m.CurrentManifest, m.Cfg.Namespace)
 	if ctx.Err() == context.DeadlineExceeded {
 		return errors.New("timeout waiting for environment to be ready")
 	}
@@ -751,7 +751,7 @@ func (m *Environment) RolloutStatefulSets() error {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), m.Cfg.ReadyCheckData.Timeout)
 	defer cancel()
-	err := m.Client.RolloutStatefulSets(m.Cfg.Namespace, ctx)
+	err := m.Client.RolloutStatefulSets(ctx, m.Cfg.Namespace)
 	if ctx.Err() == context.DeadlineExceeded {
 		return errors.New("timeout waiting for rollout statefulset to complete")
 	}
@@ -765,7 +765,7 @@ func (m *Environment) RolloutRestartBySelector(resource string, selector string)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), m.Cfg.ReadyCheckData.Timeout)
 	defer cancel()
-	err := m.Client.RolloutRestartBySelector(m.Cfg.Namespace, resource, selector, ctx)
+	err := m.Client.RolloutRestartBySelector(ctx, m.Cfg.Namespace, resource, selector)
 	if ctx.Err() == context.DeadlineExceeded {
 		return errors.New("timeout waiting for rollout restart to complete")
 	}
