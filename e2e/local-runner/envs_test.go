@@ -57,3 +57,7 @@ func TestRolloutRestartBySelector(t *testing.T) {
 func TestReplaceHelm(t *testing.T) {
 	common.TestReplaceHelm(t)
 }
+
+func TestRunTimeout(t *testing.T) {
+	common.TestRunTimeout(t)
+}

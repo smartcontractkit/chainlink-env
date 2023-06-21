@@ -2,6 +2,7 @@ package client
 
 import (
 	"bufio"
+	"context"
 	"io"
 	"os/exec"
 	"strings"
@@ -10,7 +11,11 @@ import (
 )
 
 func ExecCmd(command string) error {
-	return ExecCmdWithOptions(command, func(m string) {
+	return ExecCmdWithContext(context.Background(), command)
+}
+
+func ExecCmdWithContext(ctx context.Context, command string) error {
+	return ExecCmdWithOptions(ctx, command, func(m string) {
 		log.Debug().Str("Text", m).Msg("Std Pipe")
 	})
 }
@@ -27,9 +32,9 @@ func readStdPipe(pipe io.ReadCloser, outputFunction func(string)) {
 	}
 }
 
-func ExecCmdWithOptions(command string, outputFunction func(string)) error {
+func ExecCmdWithOptions(ctx context.Context, command string, outputFunction func(string)) error {
 	c := strings.Split(command, " ")
-	cmd := exec.Command(c[0], c[1:]...)
+	cmd := exec.CommandContext(ctx, c[0], c[1:]...)
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return err

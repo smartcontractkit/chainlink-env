@@ -1,6 +1,7 @@
 package environment
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -296,7 +297,13 @@ func (m *Environment) initApp() error {
 		},
 	})
 	m.CurrentManifest = *m.App.SynthYaml()
-	return m.Client.Apply(m.CurrentManifest, m.Cfg.Namespace)
+	ctx, cancel := context.WithTimeout(context.Background(), m.Cfg.ReadyCheckData.Timeout)
+	defer cancel()
+	err = m.Client.Apply(m.CurrentManifest, m.Cfg.Namespace, ctx)
+	if ctx.Err() == context.DeadlineExceeded {
+		return fmt.Errorf("failed to apply manifest within %s", m.Cfg.ReadyCheckData.Timeout)
+	}
+	return err
 }
 
 // AddChart adds a chart to the deployment
@@ -691,7 +698,13 @@ func (m *Environment) DeployCustomReadyConditions(customCheck *client.ReadyCheck
 		}
 		return nil
 	}
-	if err := m.Client.Apply(m.CurrentManifest, m.Cfg.Namespace); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), m.Cfg.ReadyCheckData.Timeout)
+	defer cancel()
+	err := m.Client.Apply(m.CurrentManifest, m.Cfg.Namespace, ctx)
+	if ctx.Err() == context.DeadlineExceeded {
+		return errors.New("timeout waiting for environment to be ready")
+	}
+	if err != nil {
 		return err
 	}
 	if int64(m.Cfg.UpdateWaitInterval) != 0 {
@@ -732,12 +745,31 @@ func (m *Environment) Deploy() error {
 }
 
 // RolloutStatefulSets applies "rollout statefulset" to all existing statefulsets in our namespace
-// deprecated: use the Client.RolloutStatefulSets instead, this will be removed in the future since it is just a one line wrapper
 func (m *Environment) RolloutStatefulSets() error {
 	if m.err != nil {
 		return m.err
 	}
-	return m.Client.RolloutStatefulSets(m.Cfg.Namespace)
+	ctx, cancel := context.WithTimeout(context.Background(), m.Cfg.ReadyCheckData.Timeout)
+	defer cancel()
+	err := m.Client.RolloutStatefulSets(m.Cfg.Namespace, ctx)
+	if ctx.Err() == context.DeadlineExceeded {
+		return errors.New("timeout waiting for rollout statefulset to complete")
+	}
+	return err
+}
+
+// RolloutRestartBySelector applies "rollout restart" to the selected resources
+func (m *Environment) RolloutRestartBySelector(resource string, selector string) error {
+	if m.err != nil {
+		return m.err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), m.Cfg.ReadyCheckData.Timeout)
+	defer cancel()
+	err := m.Client.RolloutRestartBySelector(m.Cfg.Namespace, resource, selector, ctx)
+	if ctx.Err() == context.DeadlineExceeded {
+		return errors.New("timeout waiting for rollout restart to complete")
+	}
+	return err
 }
 
 // findPodsInDeploymentManifest finds all the pods we will be deploying

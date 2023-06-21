@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/onsi/gomega"
@@ -342,10 +343,10 @@ func TestRolloutRestart(t *testing.T, statefulSet bool) {
 	})
 
 	if statefulSet {
-		err = e.Client.RolloutStatefulSets(e.Cfg.Namespace)
+		err = e.RolloutStatefulSets()
 		require.NoError(t, err, "failed to rollout statefulsets")
 	} else {
-		err = e.Client.RolloutRestartBySelector(e.Cfg.Namespace, "deployment", "envType=chainlink-env-test")
+		err = e.RolloutRestartBySelector("deployment", "envType=chainlink-env-test")
 		require.NoError(t, err, "failed to rollout restart deployment")
 	}
 
@@ -397,4 +398,13 @@ func TestReplaceHelm(t *testing.T) {
 	require.NoError(t, err)
 	err = e.Run()
 	require.NoError(t, err)
+}
+
+func TestRunTimeout(t *testing.T) {
+	t.Parallel()
+	testEnvConfig := GetTestEnvConfig(t)
+	e := presets.EVMOneNode(testEnvConfig)
+	e.Cfg.ReadyCheckData.Timeout = 5 * time.Second
+	err := e.Run()
+	require.Error(t, err)
 }
