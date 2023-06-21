@@ -334,7 +334,7 @@ func (m *K8sClient) RemoveNamespace(namespace string) error {
 }
 
 // RolloutStatefulSets applies "rollout statefulset" to all existing statefulsets in that namespace
-func (m *K8sClient) RolloutStatefulSets(namespace string) error {
+func (m *K8sClient) RolloutStatefulSets(ctx context.Context, namespace string) error {
 	stsClient := m.ClientSet.AppsV1().StatefulSets(namespace)
 	sts, err := stsClient.List(context.Background(), metaV1.ListOptions{})
 	if err != nil {
@@ -343,7 +343,7 @@ func (m *K8sClient) RolloutStatefulSets(namespace string) error {
 	for _, s := range sts.Items {
 		cmd := fmt.Sprintf("kubectl rollout restart statefulset %s --namespace %s", s.Name, namespace)
 		log.Info().Str("Command", cmd).Msg("Applying StatefulSet rollout")
-		if err := ExecCmd(cmd); err != nil {
+		if err := ExecCmdWithContext(ctx, cmd); err != nil {
 			return err
 		}
 	}
@@ -352,7 +352,7 @@ func (m *K8sClient) RolloutStatefulSets(namespace string) error {
 		// wait for the rollout to be complete
 		scmd := fmt.Sprintf("kubectl rollout status statefulset %s --namespace %s", s.Name, namespace)
 		log.Info().Str("Command", scmd).Msg("Waiting for StatefulSet rollout to finish")
-		if err := ExecCmd(scmd); err != nil {
+		if err := ExecCmdWithContext(ctx, scmd); err != nil {
 			return err
 		}
 	}
@@ -360,16 +360,16 @@ func (m *K8sClient) RolloutStatefulSets(namespace string) error {
 }
 
 // RolloutRestartBySelector rollouts and restarts object by selector
-func (m *K8sClient) RolloutRestartBySelector(namespace string, resource string, selector string) error {
+func (m *K8sClient) RolloutRestartBySelector(ctx context.Context, namespace, resource, selector string) error {
 	cmd := fmt.Sprintf("kubectl --namespace %s rollout restart -l %s %s", namespace, selector, resource)
 	log.Info().Str("Command", cmd).Msg("rollout restart by selector")
-	if err := ExecCmd(cmd); err != nil {
+	if err := ExecCmdWithContext(ctx, cmd); err != nil {
 		return err
 	}
 	// wait for the rollout to be complete
 	waitCmd := fmt.Sprintf("kubectl --namespace %s rollout status -l %s %s", namespace, selector, resource)
 	log.Info().Str("Command", waitCmd).Msg("Waiting for StatefulSet rollout to finish")
-	return ExecCmd(waitCmd)
+	return ExecCmdWithContext(ctx, waitCmd)
 }
 
 // ReadyCheckData data to check if selected pods are running and all containers are ready ( readiness check ) are ready
@@ -382,7 +382,7 @@ type ReadyCheckData struct {
 func (m *K8sClient) WaitForJob(namespaceName string, jobName string, fundReturnStatus func(string)) error {
 	cmd := fmt.Sprintf("kubectl --namespace %s logs --follow job/%s", namespaceName, jobName)
 	log.Info().Str("Job", jobName).Str("cmd", cmd).Msg("Waiting for job to complete")
-	if err := ExecCmdWithOptions(cmd, fundReturnStatus); err != nil {
+	if err := ExecCmdWithOptions(context.Background(), cmd, fundReturnStatus); err != nil {
 		return err
 	}
 	var exitErr error
@@ -406,17 +406,17 @@ func (m *K8sClient) WaitForJob(namespaceName string, jobName string, fundReturnS
 	return exitErr
 }
 
-func (m *K8sClient) WaitForDeploymentsAvailable(namespace string) error {
+func (m *K8sClient) WaitForDeploymentsAvailable(ctx context.Context, namespace string) error {
 	deployments, err := m.ClientSet.AppsV1().Deployments(namespace).List(context.Background(), metaV1.ListOptions{})
 	if err != nil {
 		return err
 	}
-	log.Info().Int("Number", len(deployments.Items)).Msg("Deployments found")
+	log.Debug().Int("Number", len(deployments.Items)).Msg("Deployments found")
 	for _, d := range deployments.Items {
-		log.Info().Str("status", d.Status.String()).Msg("Deployment info")
+		log.Debug().Str("status", d.Status.String()).Msg("Deployment info")
 		waitCmd := fmt.Sprintf("kubectl rollout status -n %s deployment/%s", namespace, d.Name)
 		log.Debug().Str("cmd", waitCmd).Msg("wait for deployment to be available")
-		if err := ExecCmd(waitCmd); err != nil {
+		if err := ExecCmdWithContext(ctx, waitCmd); err != nil {
 			return err
 		}
 	}
@@ -424,7 +424,7 @@ func (m *K8sClient) WaitForDeploymentsAvailable(namespace string) error {
 }
 
 // Apply applying a manifest to a currently connected k8s context
-func (m *K8sClient) Apply(manifest, namespace string) error {
+func (m *K8sClient) Apply(ctx context.Context, manifest, namespace string) error {
 	manifestFile := fmt.Sprintf(TempDebugManifest, uuid.NewString())
 	log.Info().Str("File", manifestFile).Msg("Applying manifest")
 	if err := os.WriteFile(manifestFile, []byte(manifest), os.ModePerm); err != nil {
@@ -432,10 +432,10 @@ func (m *K8sClient) Apply(manifest, namespace string) error {
 	}
 	cmd := fmt.Sprintf("kubectl apply -f %s", manifestFile)
 	log.Debug().Str("cmd", cmd).Msg("Apply command")
-	if err := ExecCmd(cmd); err != nil {
+	if err := ExecCmdWithContext(ctx, cmd); err != nil {
 		return err
 	}
-	return m.WaitForDeploymentsAvailable(namespace)
+	return m.WaitForDeploymentsAvailable(ctx, namespace)
 }
 
 // DeleteResource deletes resource
