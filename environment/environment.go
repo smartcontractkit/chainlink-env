@@ -38,13 +38,12 @@ const (
 )
 
 var (
-	defaultAnnotations = map[string]*string{
+	defaultNamespaceAnnotations = map[string]*string{
 		"prometheus.io/scrape":                             a.Str("true"),
 		"backyards.banzaicloud.io/image-registry-access":   a.Str("true"),
 		"backyards.banzaicloud.io/public-dockerhub-access": a.Str("true"),
 	}
 	defaultPodAnnotations = map[string]string{"cluster-autoscaler.kubernetes.io/safe-to-evict": "false"}
-	defaultPodLabels      = map[string]string{"clenv": "true"}
 )
 
 // ConnectedChart interface to interact both with cdk8s apps and helm charts
@@ -269,7 +268,7 @@ func (m *Environment) initApp() error {
 	if err != nil {
 		return err
 	}
-	defaultAnnotations[pkg.TTLLabelKey] = a.ShortDur(m.Cfg.TTL)
+	defaultNamespaceAnnotations[pkg.TTLLabelKey] = a.ShortDur(m.Cfg.TTL)
 	m.root = cdk8s.NewChart(m.App, a.Str(fmt.Sprintf("root-chart-%s", m.Cfg.Namespace)), &cdk8s.ChartProps{
 		Labels:    nsLabels,
 		Namespace: a.Str(m.Cfg.Namespace),
@@ -278,7 +277,7 @@ func (m *Environment) initApp() error {
 		Metadata: &k8s.ObjectMeta{
 			Name:        a.Str(m.Cfg.Namespace),
 			Labels:      nsLabels,
-			Annotations: &defaultAnnotations,
+			Annotations: &defaultNamespaceAnnotations,
 		},
 	})
 	zero := float64(0)
@@ -358,7 +357,7 @@ func (m *Environment) ReplaceHelm(name string, chart ConnectedChart) (*Environme
 		Interface("Props", chart.GetProps()).
 		Interface("Values", chart.GetValues()).
 		Msg("Chart deployment values")
-	cdk8s.NewHelm(m.root, a.Str(name), &cdk8s.HelmProps{
+	h := cdk8s.NewHelm(m.root, a.Str(name), &cdk8s.HelmProps{
 		Chart: a.Str(chart.GetPath()),
 		HelmFlags: &[]*string{
 			a.Str("--namespace"),
@@ -367,8 +366,18 @@ func (m *Environment) ReplaceHelm(name string, chart ConnectedChart) (*Environme
 		ReleaseName: a.Str(name),
 		Values:      chart.GetValues(),
 	})
+	addDefaultAnnotations(h)
 	m.Charts = append(m.Charts, chart)
 	return m, nil
+}
+
+func addDefaultAnnotations(h cdk8s.Helm) {
+	for _, ao := range *h.ApiObjects() {
+		switch *ao.Kind() {
+		case "Deployment", "ReplicaSet", "StatefulSet", "Job", "CronJob":
+			ao.AddJsonPatch(cdk8s.JsonPatch_Add(a.Str("/spec/template/metadata/annotations"), defaultPodAnnotations))
+		}
+	}
 }
 
 // UpdateHelm update a helm chart with new values. The pod will launch with an `updated=true` label if it's a Chainlink node.
@@ -415,9 +424,8 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 	defer config.JSIIGlobalMu.Unlock()
 
 	values := &map[string]any{
-		"tolerations":    m.Cfg.Tolerations,
-		"nodeSelector":   m.Cfg.NodeSelector,
-		"podAnnotations": defaultPodAnnotations,
+		"tolerations":  m.Cfg.Tolerations,
+		"nodeSelector": m.Cfg.NodeSelector,
 	}
 	config.MustMerge(values, chart.GetValues())
 	log.Trace().
@@ -439,12 +447,13 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 		m.err = err
 		return m
 	}
-	cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
+	h := cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
 		Chart:       a.Str(chartPath),
 		HelmFlags:   &helmFlags,
 		ReleaseName: a.Str(chart.GetName()),
 		Values:      values,
 	})
+	addDefaultAnnotations(h)
 	m.Charts = append(m.Charts, chart)
 	return m
 }
@@ -721,22 +730,7 @@ func (m *Environment) DeployCustomReadyConditions(customCheck *client.ReadyCheck
 			return err
 		}
 	}
-	if err := m.enumerateApps(); err != nil {
-		return err
-	}
-	podList, err := m.Client.ListPods(m.Cfg.Namespace, "")
-	if err != nil {
-		return err
-	}
-	defaultPodLabels[pkg.NamespaceLabelKey] = m.Cfg.Namespace
-	if err := m.Client.AddPodsLabels(m.Cfg.Namespace, podList, defaultPodLabels); err != nil {
-		return err
-	}
-
-	// Attempt to apply default pod annotations even through they are applied in the manifest
-	// as an attempt to add them to any pods that did not have their charts setup to handle the
-	// podAnnotations in their templates.
-	return m.Client.AddPodsAnnotations(m.Cfg.Namespace, podList, defaultPodAnnotations)
+	return m.enumerateApps()
 }
 
 // Deploy deploy current manifest and check logs for readiness
