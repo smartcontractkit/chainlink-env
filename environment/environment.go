@@ -768,9 +768,9 @@ func (m *Environment) RolloutRestartBySelector(resource string, selector string)
 
 // findPodsInDeploymentManifest finds all the pods we will be deploying
 func (m *Environment) findPodCountInDeploymentManifest() int {
-	podCount := 0
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
+	podCount := 0
 	charts := m.App.Charts()
 	for _, chart := range *charts {
 		json := chart.ToJson()
