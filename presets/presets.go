@@ -11,25 +11,31 @@ import (
 )
 
 // EVMOneNode local development Chainlink deployment
-func EVMOneNode(config *environment.Config) *environment.Environment {
+func EVMOneNode(config *environment.Config) (*environment.Environment, error) {
+	c, err := chainlink.NewDeployment(1, nil)
+	if err != nil {
+		return nil, err
+	}
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, nil))
+		AddHelmCharts(c), nil
 }
 
 // EVMMinimalLocalBS local development Chainlink deployment,
 // 1 bootstrap + 4 oracles (minimal requirements for OCR) + Blockscout
-func EVMMinimalLocalBS(config *environment.Config) *environment.Environment {
+func EVMMinimalLocalBS(config *environment.Config) (*environment.Environment, error) {
+	c, err := chainlink.NewDeployment(5, nil)
+	if err != nil {
+		return nil, err
+	}
 	return environment.New(config).
 		AddChart(blockscout.New(&blockscout.Props{})).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, map[string]interface{}{
-			"replicas": 5,
-		}))
+		AddHelmCharts(c), nil
 }
 
 // EVMMinimalLocal local development Chainlink deployment,
@@ -45,7 +51,7 @@ func EVMMinimalLocal(config *environment.Config) *environment.Environment {
 }
 
 // EVMReorg deployment for two Ethereum networks re-org test
-func EVMReorg(config *environment.Config) *environment.Environment {
+func EVMReorg(config *environment.Config) (*environment.Environment, error) {
 	var clToml = `[[EVM]]
 ChainID = '1337'
 FinalityDepth = 200
@@ -57,6 +63,12 @@ HTTPURL = 'http://geth-ethereum-geth:8544'
 
 [EVM.HeadTracker]
 HistoryDepth = 400`
+	c, err := chainlink.NewDeployment(5, map[string]interface{}{
+		"toml": clToml,
+	})
+	if err != nil {
+		return nil, err
+	}
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
@@ -82,10 +94,7 @@ HistoryDepth = 400`
 				},
 			},
 		})).
-		AddHelm(chainlink.New(0, map[string]interface{}{
-			"replicas": 5,
-			"toml":     clToml,
-		}))
+		AddHelmCharts(c), nil
 }
 
 // EVMSoak deployment for a long running soak tests

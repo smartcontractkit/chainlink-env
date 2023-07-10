@@ -60,7 +60,11 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		return err
 	}
 	if e.Cfg.InsideK8s {
-		urls = append(urls, mockInternal, mockInternal)
+		services, err := e.Client.ListServices(e.Cfg.Namespace, fmt.Sprintf("app=%s", m.Name))
+		if err != nil {
+			return err
+		}
+		urls = append(urls, fmt.Sprintf("http://%s:1080", services.Items[0].Name), mockInternal)
 	} else {
 		urls = append(urls, mock, mockInternal)
 	}

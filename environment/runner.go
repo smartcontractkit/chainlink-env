@@ -172,7 +172,6 @@ func jobEnvVars(props *Props) *[]*k8s.EnvVar {
 
 	// Propagate common environment variables to the runner
 	lookups := []string{
-		"CI",
 		config.EnvVarCLImage,
 		config.EnvVarCLTag,
 		config.EnvVarCLCommitSha,

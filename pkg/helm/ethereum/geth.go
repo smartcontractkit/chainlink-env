@@ -74,11 +74,16 @@ func (m Chart) ExportData(e *environment.Environment) error {
 			return err
 		}
 		if e.Cfg.InsideK8s {
-			e.URLs[m.Props.NetworkName] = []string{gethInternalWs}
+			services, err := e.Client.ListServices(e.Cfg.Namespace, fmt.Sprintf("app=%s", m.HelmProps.Name))
+			if err != nil {
+				return err
+			}
+			e.URLs[m.Props.NetworkName] = []string{fmt.Sprintf("ws://%s:8546", services.Items[0].Name)}
+			e.URLs[m.Props.NetworkName+"_http"] = []string{fmt.Sprintf("http://%s:8544", services.Items[0].Name)}
 		} else {
 			e.URLs[m.Props.NetworkName] = []string{gethLocalWs}
+			e.URLs[m.Props.NetworkName+"_http"] = []string{gethLocalHttp}
 		}
-		e.URLs[m.Props.NetworkName+"_http"] = []string{gethLocalHttp}
 
 		// For cases like starknet we need the internalHttp address to set up the L1<>L2 interaction
 		e.URLs[m.Props.NetworkName+"_internal"] = []string{gethInternalWs}

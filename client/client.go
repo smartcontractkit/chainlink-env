@@ -80,6 +80,12 @@ func (m *K8sClient) ListPods(namespace, selector string) (*v1.PodList, error) {
 	return pods.DeepCopy(), err
 }
 
+// ListPods lists services for a namespace and selector
+func (m *K8sClient) ListServices(namespace, selector string) (*v1.ServiceList, error) {
+	services, err := m.ClientSet.CoreV1().Services(namespace).List(context.Background(), metaV1.ListOptions{LabelSelector: selector})
+	return services.DeepCopy(), err
+}
+
 // ListNamespaces lists k8s namespaces
 func (m *K8sClient) ListNamespaces(selector string) (*v1.NamespaceList, error) {
 	return m.ClientSet.CoreV1().Namespaces().List(context.Background(), metaV1.ListOptions{LabelSelector: selector})
