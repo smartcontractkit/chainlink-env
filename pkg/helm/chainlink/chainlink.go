@@ -18,7 +18,9 @@ const (
 	DBsLocalURLsKey      = "chainlink_db"
 )
 
-type Props struct{}
+type Props struct {
+	HasReplicas bool
+}
 
 type Chart struct {
 	Name    string
@@ -70,6 +72,13 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		var localConnection string
 		if e.Cfg.InsideK8s {
 			localConnection = internalConnection
+			if !m.Props.HasReplicas {
+				services, err := e.Client.ListServices(e.Cfg.Namespace, fmt.Sprintf("app=%s", m.Name))
+				if err != nil {
+					return err
+				}
+				localConnection = fmt.Sprintf("http://%s:6688", services.Items[0].Name)
+			}
 		} else {
 			localConnection, err = e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
 				As(client.LocalConnection, client.HTTP)
@@ -175,6 +184,7 @@ func NewDeployment(deploymentCount int, props map[string]any) ([]environment.Con
 	for i := 0; i < deploymentCount; i++ {
 		charts = append(charts, New(i, props))
 	}
+
 	return charts, nil
 }
 
@@ -183,11 +193,18 @@ func NewVersioned(index int, helmVersion string, props map[string]any) environme
 	dp := defaultProps()
 	config.MustEnvOverrideVersion(&dp)
 	config.MustMerge(&dp, props)
+	p := &Props{
+		HasReplicas: false,
+	}
+	if props["replicas"] != nil && props["replicas"] != "1" {
+		p.HasReplicas = true
+	}
 	return Chart{
 		Index:   index,
 		Name:    fmt.Sprintf("%s-%d", AppName, index),
 		Path:    "chainlink-qa/chainlink",
 		Version: helmVersion,
 		Values:  &dp,
+		Props:   p,
 	}
 }

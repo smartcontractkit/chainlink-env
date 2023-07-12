@@ -173,8 +173,9 @@ func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
 func TestWithSingleNodeEnv(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
-	e := presets.EVMOneNode(testEnvConfig)
-	err := e.Run()
+	e, err := presets.EVMOneNode(testEnvConfig)
+	require.NoError(t, err)
+	err = e.Run()
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
 		return
@@ -201,8 +202,9 @@ func TestMinResources5NodesEnv(t *testing.T) {
 func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
-	e := presets.EVMMinimalLocalBS(testEnvConfig)
-	err := e.Run()
+	e, err := presets.EVMMinimalLocalBS(testEnvConfig)
+	require.NoError(t, err)
+	err = e.Run()
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
 		return
@@ -215,8 +217,9 @@ func TestMinResources5NodesEnvWithBlockscout(t *testing.T) {
 func Test5NodesPlus2MiningGethsReorgEnv(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
-	e := presets.EVMReorg(testEnvConfig)
-	err := e.Run()
+	e, err := presets.EVMReorg(testEnvConfig)
+	require.NoError(t, err)
+	err = e.Run()
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
 		return
@@ -259,12 +262,12 @@ func TestWithChaos(t *testing.T) {
 		},
 	}
 	testEnvConfig := GetTestEnvConfig(t)
+	cd, err := chainlink.NewDeployment(1, nil)
+	require.NoError(t, err)
 	e := environment.New(testEnvConfig).
 		AddHelm(ethereum.New(nil)).
-		AddHelm(chainlink.New(0, map[string]any{
-			"replicas": 1,
-		}))
-	err := e.Run()
+		AddHelmCharts(cd)
+	err = e.Run()
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
 		return
@@ -273,12 +276,7 @@ func TestWithChaos(t *testing.T) {
 		assert.NoError(t, e.Shutdown())
 	})
 
-	connection := client.LocalConnection
-	if e.Cfg.InsideK8s {
-		connection = client.RemoteConnection
-	}
-	url, err := e.Fwd.FindPort("chainlink-0:0", "node", "access").As(connection, client.HTTP)
-	require.NoError(t, err)
+	url := e.URLs["chainlink_local"][0]
 	r := resty.New()
 	res, err := r.R().Get(url)
 	require.NoError(t, err)
@@ -299,8 +297,7 @@ func TestWithChaos(t *testing.T) {
 	require.NoError(t, err)
 
 	// verify that the node can recieve requests again
-	url, err = e.Fwd.FindPort("chainlink-0:0", "node", "access").As(connection, client.HTTP)
-	require.NoError(t, err)
+	url = e.URLs["chainlink_local"][0]
 	res, err = r.R().Get(url)
 	require.NoError(t, err)
 	require.Equal(t, "200 OK", res.Status())
@@ -403,8 +400,9 @@ func TestReplaceHelm(t *testing.T) {
 func TestRunTimeout(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
-	e := presets.EVMOneNode(testEnvConfig)
+	e, err := presets.EVMOneNode(testEnvConfig)
+	require.NoError(t, err)
 	e.Cfg.ReadyCheckData.Timeout = 5 * time.Second
-	err := e.Run()
+	err = e.Run()
 	require.Error(t, err)
 }
