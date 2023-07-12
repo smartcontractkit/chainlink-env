@@ -1,9 +1,13 @@
 package sol
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/rs/zerolog/log"
 
 	"github.com/smartcontractkit/chainlink-env/client"
+	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/environment"
 )
 
@@ -76,13 +80,18 @@ func (m Chart) ExportData(e *environment.Environment) error {
 }
 
 func defaultProps() *Props {
+	internalRepo := os.Getenv(config.EnvVarInternalDockerRepo)
+	solImage := "solanalabs/solana"
+	if internalRepo != "" {
+		solImage = fmt.Sprintf("%s/solanalabs/solana", internalRepo)
+	}
 	return &Props{
 		NetworkName: "sol",
 		Values: map[string]interface{}{
 			"replicas": "1",
 			"sol": map[string]interface{}{
 				"image": map[string]interface{}{
-					"image":   "solanalabs/solana",
+					"image":   solImage,
 					"version": "v1.13.3",
 				},
 				"resources": map[string]interface{}{
