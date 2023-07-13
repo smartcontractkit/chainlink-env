@@ -137,7 +137,7 @@ func defaultProps() map[string]any {
 				"version": "develop",
 			},
 			"web_port": "6688",
-			"p2p_port": "8090",
+			"p2p_port": "6690",
 			"resources": map[string]any{
 				"requests": map[string]any{
 					"cpu":    "350m",
