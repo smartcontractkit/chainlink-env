@@ -384,7 +384,7 @@ func addDefaultPodAnnotationsAndLabels(h cdk8s.Helm, annotations, labels map[str
 	}
 	for _, ao := range *h.ApiObjects() {
 		switch *ao.Kind() {
-		case "Deployment", "ReplicaSet", "StatefulSet", "Job", "CronJob":
+		case "Deployment", "ReplicaSet", "StatefulSet":
 			// we aren't guaranteed to have annotations in existence so we have to dig down to see if they exist
 			// and add any to our current list we want to add
 			aj := *ao.Chart().ToJson()
