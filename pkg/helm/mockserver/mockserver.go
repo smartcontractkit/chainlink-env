@@ -71,6 +71,9 @@ func (m Chart) ExportData(e *environment.Environment) error {
 			return err
 		}
 	}
+	if e.Cfg.InsideK8s {
+		mockLocal = mockInternal
+	}
 
 	e.URLs[LocalURLsKey] = []string{mockLocal}
 	e.URLs[InternalURLsKey] = []string{mockInternal}
