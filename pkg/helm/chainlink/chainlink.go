@@ -72,7 +72,9 @@ func (m Chart) ExportData(e *environment.Environment) error {
 			if err != nil {
 				return err
 			}
-			internalConnection = fmt.Sprintf("http://%s:6688", services.Items[0].Name)
+			if services != nil && len(services.Items) > 0 {
+				internalConnection = fmt.Sprintf("http://%s:6688", services.Items[0].Name)
+			}
 		}
 
 		var localConnection string
