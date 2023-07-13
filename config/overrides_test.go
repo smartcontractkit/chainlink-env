@@ -23,7 +23,7 @@ func TestOverrideCodeEnv(t *testing.T) {
 					"version": "1.4.1-root",
 				},
 				"web_port": "6688",
-				"p2p_port": "8090",
+				"p2p_port": "6690",
 				"resources": map[string]interface{}{
 					"requests": map[string]interface{}{
 						"cpu":    "350m",

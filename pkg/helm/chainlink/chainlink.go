@@ -67,18 +67,19 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		if err != nil {
 			return err
 		}
-		e.URLs[NodesInternalURLsKey] = append(e.URLs[NodesInternalURLsKey], internalConnection)
+		if !m.Props.HasReplicas {
+			services, err := e.Client.ListServices(e.Cfg.Namespace, fmt.Sprintf("app=%s", m.Name))
+			if err != nil {
+				return err
+			}
+			if services != nil && len(services.Items) > 0 {
+				internalConnection = fmt.Sprintf("http://%s:6688", services.Items[0].Name)
+			}
+		}
 
 		var localConnection string
 		if e.Cfg.InsideK8s {
 			localConnection = internalConnection
-			if !m.Props.HasReplicas {
-				services, err := e.Client.ListServices(e.Cfg.Namespace, fmt.Sprintf("app=%s", m.Name))
-				if err != nil {
-					return err
-				}
-				localConnection = fmt.Sprintf("http://%s:6688", services.Items[0].Name)
-			}
 		} else {
 			localConnection, err = e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
 				As(client.LocalConnection, client.HTTP)
@@ -86,6 +87,7 @@ func (m Chart) ExportData(e *environment.Environment) error {
 				return err
 			}
 		}
+		e.URLs[NodesInternalURLsKey] = append(e.URLs[NodesInternalURLsKey], internalConnection)
 		e.URLs[NodesLocalURLsKey] = append(e.URLs[NodesLocalURLsKey], localConnection)
 
 		dbLocalConnection, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "chainlink-db", "postgres").
@@ -98,7 +100,7 @@ func (m Chart) ExportData(e *environment.Environment) error {
 			Str("Chart Name", m.Name).
 			Str("Local IP", localConnection).
 			Str("Local DB IP", dbLocalConnection).
-			Str("K8s Internal IP", internalConnection).
+			Str("K8s Internal Connection", internalConnection).
 			Msg("Chainlink Node Details")
 
 		nodeDetails := &environment.ChainlinkNodeDetail{
@@ -137,7 +139,7 @@ func defaultProps() map[string]any {
 				"version": "develop",
 			},
 			"web_port": "6688",
-			"p2p_port": "8090",
+			"p2p_port": "6690",
 			"resources": map[string]any{
 				"requests": map[string]any{
 					"cpu":    "350m",
