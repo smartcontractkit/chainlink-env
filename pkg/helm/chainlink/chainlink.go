@@ -67,17 +67,16 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		if err != nil {
 			return err
 		}
-		e.URLs[NodesInternalURLsKey] = append(e.URLs[NodesInternalURLsKey], internalConnection)
 
 		var localConnection string
 		if e.Cfg.InsideK8s {
-			localConnection = internalConnection
 			if !m.Props.HasReplicas {
 				services, err := e.Client.ListServices(e.Cfg.Namespace, fmt.Sprintf("app=%s", m.Name))
 				if err != nil {
 					return err
 				}
-				localConnection = fmt.Sprintf("http://%s:6688", services.Items[0].Name)
+				internalConnection = fmt.Sprintf("http://%s:6688", services.Items[0].Name)
+				localConnection = internalConnection
 			}
 		} else {
 			localConnection, err = e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
@@ -86,6 +85,7 @@ func (m Chart) ExportData(e *environment.Environment) error {
 				return err
 			}
 		}
+		e.URLs[NodesInternalURLsKey] = append(e.URLs[NodesInternalURLsKey], internalConnection)
 		e.URLs[NodesLocalURLsKey] = append(e.URLs[NodesLocalURLsKey], localConnection)
 
 		dbLocalConnection, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "chainlink-db", "postgres").
@@ -98,7 +98,7 @@ func (m Chart) ExportData(e *environment.Environment) error {
 			Str("Chart Name", m.Name).
 			Str("Local IP", localConnection).
 			Str("Local DB IP", dbLocalConnection).
-			Str("K8s Internal IP", internalConnection).
+			Str("K8s Internal Connection", internalConnection).
 			Msg("Chainlink Node Details")
 
 		nodeDetails := &environment.ChainlinkNodeDetail{

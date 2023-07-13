@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	URLsKey = "mockserver"
+	LocalURLsKey    = "mockserver_local"
+	InternalURLsKey = "mockserver_internal"
 )
 
 type Props struct {
@@ -50,8 +51,7 @@ func (m Chart) GetValues() *map[string]interface{} {
 }
 
 func (m Chart) ExportData(e *environment.Environment) error {
-	urls := make([]string, 0)
-	mock, err := e.Fwd.FindPort("mockserver:0", "mockserver", "serviceport").As(client.LocalConnection, client.HTTP)
+	mockLocal, err := e.Fwd.FindPort("mockserver:0", "mockserver", "serviceport").As(client.LocalConnection, client.HTTP)
 	if err != nil {
 		return err
 	}
@@ -64,13 +64,12 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		if err != nil {
 			return err
 		}
-		urls = append(urls, fmt.Sprintf("http://%s:1080", services.Items[0].Name), mockInternal)
-	} else {
-		urls = append(urls, mock, mockInternal)
+		mockInternal = fmt.Sprintf("http://%s:1080", services.Items[0].Name)
+		mockLocal = mockInternal
 	}
-	e.URLs[URLsKey] = urls
-	log.Info().Str("URL", mock).Msg("Mockserver local connection")
-	log.Info().Str("URL", mockInternal).Msg("Mockserver remote connection")
+	e.URLs[LocalURLsKey] = []string{mockLocal}
+	e.URLs[InternalURLsKey] = []string{mockInternal}
+	log.Info().Str("Local Connection", mockLocal).Str("Internal Connection", mockInternal).Msg("Mockserver")
 	return nil
 }
 
