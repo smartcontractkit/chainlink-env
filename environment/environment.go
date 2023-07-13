@@ -382,52 +382,78 @@ func addDefaultPodAnnotationsAndLabels(h cdk8s.Helm, annotations, labels map[str
 	for k, v := range annotations {
 		annoatationsCopy[k] = v
 	}
+	labelsCopy := map[string]string{}
+	for k, v := range labels {
+		labelsCopy[k] = v
+	}
 	for _, ao := range *h.ApiObjects() {
 		switch *ao.Kind() {
 		case "Deployment", "ReplicaSet", "StatefulSet", "Job", "CronJob":
-			// we aren't guaranteed to have annotations in existence so we have to dig down to see if they exist
-			// and add any to our current list we want to add
+			// we aren't guaranteed to have annotations, labels and matchLabels in existence so we have to dig down to see if they exist
+			// and add any to our current list
 			aj := *ao.Chart().ToJson()
-			// loop over the json array until we get the expected kind and look for existing annotations
+			// loop over the json array until we get the expected kind and look for existing annotations and labels
+			selectorExists := false
 			for _, dep := range aj {
 				l := fmt.Sprint(dep)
 				if !strings.Contains(l, fmt.Sprintf("kind:%s", *ao.Kind())) {
 					continue
 				}
-				depM := dep.(map[string]interface{})
-				spec, ok := depM["spec"].(map[string]interface{})
-				if !ok {
-					continue
-				}
-				template, ok := spec["template"].(map[string]interface{})
-				if !ok {
-					continue
-				}
-				metadata, ok := template["metadata"].(map[string]interface{})
-				if !ok {
-					continue
-				}
-				annot, ok := metadata["annotations"].(map[string]interface{})
-				if !ok {
-					continue
-				}
-				for k, v := range annot {
-					annoatationsCopy[k] = v.(string)
-				}
-			}
-			ao.AddJsonPatch(cdk8s.JsonPatch_Add(a.Str("/spec/template/metadata/annotations"), annoatationsCopy))
 
-			// loop over the labels and apply them to both the labels and selectors
-			// these should in theory always have at least one label/selector combo in existence so we don't
-			// have to do the existence check like we do for the annotations
-			for k, v := range labels {
-				// Escape the keys according to JSON Pointer syntax in RFC 6901
-				escapedKey := strings.ReplaceAll(strings.ReplaceAll(k, "~", "~0"), "/", "~1")
-				ao.AddJsonPatch(cdk8s.JsonPatch_Add(a.Str(fmt.Sprintf("/spec/template/metadata/labels/%s", escapedKey)), v))
-				ao.AddJsonPatch(cdk8s.JsonPatch_Add(a.Str(fmt.Sprintf("/spec/selector/matchLabels/%s", escapedKey)), v))
+				// annotations checks
+				mappedDeployment := dep.(map[string]interface{})
+				spec, ok := mappedDeployment["spec"].(map[string]interface{})
+				if !ok {
+					continue
+				}
+				metadata := getSpecMetadata(spec)
+				if metadata != nil {
+					annot, ok := metadata["annotations"].(map[string]interface{})
+					if ok {
+						// copy existing annotation data
+						for k, v := range annot {
+							annoatationsCopy[k] = v.(string)
+						}
+					}
+					lab, ok := metadata["labels"].(map[string]interface{})
+					if ok {
+						// copy existing label data
+						for k, v := range lab {
+							labelsCopy[k] = v.(string)
+						}
+					}
+				}
+				_, ok = metadata["selector"].(map[string]interface{})
+				if !ok {
+					continue
+				}
+				selectorExists = true
+			}
+
+			ao.AddJsonPatch(cdk8s.JsonPatch_Add(a.Str("/spec/template/metadata/annotations"), annoatationsCopy))
+			ao.AddJsonPatch(cdk8s.JsonPatch_Add(a.Str("/spec/template/metadata/labels"), labelsCopy))
+
+			if !selectorExists {
+				ao.AddJsonPatch(cdk8s.JsonPatch_Add(a.Str("/spec/selector"), map[string]interface{}{
+					"matchLabels": labelsCopy,
+				}))
+			} else {
+				ao.AddJsonPatch(cdk8s.JsonPatch_Add(a.Str("/spec/selector/matchLabels"), labelsCopy))
 			}
 		}
 	}
+}
+
+func getSpecMetadata(spec map[string]interface{}) map[string]interface{} {
+	template, ok := spec["template"].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	metadata, ok := template["metadata"].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	return metadata
 }
 
 // UpdateHelm update a helm chart with new values. The pod will launch with an `updated=true` label if it's a Chainlink node.
