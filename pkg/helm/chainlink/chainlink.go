@@ -70,6 +70,7 @@ func (m Chart) ExportData(e *environment.Environment) error {
 
 		var localConnection string
 		if e.Cfg.InsideK8s {
+			log.Debug().Str("Name", m.Name).Bool("Has Replicas", m.Props.HasReplicas).Msg("Inside K8s")
 			if !m.Props.HasReplicas {
 				services, err := e.Client.ListServices(e.Cfg.Namespace, fmt.Sprintf("app=%s", m.Name))
 				if err != nil {
