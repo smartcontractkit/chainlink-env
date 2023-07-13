@@ -67,18 +67,17 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		if err != nil {
 			return err
 		}
+		if !m.Props.HasReplicas {
+			services, err := e.Client.ListServices(e.Cfg.Namespace, fmt.Sprintf("app=%s", m.Name))
+			if err != nil {
+				return err
+			}
+			internalConnection = fmt.Sprintf("http://%s:6688", services.Items[0].Name)
+		}
 
 		var localConnection string
 		if e.Cfg.InsideK8s {
-			log.Debug().Str("Name", m.Name).Bool("Has Replicas", m.Props.HasReplicas).Msg("Inside K8s")
-			if !m.Props.HasReplicas {
-				services, err := e.Client.ListServices(e.Cfg.Namespace, fmt.Sprintf("app=%s", m.Name))
-				if err != nil {
-					return err
-				}
-				internalConnection = fmt.Sprintf("http://%s:6688", services.Items[0].Name)
-				localConnection = internalConnection
-			}
+			localConnection = internalConnection
 		} else {
 			localConnection, err = e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
 				As(client.LocalConnection, client.HTTP)

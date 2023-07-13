@@ -160,8 +160,6 @@ type ChainlinkNodeDetail struct {
 	InternalIP string
 	// DBLocalIP is the URL to connect to the node's database from the local machine
 	DBLocalIP string
-	// ServiceName is the name of the K8s service that exposes the node, prefer it in most cases
-	ServiceName string
 }
 
 // New creates new environment

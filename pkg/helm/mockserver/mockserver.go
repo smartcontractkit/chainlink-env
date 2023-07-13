@@ -55,16 +55,12 @@ func (m Chart) ExportData(e *environment.Environment) error {
 	if err != nil {
 		return err
 	}
-	mockInternal, err := e.Fwd.FindPort("mockserver:0", "mockserver", "serviceport").As(client.RemoteConnection, client.HTTP)
+	services, err := e.Client.ListServices(e.Cfg.Namespace, fmt.Sprintf("app=%s", m.Name))
 	if err != nil {
 		return err
 	}
+	mockInternal := fmt.Sprintf("http://%s:1080", services.Items[0].Name)
 	if e.Cfg.InsideK8s {
-		services, err := e.Client.ListServices(e.Cfg.Namespace, fmt.Sprintf("app=%s", m.Name))
-		if err != nil {
-			return err
-		}
-		mockInternal = fmt.Sprintf("http://%s:1080", services.Items[0].Name)
 		mockLocal = mockInternal
 	}
 	e.URLs[LocalURLsKey] = []string{mockLocal}
