@@ -210,7 +210,7 @@ func New(cfg *Config) *Environment {
 	config.JSIIGlobalMu.Lock()
 	defer config.JSIIGlobalMu.Unlock()
 	if err := e.initApp(); err != nil {
-		log.Error().Err(err).Msg("failed to create ns and service account")
+		log.Error().Err(err).Msg("failed to apply the initial manifest to create the namespace")
 		return &Environment{err: err}
 	}
 	e.Chaos = client.NewChaos(c, e.Cfg.Namespace)
@@ -298,9 +298,21 @@ func (m *Environment) initApp() error {
 		},
 	})
 	m.CurrentManifest = *m.App.SynthYaml()
+	// loop retry applying the initial manifest with the namespace and other basics
 	ctx, cancel := context.WithTimeout(context.Background(), m.Cfg.ReadyCheckData.Timeout)
 	defer cancel()
-	err = m.Client.Apply(ctx, m.CurrentManifest, m.Cfg.Namespace)
+	startTime := time.Now()
+	deadline, _ := ctx.Deadline()
+	for {
+		err = m.Client.Apply(ctx, m.CurrentManifest, m.Cfg.Namespace)
+		if err == nil || ctx.Err() != nil {
+			break
+		}
+		elapsed := time.Since(startTime)
+		remaining := time.Until(deadline)
+		log.Debug().Err(err).Msgf("Failed to apply initial manifest, will continue to retry. Time elapsed: %s, Time until timeout %s\n", elapsed, remaining)
+		time.Sleep(5 * time.Second)
+	}
 	if ctx.Err() == context.DeadlineExceeded {
 		return fmt.Errorf("failed to apply manifest within %s", m.Cfg.ReadyCheckData.Timeout)
 	}
@@ -596,7 +608,7 @@ func (m *Environment) ResourcesSummary(selector string) (map[string]map[string]s
 func (m *Environment) ClearCharts() error {
 	m.Charts = make([]ConnectedChart, 0)
 	if err := m.initApp(); err != nil {
-		log.Error().Err(err).Msg("failed to create ns and service account")
+		log.Error().Err(err).Msg("failed to apply the initial manifest to create the namespace")
 		return err
 	}
 	return nil
