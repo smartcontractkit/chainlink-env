@@ -22,6 +22,15 @@ require (
 	k8s.io/kubectl v0.25.11
 )
 
+// Our use of K8s requires locking to this version, K8s version changes tend to break a lot of things, and go mod tidy likes to update them
+replace (
+	k8s.io/api => k8s.io/api v0.25.11
+	k8s.io/apimachinery => k8s.io/apimachinery v0.25.11
+	k8s.io/cli-runtime => k8s.io/cli-runtime v0.25.11
+	k8s.io/client-go => k8s.io/client-go v0.25.11
+	k8s.io/kubectl => k8s.io/kubectl v0.25.11
+)
+
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
