@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/aws/constructs-go/constructs/v10 v10.2.69
-	github.com/aws/jsii-runtime-go v1.85.0
+	github.com/aws/jsii-runtime-go v1.84.0
 	github.com/cdk8s-team/cdk8s-core-go/cdk8s/v2 v2.7.5
 	github.com/chaos-mesh/chaos-mesh/api/v1alpha1 v0.0.0-20220226050744-799408773657
 	github.com/go-resty/resty/v2 v2.7.0
@@ -24,6 +24,7 @@ require (
 
 // Our use of K8s requires locking to this version, K8s version changes tend to break a lot of things, and go mod tidy likes to update them
 replace (
+	github.com/aws/jsii-runtime-go => github.com/aws/jsii-runtime-go v1.75.0
 	k8s.io/api => k8s.io/api v0.25.11
 	k8s.io/apimachinery => k8s.io/apimachinery v0.25.11
 	k8s.io/cli-runtime => k8s.io/cli-runtime v0.25.11
@@ -46,7 +47,6 @@ require (
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
-	github.com/fatih/color v1.15.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/fvbommel/sortorder v1.0.2 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
