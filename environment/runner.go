@@ -139,7 +139,7 @@ func job(chart cdk8s.Chart, props *Props) {
 						Containers: &[]*k8s.Container{
 							container(props),
 						},
-						RestartPolicy: a.Str("Never"),
+						RestartPolicy: a.Str("OnFailure"),
 					},
 				},
 				ActiveDeadlineSeconds: nil,
