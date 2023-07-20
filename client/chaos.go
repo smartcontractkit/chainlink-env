@@ -61,6 +61,7 @@ func (c *Chaos) waitForChaosStatus(id string, condition v1alpha1.ChaosConditionT
 	log.Info().Msgf("waiting for chaos experiment state %s", condition)
 	if timeout < time.Minute {
 		log.Info().Msg("timeout is less than 1 minute, setting to 1 minute")
+		timeout = time.Minute
 	}
 	return wait.PollImmediate(2*time.Second, timeout, func() (bool, error) {
 		data, err := c.Client.ClientSet.
