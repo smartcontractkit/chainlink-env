@@ -49,17 +49,20 @@ func (c *Chaos) Run(app cdk8s.App, id string, resource string) (string, error) {
 	if err := c.checkForPodsExistence(app); err != nil {
 		return id, err
 	}
-	err := c.waitForChaosStatus(id, v1alpha1.ConditionAllInjected)
+	err := c.waitForChaosStatus(id, v1alpha1.ConditionAllInjected, time.Minute)
 	if err != nil {
 		return id, err
 	}
 	return id, nil
 }
 
-func (c *Chaos) waitForChaosStatus(id string, condition v1alpha1.ChaosConditionType) error {
+func (c *Chaos) waitForChaosStatus(id string, condition v1alpha1.ChaosConditionType, timeout time.Duration) error {
 	var result ChaosState
 	log.Info().Msgf("waiting for chaos experiment state %s", condition)
-	return wait.PollImmediate(2*time.Second, 1*time.Minute, func() (bool, error) {
+	if timeout < time.Minute {
+		log.Info().Msg("timeout is less than 1 minute, setting to 1 minute")
+	}
+	return wait.PollImmediate(2*time.Second, timeout, func() (bool, error) {
 		data, err := c.Client.ClientSet.
 			RESTClient().
 			Get().
@@ -81,8 +84,8 @@ func (c *Chaos) waitForChaosStatus(id string, condition v1alpha1.ChaosConditionT
 	})
 }
 
-func (c *Chaos) WaitForAllRecovered(id string) error {
-	return c.waitForChaosStatus(id, v1alpha1.ConditionAllRecovered)
+func (c *Chaos) WaitForAllRecovered(id string, timeout time.Duration) error {
+	return c.waitForChaosStatus(id, v1alpha1.ConditionAllRecovered, timeout)
 }
 
 // Stop removes a chaos experiment
