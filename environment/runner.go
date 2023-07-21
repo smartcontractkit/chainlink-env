@@ -140,6 +140,12 @@ func job(chart cdk8s.Chart, props *Props) {
 							container(props),
 						},
 						RestartPolicy: a.Str("OnFailure"),
+						Volumes: &[]*k8s.Volume{
+							{
+								Name:     a.Str("persistence"),
+								EmptyDir: &k8s.EmptyDirVolumeSource{},
+							},
+						},
 					},
 				},
 				ActiveDeadlineSeconds: nil,
@@ -163,6 +169,12 @@ func container(props *Props) *k8s.Container {
 		ImagePullPolicy: a.Str("Always"),
 		Env:             jobEnvVars(props),
 		Resources:       a.ContainerResources(cpu, mem, cpu, mem),
+		VolumeMounts: &[]*k8s.VolumeMount{
+			{
+				Name:      a.Str("persistence"),
+				MountPath: a.Str("/persistence"),
+			},
+		},
 	}
 }
 
