@@ -60,11 +60,8 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		return err
 	}
 	var mockInternal string
-	if services == nil || len(services.Items) == 0 {
-		mockInternal := fmt.Sprintf("http://%s:1080", services.Items[0].Name)
-		if e.Cfg.InsideK8s {
-			mockLocal = mockInternal
-		}
+	if services != nil && len(services.Items) != 0 {
+		mockInternal = fmt.Sprintf("http://%s:1080", services.Items[0].Name)
 	} else {
 		mockInternal, err = e.Fwd.FindPort("mockserver:0", "mockserver", "serviceport").As(client.RemoteConnection, client.HTTP)
 		if err != nil {
