@@ -118,9 +118,9 @@ func (m *K8sClient) AddLabel(namespace string, selector string, label string) er
 	return nil
 }
 
-func (m *K8sClient) LabelChaosGroup(namespace string, startInstance int, endInstance int, group string) error {
+func (m *K8sClient) LabelChaosGroup(namespace string, labelPrefix string, startInstance int, endInstance int, group string) error {
 	for i := startInstance; i <= endInstance; i++ {
-		err := m.AddLabel(namespace, fmt.Sprintf("app=chainlink-%d", i), fmt.Sprintf("%s=1", group))
+		err := m.AddLabel(namespace, fmt.Sprintf("%s-%d", labelPrefix, i), fmt.Sprintf("%s=1", group))
 		if err != nil {
 			return err
 		}
