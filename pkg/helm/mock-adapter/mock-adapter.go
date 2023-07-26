@@ -2,15 +2,17 @@ package mock_adapter
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/rs/zerolog/log"
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
 	"github.com/smartcontractkit/chainlink-env/environment"
-	"os"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 const (
-	URLsKey = "qa-mock-adapter"
+	LocalURLsKey    = "qa_mock_adapter_local"
+	InternalURLsKey = "qa_mock_adapter_internal"
 )
 
 type Props struct {
@@ -49,31 +51,38 @@ func (m Chart) GetValues() *map[string]interface{} {
 }
 
 func (m Chart) ExportData(e *environment.Environment) error {
-	urls := make([]string, 0)
-	mock, err := e.Fwd.FindPort("qa-mock-adapter:0", "qa-mock-adapter", "serviceport").As(client.LocalConnection, client.HTTP)
+	mockLocal, err := e.Fwd.FindPort("qa-mock-adapter:0", "qa-mock-adapter", "serviceport").As(client.LocalConnection, client.HTTP)
 	if err != nil {
 		return err
 	}
-	mockInternal, err := e.Fwd.FindPort("qa-mock-adapter:0", "qa-mock-adapter", "serviceport").As(client.RemoteConnection, client.HTTP)
+	services, err := e.Client.ListServices(e.Cfg.Namespace, fmt.Sprintf("app=%s", m.Name))
 	if err != nil {
 		return err
+	}
+	var mockInternal string
+	if services != nil && len(services.Items) != 0 {
+		mockInternal = fmt.Sprintf("http://%s:6060", services.Items[0].Name)
+	} else {
+		mockInternal, err = e.Fwd.FindPort("qa-mock-adapter:0", "qa-mock-adapter", "serviceport").As(client.RemoteConnection, client.HTTP)
+		if err != nil {
+			return err
+		}
 	}
 	if e.Cfg.InsideK8s {
-		urls = append(urls, mockInternal, mockInternal)
-	} else {
-		urls = append(urls, mock, mockInternal)
+		mockLocal = mockInternal
 	}
-	e.URLs[URLsKey] = urls
-	log.Info().Str("URL", mock).Msg("Mock adapter local connection")
-	log.Info().Str("URL", mockInternal).Msg("Mock adapter remote connection")
+
+	e.URLs[LocalURLsKey] = []string{mockLocal}
+	e.URLs[InternalURLsKey] = []string{mockInternal}
+	log.Info().Str("Local Connection", mockLocal).Str("Internal Connection", mockInternal).Msg("QA Mock Adapter")
 	return nil
 }
 
 func defaultProps() map[string]interface{} {
 	internalRepo := os.Getenv(config.EnvVarInternalDockerRepo)
-	mockAdapterRepo := "qa-mock-adapter"
+	qaMockAdapterRepo := "qa-mock-adapter"
 	if internalRepo != "" {
-		mockAdapterRepo = fmt.Sprintf("%s/qa-mock-adapter", internalRepo)
+		qaMockAdapterRepo = fmt.Sprintf("%s/qa-mock-adapter", internalRepo)
 	}
 
 	return map[string]interface{}{
@@ -96,7 +105,7 @@ func defaultProps() map[string]interface{} {
 			},
 		},
 		"image": map[string]interface{}{
-			"repository": mockAdapterRepo,
+			"repository": qaMockAdapterRepo,
 			"snapshot":   false,
 			"pullPolicy": "IfNotPresent",
 		},
