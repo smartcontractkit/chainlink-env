@@ -149,6 +149,7 @@ func job(chart cdk8s.Chart, props *Props) {
 					},
 				},
 				ActiveDeadlineSeconds: nil,
+				BackoffLimit:          a.Num(10000), // effectively infinite (I hope)
 			},
 		})
 }
