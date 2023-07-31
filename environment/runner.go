@@ -121,6 +121,12 @@ func role(chart cdk8s.Chart, props *Props) {
 }
 
 func job(chart cdk8s.Chart, props *Props) {
+	restartPolicy := "Never"
+	backOffLimit := float64(0)
+	if os.Getenv(config.EnvVarDetachRunner) == "true" { // If we're running detached, we're likely running a long-form test
+		restartPolicy = "OnFailure"
+		backOffLimit = 100000 // effectively infinite (I hope)
+	}
 	k8s.NewKubeJob(
 		chart,
 		a.Str(fmt.Sprintf("%s-job", props.BaseName)),
@@ -139,11 +145,17 @@ func job(chart cdk8s.Chart, props *Props) {
 						Containers: &[]*k8s.Container{
 							container(props),
 						},
-						RestartPolicy: a.Str("Never"),
+						RestartPolicy: a.Str(restartPolicy),
+						Volumes: &[]*k8s.Volume{
+							{
+								Name:     a.Str("persistence"),
+								EmptyDir: &k8s.EmptyDirVolumeSource{},
+							},
+						},
 					},
 				},
 				ActiveDeadlineSeconds: nil,
-				BackoffLimit:          a.Num(0),
+				BackoffLimit:          a.Num(backOffLimit),
 			},
 		})
 }
@@ -163,6 +175,12 @@ func container(props *Props) *k8s.Container {
 		ImagePullPolicy: a.Str("Always"),
 		Env:             jobEnvVars(props),
 		Resources:       a.ContainerResources(cpu, mem, cpu, mem),
+		VolumeMounts: &[]*k8s.VolumeMount{
+			{
+				Name:      a.Str("persistence"),
+				MountPath: a.Str("/persistence"),
+			},
+		},
 	}
 }
 
