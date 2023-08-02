@@ -82,7 +82,7 @@ func defaultProps() map[string]interface{} {
 	internalRepo := os.Getenv(config.EnvVarInternalDockerRepo)
 	qaMockAdapterRepo := "qa-mock-adapter"
 	if internalRepo != "" {
-		qaMockAdapterRepo = fmt.Sprintf("%s", internalRepo)
+		qaMockAdapterRepo = internalRepo
 	}
 
 	return map[string]interface{}{
