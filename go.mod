@@ -12,7 +12,7 @@ require (
 	github.com/imdario/mergo v0.3.13
 	github.com/onsi/gomega v1.20.1
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.29.0
+	github.com/rs/zerolog v1.30.0
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/sync v0.1.0
 	k8s.io/api v0.25.11
