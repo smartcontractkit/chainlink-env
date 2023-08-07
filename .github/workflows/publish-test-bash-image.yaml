@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build Base Image
-        uses: smartcontractkit/chainlink-github-actions/docker/build-push@cb4a8f51d77cbf77ea6a765bd1f437ffc7a18730 # v2.0.28
+        uses: smartcontractkit/chainlink-github-actions/docker/build-push@9a48ff0869aa6cb2753125301f744d5372d669f6 # v2.2.5
         with:
           tags: ${{ env.BASE_IMAGE_TAG }}
           file: Dockerfile.base
