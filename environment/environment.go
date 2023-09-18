@@ -78,6 +78,8 @@ type Config struct {
 	// PodLabels is a set of labels applied to every pod in the namespace
 	PodLabels map[string]string
 	// PreventPodEviction if true sets a k8s annotation safe-to-evict=false to prevent pods from being evicted
+	// Note: This should only be used if your test is completely incapable of handling things like K8s rebalances without failing.
+	// If that is the case, it's worth the effort to make your test fault-tolerant soon. The alternative is expensive and infuriating.
 	PreventPodEviction bool
 	// Allow deployment to nodes with these tolerances
 	Tolerations []map[string]string
