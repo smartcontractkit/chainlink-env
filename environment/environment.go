@@ -387,7 +387,7 @@ func (m *Environment) ReplaceHelm(name string, chart ConnectedChart) (*Environme
 		ReleaseName: a.Str(name),
 		Values:      chart.GetValues(),
 	})
-	addDefaultPodAnnotationsAndLabels(h, addSafeToEvictPrevention(m.Cfg.PreventPodEviction, nil), m.Cfg.PodLabels)
+	addDefaultPodAnnotationsAndLabels(h, markNotSafeToEvict(m.Cfg.PreventPodEviction, nil), m.Cfg.PodLabels)
 	m.Charts = append(m.Charts, chart)
 	return m, nil
 }
@@ -518,7 +518,7 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 		ReleaseName: a.Str(chart.GetName()),
 		Values:      values,
 	})
-	addDefaultPodAnnotationsAndLabels(h, addSafeToEvictPrevention(m.Cfg.PreventPodEviction, nil), m.Cfg.PodLabels)
+	addDefaultPodAnnotationsAndLabels(h, markNotSafeToEvict(m.Cfg.PreventPodEviction, nil), m.Cfg.PodLabels)
 	m.Charts = append(m.Charts, chart)
 	return m
 }
@@ -1023,8 +1023,8 @@ func DefaultJobLogFunction(e *Environment, message string) {
 	}
 }
 
-// addSafeToEvictPrevention adds the safe to evict annotation to the provided map if needed
-func addSafeToEvictPrevention(preventPodEviction bool, m map[string]string) map[string]string {
+// markNotSafeToEvict adds the safe to evict annotation to the provided map if needed
+func markNotSafeToEvict(preventPodEviction bool, m map[string]string) map[string]string {
 	if m == nil {
 		m = make(map[string]string)
 	}

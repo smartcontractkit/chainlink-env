@@ -122,7 +122,7 @@ func role(chart cdk8s.Chart, props *Props) {
 }
 
 func job(chart cdk8s.Chart, props *Props) {
-	defaultRunnerPodAnnotations := addSafeToEvictPrevention(props.PreventPodEviction, nil)
+	defaultRunnerPodAnnotations := markNotSafeToEvict(props.PreventPodEviction, nil)
 	restartPolicy := "Never"
 	backOffLimit := float64(0)
 	if os.Getenv(config.EnvVarDetachRunner) == "true" { // If we're running detached, we're likely running a long-form test
