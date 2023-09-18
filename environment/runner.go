@@ -60,12 +60,13 @@ func NewRunner(props *Props) func(root cdk8s.Chart) ConnectedChart {
 }
 
 type Props struct {
-	BaseName         string
-	TargetNamespace  string
-	Labels           *map[string]*string
-	Image            string
-	TestName         string
-	NoManifestUpdate bool
+	BaseName           string
+	TargetNamespace    string
+	Labels             *map[string]*string
+	Image              string
+	TestName           string
+	NoManifestUpdate   bool
+	PreventPodEviction bool
 }
 
 func role(chart cdk8s.Chart, props *Props) {
@@ -121,6 +122,7 @@ func role(chart cdk8s.Chart, props *Props) {
 }
 
 func job(chart cdk8s.Chart, props *Props) {
+	defaultRunnerPodAnnotations := addSafeToEvictPrevention(props.PreventPodEviction, nil)
 	restartPolicy := "Never"
 	backOffLimit := float64(0)
 	if os.Getenv(config.EnvVarDetachRunner) == "true" { // If we're running detached, we're likely running a long-form test
@@ -138,7 +140,7 @@ func job(chart cdk8s.Chart, props *Props) {
 				Template: &k8s.PodTemplateSpec{
 					Metadata: &k8s.ObjectMeta{
 						Labels:      props.Labels,
-						Annotations: a.ConvertAnnotations(defaultPodAnnotations),
+						Annotations: a.ConvertAnnotations(defaultRunnerPodAnnotations),
 					},
 					Spec: &k8s.PodSpec{
 						ServiceAccountName: a.Str("default"),

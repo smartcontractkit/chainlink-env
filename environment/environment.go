@@ -43,7 +43,6 @@ var (
 		"backyards.banzaicloud.io/image-registry-access":   a.Str("true"),
 		"backyards.banzaicloud.io/public-dockerhub-access": a.Str("true"),
 	}
-	defaultPodAnnotations = map[string]string{"cluster-autoscaler.kubernetes.io/safe-to-evict": "false"}
 )
 
 // ConnectedChart interface to interact both with cdk8s apps and helm charts
@@ -78,6 +77,8 @@ type Config struct {
 	Labels []string
 	// PodLabels is a set of labels applied to every pod in the namespace
 	PodLabels map[string]string
+	// PreventPodEviction if true sets a k8s annotation safe-to-evict=false to prevent pods from being evicted
+	PreventPodEviction bool
 	// Allow deployment to nodes with these tolerances
 	Tolerations []map[string]string
 	// Restrict deployment to only nodes matching a particular node role
@@ -384,7 +385,7 @@ func (m *Environment) ReplaceHelm(name string, chart ConnectedChart) (*Environme
 		ReleaseName: a.Str(name),
 		Values:      chart.GetValues(),
 	})
-	addDefaultPodAnnotationsAndLabels(h, defaultPodAnnotations, m.Cfg.PodLabels)
+	addDefaultPodAnnotationsAndLabels(h, addSafeToEvictPrevention(m.Cfg.PreventPodEviction, nil), m.Cfg.PodLabels)
 	m.Charts = append(m.Charts, chart)
 	return m, nil
 }
@@ -515,7 +516,7 @@ func (m *Environment) AddHelm(chart ConnectedChart) *Environment {
 		ReleaseName: a.Str(chart.GetName()),
 		Values:      values,
 	})
-	addDefaultPodAnnotationsAndLabels(h, defaultPodAnnotations, m.Cfg.PodLabels)
+	addDefaultPodAnnotationsAndLabels(h, addSafeToEvictPrevention(m.Cfg.PreventPodEviction, nil), m.Cfg.PodLabels)
 	m.Charts = append(m.Charts, chart)
 	return m
 }
@@ -639,12 +640,13 @@ func (m *Environment) RunCustomReadyConditions(customCheck *client.ReadyCheckDat
 		}
 		rrSelector := map[string]*string{pkg.NamespaceLabelKey: a.Str(m.Cfg.Namespace)}
 		m.AddChart(NewRunner(&Props{
-			BaseName:         REMOTE_RUNNER_NAME,
-			TargetNamespace:  m.Cfg.Namespace,
-			Labels:           &rrSelector,
-			Image:            m.Cfg.JobImage,
-			TestName:         m.Cfg.Test.Name(),
-			NoManifestUpdate: m.Cfg.NoManifestUpdate,
+			BaseName:           REMOTE_RUNNER_NAME,
+			TargetNamespace:    m.Cfg.Namespace,
+			Labels:             &rrSelector,
+			Image:              m.Cfg.JobImage,
+			TestName:           m.Cfg.Test.Name(),
+			NoManifestUpdate:   m.Cfg.NoManifestUpdate,
+			PreventPodEviction: m.Cfg.PreventPodEviction,
 		}))
 	}
 	m.UpdateManifest()
@@ -1017,4 +1019,16 @@ func DefaultJobLogFunction(e *Environment, message string) {
 	if found {
 		e.Cfg.fundReturnFailed = true
 	}
+}
+
+// addSafeToEvictPrevention adds the safe to evict annotation to the provided map if needed
+func addSafeToEvictPrevention(preventPodEviction bool, m map[string]string) map[string]string {
+	if m == nil {
+		m = make(map[string]string)
+	}
+	if preventPodEviction {
+		m["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "false"
+	}
+
+	return m
 }
