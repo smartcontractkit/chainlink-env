@@ -10,25 +10,25 @@ require (
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/google/uuid v1.3.0
 	github.com/imdario/mergo v0.3.13
-	github.com/onsi/gomega v1.20.1
+	github.com/onsi/gomega v1.23.0
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.0
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/sync v0.1.0
-	k8s.io/api v0.25.11
-	k8s.io/apimachinery v0.25.11
-	k8s.io/cli-runtime v0.25.11
-	k8s.io/client-go v0.25.11
-	k8s.io/kubectl v0.25.11
+	k8s.io/api v0.26.9
+	k8s.io/apimachinery v0.26.9
+	k8s.io/cli-runtime v0.26.9
+	k8s.io/client-go v0.26.9
+	k8s.io/kubectl v0.26.9
 )
 
 // K8s dependencies are infuriating and go mod tidy keeps wanting to update them, lock them here
 replace (
-	k8s.io/api => k8s.io/api v0.25.11
-	k8s.io/apimachinery => k8s.io/apimachinery v0.25.11
-	k8s.io/cli-runtime => k8s.io/cli-runtime v0.25.11
-	k8s.io/client-go => k8s.io/client-go v0.25.11
-	k8s.io/kubectl => k8s.io/kubectl v0.25.11
+	k8s.io/api => k8s.io/api v0.26.9
+	k8s.io/apimachinery => k8s.io/apimachinery v0.26.9
+	k8s.io/cli-runtime => k8s.io/cli-runtime v0.26.9
+	k8s.io/client-go => k8s.io/client-go v0.26.9
+	k8s.io/kubectl => k8s.io/kubectl v0.26.9
 )
 
 require (
@@ -85,7 +85,7 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
-	github.com/russross/blackfriday v1.5.2 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/spf13/cobra v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
@@ -108,7 +108,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.25.3 // indirect
-	k8s.io/component-base v0.25.11 // indirect
+	k8s.io/component-base v0.26.9 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
 	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d // indirect
