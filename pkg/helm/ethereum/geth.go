@@ -111,7 +111,7 @@ func defaultProps() *Props {
 			"geth": map[string]interface{}{
 				"image": map[string]interface{}{
 					"image":   gethImage,
-					"version": "v1.10.25",
+					"version": "stable",
 				},
 			},
 			"resources": map[string]interface{}{
@@ -145,7 +145,7 @@ func NewVersioned(helmVersion string, props *Props) environment.ConnectedChart {
 		return Chart{
 			HelmProps: &HelmProps{
 				Name:   "geth",
-				Path:   "chainlink-qa/geth",
+				Path:   "/Users/adamhamrick/Projects/qa-charts/charts/geth",
 				Values: &targetProps.Values,
 			},
 			Props: targetProps,
