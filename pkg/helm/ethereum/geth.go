@@ -145,7 +145,7 @@ func NewVersioned(helmVersion string, props *Props) environment.ConnectedChart {
 		return Chart{
 			HelmProps: &HelmProps{
 				Name:   "geth",
-				Path:   "/Users/adamhamrick/Projects/qa-charts/charts/geth",
+				Path:   "chainlink-qa/geth",
 				Values: &targetProps.Values,
 			},
 			Props: targetProps,
