@@ -12,30 +12,27 @@ import (
 
 // EVMOneNode local development Chainlink deployment
 func EVMOneNode(config *environment.Config) (*environment.Environment, error) {
-	c, err := chainlink.NewDeployment(1, nil)
-	if err != nil {
-		return nil, err
-	}
+	c := chainlink.New(0, nil)
+
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethereum.New(nil)).
-		AddHelmCharts(c), nil
+		AddHelm(c), nil
 }
 
 // EVMMinimalLocalBS local development Chainlink deployment,
 // 1 bootstrap + 4 oracles (minimal requirements for OCR) + Blockscout
 func EVMMinimalLocalBS(config *environment.Config) (*environment.Environment, error) {
-	c, err := chainlink.NewDeployment(5, nil)
-	if err != nil {
-		return nil, err
-	}
+	c := chainlink.New(0, map[string]any{
+		"replicas": 5,
+	})
 	return environment.New(config).
 		AddChart(blockscout.New(&blockscout.Props{})).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
 		AddHelm(ethereum.New(nil)).
-		AddHelmCharts(c), nil
+		AddHelm(c), nil
 }
 
 // EVMMinimalLocal local development Chainlink deployment,
@@ -63,12 +60,11 @@ HTTPURL = 'http://geth-ethereum-geth:8544'
 
 [EVM.HeadTracker]
 HistoryDepth = 400`
-	c, err := chainlink.NewDeployment(5, map[string]interface{}{
-		"toml": clToml,
+	c := chainlink.New(0, map[string]interface{}{
+		"replicas": 5,
+		"toml":     clToml,
 	})
-	if err != nil {
-		return nil, err
-	}
+
 	return environment.New(config).
 		AddHelm(mockservercfg.New(nil)).
 		AddHelm(mockserver.New(nil)).
@@ -94,7 +90,7 @@ HistoryDepth = 400`
 				},
 			},
 		})).
-		AddHelmCharts(c), nil
+		AddHelm(c), nil
 }
 
 // EVMSoak deployment for a long running soak tests

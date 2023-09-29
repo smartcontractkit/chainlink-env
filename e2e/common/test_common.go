@@ -9,6 +9,9 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/smartcontractkit/chainlink-env/chaos"
 	"github.com/smartcontractkit/chainlink-env/client"
 	"github.com/smartcontractkit/chainlink-env/config"
@@ -18,8 +21,6 @@ import (
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/ethereum"
 	"github.com/smartcontractkit/chainlink-env/presets"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -143,7 +144,7 @@ func TestConnectWithoutManifest(t *testing.T) {
 	if testEnv.Cfg.InsideK8s {
 		connection = client.RemoteConnection
 	}
-	url, err := testEnv.Fwd.FindPort("chainlink-0:0", "node", "access").As(connection, client.HTTP)
+	url, err := testEnv.Fwd.FindPort("chainlink-0:node-1", "node", "access").As(connection, client.HTTP)
 	require.NoError(t, err)
 	urlGeth, err := testEnv.Fwd.FindPort("geth:0", "geth-network", "http-rpc").As(connection, client.HTTP)
 	require.NoError(t, err)
@@ -262,12 +263,12 @@ func TestWithChaos(t *testing.T) {
 		},
 	}
 	testEnvConfig := GetTestEnvConfig(t)
-	cd, err := chainlink.NewDeployment(1, nil)
-	require.NoError(t, err)
+	cd := chainlink.New(0, nil)
+
 	e := environment.New(testEnvConfig).
 		AddHelm(ethereum.New(nil)).
-		AddHelmCharts(cd)
-	err = e.Run()
+		AddHelm(cd)
+	err := e.Run()
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
 		return
@@ -320,17 +321,18 @@ func TestEmptyEnvironmentStartup(t *testing.T) {
 func TestRolloutRestart(t *testing.T, statefulSet bool) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
-	cd, err := chainlink.NewDeployment(5, map[string]any{
+	cd := chainlink.New(0, map[string]any{
+		"replicas": 5,
 		"db": map[string]any{
 			"stateful": true,
 			"capacity": "1Gi",
 		},
 	})
-	require.NoError(t, err, "failed to create chainlink deployment")
+
 	e := environment.New(testEnvConfig).
 		AddHelm(ethereum.New(nil)).
-		AddHelmCharts(cd)
-	err = e.Run()
+		AddHelm(cd)
+	err := e.Run()
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
 		return
@@ -354,7 +356,7 @@ func TestRolloutRestart(t *testing.T, statefulSet bool) {
 func TestReplaceHelm(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)
-	cd, err := chainlink.NewDeployment(1, map[string]any{
+	cd := chainlink.New(0, map[string]any{
 		"chainlink": map[string]any{
 			"resources": map[string]any{
 				"requests": map[string]any{
@@ -366,9 +368,9 @@ func TestReplaceHelm(t *testing.T) {
 			},
 		},
 	})
-	require.NoError(t, err, "failed to create chainlink deployment")
-	e := environment.New(testEnvConfig).AddHelmCharts(cd)
-	err = e.Run()
+
+	e := environment.New(testEnvConfig).AddHelm(cd)
+	err := e.Run()
 	require.NoError(t, err)
 	if e.WillUseRemoteRunner() {
 		return
@@ -377,7 +379,7 @@ func TestReplaceHelm(t *testing.T) {
 		assert.NoError(t, e.Shutdown())
 	})
 	require.NoError(t, err)
-	cd, err = chainlink.NewDeployment(1, map[string]any{
+	cd = chainlink.New(1, map[string]any{
 		"chainlink": map[string]any{
 			"resources": map[string]any{
 				"requests": map[string]any{
@@ -391,7 +393,7 @@ func TestReplaceHelm(t *testing.T) {
 	})
 	require.NoError(t, err)
 	e, err = e.
-		ReplaceHelm("chainlink-0", cd[0])
+		ReplaceHelm("chainlink-0", cd)
 	require.NoError(t, err)
 	err = e.Run()
 	require.NoError(t, err)
