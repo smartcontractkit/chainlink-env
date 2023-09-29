@@ -378,13 +378,13 @@ func (m *Environment) ReplaceHelm(name string, chart ConnectedChart) (*Environme
 		Interface("Props", chart.GetProps()).
 		Interface("Values", chart.GetValues()).
 		Msg("Chart deployment values")
-	h := cdk8s.NewHelm(m.root, a.Str(name), &cdk8s.HelmProps{
+	h := cdk8s.NewHelm(m.root, a.Str(chart.GetName()), &cdk8s.HelmProps{
 		Chart: a.Str(chart.GetPath()),
 		HelmFlags: &[]*string{
 			a.Str("--namespace"),
 			a.Str(m.Cfg.Namespace),
 		},
-		ReleaseName: a.Str(name),
+		ReleaseName: a.Str(chart.GetName()),
 		Values:      chart.GetValues(),
 	})
 	addDefaultPodAnnotationsAndLabels(h, markNotSafeToEvict(m.Cfg.PreventPodEviction, nil), m.Cfg.PodLabels)

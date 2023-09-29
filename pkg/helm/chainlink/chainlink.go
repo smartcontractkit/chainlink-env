@@ -62,8 +62,9 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		return err
 	}
 	for i := 0; i < len(pods.Items); i++ {
-		internalConnection, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
-			As(client.RemoteConnection, client.HTTP)
+		chainlinkNode := fmt.Sprintf("%s:node-%d", m.Name, i+1)
+		pgNode := fmt.Sprintf("%s-postgres:node-%d", m.Name, i+1)
+		internalConnection, err := e.Fwd.FindPort(chainlinkNode, "node", "access").As(client.RemoteConnection, client.HTTP)
 		if err != nil {
 			return err
 		}
@@ -81,8 +82,7 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		if e.Cfg.InsideK8s {
 			localConnection = internalConnection
 		} else {
-			localConnection, err = e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "node", "access").
-				As(client.LocalConnection, client.HTTP)
+			localConnection, err = e.Fwd.FindPort(chainlinkNode, "node", "access").As(client.LocalConnection, client.HTTP)
 			if err != nil {
 				return err
 			}
@@ -90,7 +90,7 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		e.URLs[NodesInternalURLsKey] = append(e.URLs[NodesInternalURLsKey], internalConnection)
 		e.URLs[NodesLocalURLsKey] = append(e.URLs[NodesLocalURLsKey], localConnection)
 
-		dbLocalConnection, err := e.Fwd.FindPort(fmt.Sprintf("%s:%d", m.Name, i), "chainlink-db", "postgres").
+		dbLocalConnection, err := e.Fwd.FindPort(pgNode, "chainlink-db", "postgres").
 			As(client.LocalConnection, client.HTTP)
 		if err != nil {
 			return err
@@ -123,9 +123,7 @@ func defaultProps() map[string]any {
 		chainlinkImage = fmt.Sprintf("%s/chainlink", internalRepo)
 		postgresImage = fmt.Sprintf("%s/postgres", internalRepo)
 	}
-	env := map[string]any{
-		"CL_DATABASE_URL": "postgresql://postgres:verylongdatabasepassword@0.0.0.0/chainlink?sslmode=disable",
-	}
+	env := make(map[string]string)
 	pyroscopeAuth := os.Getenv(config.EnvVarPyroscopeKey)
 	if pyroscopeAuth != "" {
 		env["CL_PYROSCOPE_AUTH_TOKEN"] = pyroscopeAuth
@@ -176,20 +174,6 @@ func New(index int, props map[string]any) environment.ConnectedChart {
 	return NewVersioned(index, "", props)
 }
 
-// NewDeployment ensures that each chainlink node gets its own helm chart, and should be preferred over New
-// Avoid using replicas when using NewDeployment
-func NewDeployment(deploymentCount int, props map[string]any) ([]environment.ConnectedChart, error) {
-	if props["replicas"] != nil && props["replicas"] != "1" {
-		return nil, fmt.Errorf("don't use replicas with NewDeployment")
-	}
-	charts := make([]environment.ConnectedChart, 0)
-	for i := 0; i < deploymentCount; i++ {
-		charts = append(charts, New(i, props))
-	}
-
-	return charts, nil
-}
-
 // NewVersioned enables you to select a specific helm chart version
 func NewVersioned(index int, helmVersion string, props map[string]any) environment.ConnectedChart {
 	dp := defaultProps()
@@ -200,6 +184,14 @@ func NewVersioned(index int, helmVersion string, props map[string]any) environme
 	}
 	if props["replicas"] != nil && props["replicas"] != "1" {
 		p.HasReplicas = true
+		replicas := props["replicas"].(int)
+		var nodesMap []map[string]string
+		for i := 0; i < replicas; i++ {
+			nodesMap = append(nodesMap, map[string]string{
+				"name": fmt.Sprintf("node-%d", i+1),
+			})
+		}
+		dp["nodes"] = nodesMap
 	}
 	return Chart{
 		Index:   index,

@@ -231,7 +231,14 @@ func (m *K8sClient) EnumerateInstances(namespace string, selector string) error 
 	if err != nil {
 		return err
 	}
+
 	for id, pod := range podList.Items {
+		// skip if already labeled with instance
+		existingLabels := pod.Labels
+		_, exists := existingLabels["instance"]
+		if exists {
+			continue
+		}
 		if err := m.AddPodLabel(namespace, pod, "instance", strconv.Itoa(id)); err != nil {
 			return err
 		}
