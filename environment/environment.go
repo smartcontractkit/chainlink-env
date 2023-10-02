@@ -285,23 +285,21 @@ func (m *Environment) initApp() error {
 			Annotations: &defaultNamespaceAnnotations,
 		},
 	})
-	if m.Cfg.PreventPodEviction {
-		zero := float64(0)
-		k8s.NewKubePodDisruptionBudget(m.root, a.Str("pdb"), &k8s.KubePodDisruptionBudgetProps{
-			Metadata: &k8s.ObjectMeta{
-				Name:      a.Str("clenv-pdb"),
-				Namespace: a.Str(m.Cfg.Namespace),
-			},
-			Spec: &k8s.PodDisruptionBudgetSpec{
-				MaxUnavailable: k8s.IntOrString_FromNumber(&zero),
-				Selector: &k8s.LabelSelector{
-					MatchLabels: &map[string]*string{
-						pkg.NamespaceLabelKey: a.Str(m.Cfg.Namespace),
-					},
+	zero := float64(0)
+	k8s.NewKubePodDisruptionBudget(m.root, a.Str("pdb"), &k8s.KubePodDisruptionBudgetProps{
+		Metadata: &k8s.ObjectMeta{
+			Name:      a.Str("clenv-pdb"),
+			Namespace: a.Str(m.Cfg.Namespace),
+		},
+		Spec: &k8s.PodDisruptionBudgetSpec{
+			MaxUnavailable: k8s.IntOrString_FromNumber(&zero),
+			Selector: &k8s.LabelSelector{
+				MatchLabels: &map[string]*string{
+					pkg.NamespaceLabelKey: a.Str(m.Cfg.Namespace),
 				},
 			},
-		})
-	}
+		},
+	})
 	m.CurrentManifest = *m.App.SynthYaml()
 	// loop retry applying the initial manifest with the namespace and other basics
 	ctx, cancel := context.WithTimeout(context.Background(), m.Cfg.ReadyCheckData.Timeout)
