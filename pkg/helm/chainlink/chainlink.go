@@ -184,7 +184,12 @@ func NewVersioned(index int, helmVersion string, props map[string]any) environme
 	}
 	if props["replicas"] != nil && props["replicas"] != "1" {
 		p.HasReplicas = true
-		replicas := props["replicas"].(int)
+		var replicas int
+		if r, ok := props["replicas"].(uint64); ok {
+			replicas = int(r) // convert to int if required
+		} else {
+			panic("chainlink node replicas must be an int")
+		}
 		var nodesMap []map[string]string
 		for i := 0; i < replicas; i++ {
 			nodesMap = append(nodesMap, map[string]string{
