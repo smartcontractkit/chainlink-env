@@ -33,7 +33,7 @@ import (
 
 const (
 	TempDebugManifest    = "tmp-manifest-%s.yaml"
-	K8sStatePollInterval = 2 * time.Second
+	K8sStatePollInterval = 10 * time.Second
 	JobFinalizedTimeout  = 2 * time.Minute
 	AppLabel             = "app"
 )
@@ -277,6 +277,8 @@ func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData, expectedPodCou
 	}
 
 	log.Info().Msg("Waiting for pods to be ready")
+	ticker := time.NewTicker(K8sStatePollInterval)
+	defer ticker.Stop()
 	timeout := time.NewTimer(rcd.Timeout)
 	readyCount := 0
 	defer timeout.Stop()
@@ -285,7 +287,7 @@ func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData, expectedPodCou
 		case <-timeout.C:
 			return fmt.Errorf("waitcontainersready, no pods in %s with selector %s after timeout %s",
 				ns, rcd.ReadinessProbeCheckSelector, rcd.Timeout)
-		default:
+		case <-ticker.C:
 			podList, err := m.ListPods(ns, rcd.ReadinessProbeCheckSelector)
 			if err != nil {
 				return err
@@ -324,7 +326,6 @@ func (m *K8sClient) WaitPodsReady(ns string, rcd *ReadyCheckData, expectedPodCou
 					return nil
 				}
 			}
-			time.Sleep(K8sStatePollInterval)
 		}
 	}
 }
