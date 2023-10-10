@@ -1031,6 +1031,7 @@ func markNotSafeToEvict(preventPodEviction bool, m map[string]string) map[string
 		m = make(map[string]string)
 	}
 	if preventPodEviction {
+		m["karpenter.sh/do-not-evict"] = "true"
 		m["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "false"
 	}
 
