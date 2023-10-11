@@ -185,9 +185,9 @@ func NewVersioned(index int, helmVersion string, props map[string]any) environme
 	if props["replicas"] != nil && props["replicas"] != "1" {
 		p.HasReplicas = true
 		replicas := props["replicas"].(int)
-		var nodesMap []map[string]string
+		var nodesMap []map[string]any
 		for i := 0; i < replicas; i++ {
-			nodesMap = append(nodesMap, map[string]string{
+			nodesMap = append(nodesMap, map[string]any{
 				"name": fmt.Sprintf("node-%d", i+1),
 			})
 		}

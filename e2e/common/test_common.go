@@ -186,6 +186,20 @@ func TestWithSingleNodeEnv(t *testing.T) {
 	})
 }
 
+func TestMultipleNodeWithDiffDBVersionEnv(t *testing.T) {
+	t.Parallel()
+	testEnvConfig := GetTestEnvConfig(t)
+	e := presets.EVMMultipleNodesWithDiffDBVersion(testEnvConfig)
+	err := e.Run()
+	require.NoError(t, err)
+	if e.WillUseRemoteRunner() {
+		return
+	}
+	t.Cleanup(func() {
+		assert.NoError(t, e.Shutdown())
+	})
+}
+
 func TestMinResources5NodesEnv(t *testing.T) {
 	t.Parallel()
 	testEnvConfig := GetTestEnvConfig(t)

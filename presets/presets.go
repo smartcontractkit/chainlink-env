@@ -47,6 +47,46 @@ func EVMMinimalLocal(config *environment.Config) *environment.Environment {
 		}))
 }
 
+// EVMMinimalLocal local development Chainlink deployment,
+// 1 bootstrap + 4 oracles (minimal requirements for OCR)
+func EVMMultipleNodesWithDiffDBVersion(config *environment.Config) *environment.Environment {
+	return environment.New(config).
+		AddHelm(mockservercfg.New(nil)).
+		AddHelm(mockserver.New(nil)).
+		AddHelm(ethereum.New(nil)).
+		AddHelm(chainlink.New(0, map[string]interface{}{
+			"nodes": []map[string]any{
+				{
+					"name": "node-1",
+					"db": map[string]any{
+						"image": map[string]any{
+							"image":   "postgres",
+							"version": "13.12",
+						},
+					},
+				},
+				{
+					"name": "node-2",
+					"db": map[string]any{
+						"image": map[string]any{
+							"image":   "postgres",
+							"version": "14.9",
+						},
+					},
+				},
+				{
+					"name": "node-3",
+					"db": map[string]any{
+						"image": map[string]any{
+							"image":   "postgres",
+							"version": "15.4",
+						},
+					},
+				},
+			},
+		}))
+}
+
 // EVMReorg deployment for two Ethereum networks re-org test
 func EVMReorg(config *environment.Config) (*environment.Environment, error) {
 	var clToml = `[[EVM]]
