@@ -7,6 +7,9 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/smartcontractkit/chainlink-env/e2e/common"
 	"github.com/smartcontractkit/chainlink-env/environment"
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/chainlink"
@@ -14,8 +17,6 @@ import (
 	"github.com/smartcontractkit/chainlink-env/pkg/helm/mockserver"
 	mockservercfg "github.com/smartcontractkit/chainlink-env/pkg/helm/mockserver-cfg"
 	"github.com/smartcontractkit/chainlink-env/presets"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMultiStageMultiManifestConnection(t *testing.T) {
@@ -32,6 +33,10 @@ func Test5NodesSoakEnvironmentWithPVCs(t *testing.T) {
 
 func TestWithSingleNodeEnv(t *testing.T) {
 	common.TestWithSingleNodeEnv(t)
+}
+
+func TestMultipleNodeWithDiffDBVersionEnv(t *testing.T) {
+	common.TestMultipleNodeWithDiffDBVersionEnv(t)
 }
 
 func TestMinResources5NodesEnv(t *testing.T) {

@@ -22,6 +22,10 @@ func TestWithSingleNodeEnv(t *testing.T) {
 	common.TestWithSingleNodeEnv(t)
 }
 
+func TestMultipleNodeWithDiffDBVersionEnv(t *testing.T) {
+	common.TestMultipleNodeWithDiffDBVersionEnv(t)
+}
+
 func TestMinResources5NodesEnv(t *testing.T) {
 	common.TestMinResources5NodesEnv(t)
 }
