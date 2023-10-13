@@ -62,8 +62,8 @@ func (m Chart) ExportData(e *environment.Environment) error {
 		return err
 	}
 	for i := 0; i < len(pods.Items); i++ {
-		chainlinkNode := fmt.Sprintf("%s:node-%d", m.Name, i+1)
-		pgNode := fmt.Sprintf("%s-postgres:node-%d", m.Name, i+1)
+		chainlinkNode := m.Name
+		pgNode := fmt.Sprintf("%s-postgres", m.Name)
 		internalConnection, err := e.Fwd.FindPort(chainlinkNode, "node", "access").As(client.RemoteConnection, client.HTTP)
 		if err != nil {
 			return err
