@@ -19,12 +19,12 @@ RUN curl -sL https://deb.nodesource.com/setup_${NODE_VERSION}.x  | bash - && \
     chmod +x ./kubectl && \
     mv ./kubectl /usr/local/bin && \
     case `uname -m` in \
-        x86_64) ARCH=amd64; ;; \
-        armv7l) ARCH=arm; ;; \
-        aarch64) ARCH=arm64; ;; \
-        ppc64le) ARCH=ppc64le; ;; \
-        s390x) ARCH=s390x; ;; \
-        *) echo "un-supported arch, exit ..."; exit 1; ;; \
+    x86_64) ARCH=amd64; ;; \
+    armv7l) ARCH=arm; ;; \
+    aarch64) ARCH=arm64; ;; \
+    ppc64le) ARCH=ppc64le; ;; \
+    s390x) ARCH=s390x; ;; \
+    *) echo "un-supported arch, exit ..."; exit 1; ;; \
     esac && \
     wget ${BASE_URL}/helm-v${HELM_VERSION}-linux-${ARCH}.tar.gz -O - | tar -xz && \
     mv linux-${ARCH}/helm /usr/bin/helm && \
